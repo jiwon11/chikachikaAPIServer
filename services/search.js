@@ -1,0 +1,308 @@
+const sequelize = require("sequelize");
+const jwt = require("jsonwebtoken");
+const { Symptom_item, Dental_clinic, Treatment_item, Review, User, Review_content, Search_record, GeneralTag } = require("../utils/models");
+
+module.exports.treatmentItems = async function treatmentItems(event) {
+  try {
+    const query = event.queryStringParameters.q;
+    const treatments = await Treatment_item.findAll({
+      where: {
+        name: {
+          [sequelize.Op.like]: `${query}%`,
+        },
+      },
+    });
+    let response = {
+      statusCode: 200,
+      body: JSON.stringify(treatments),
+    };
+    return response;
+  } catch (err) {
+    console.info("Error login", err);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${err.message}"}`,
+    };
+  }
+};
+
+module.exports.symptomItems = async function symptomItems(event) {
+  try {
+    const query = event.queryStringParameters.q;
+    const symptoms = await Symptom_item.findAll({
+      where: {
+        name: {
+          [sequelize.Op.like]: `${query}%`,
+        },
+      },
+    });
+    let response = {
+      statusCode: 200,
+      body: JSON.stringify(symptoms),
+    };
+    return response;
+  } catch (err) {
+    console.info("Error login", err);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${err.message}"}`,
+    };
+  }
+};
+
+module.exports.dentalClinics = async function dentalClinics(event) {
+  try {
+    const query = event.queryStringParameters.q;
+    const clinics = await Dental_clinic.findAll({
+      where: {
+        name: {
+          [sequelize.Op.like]: `${query}%`,
+        },
+      },
+      attributes: ["id", "name", "address"],
+    });
+    let response = {
+      statusCode: 200,
+      body: JSON.stringify(clinics),
+    };
+    return response;
+  } catch (err) {
+    console.info("Error login", err);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${err.message}"}`,
+    };
+  }
+};
+
+module.exports.localClinicSearch = async function localClinicSearch(event) {
+  try {
+    const { lat, long, query } = event.queryStringParameters;
+    if (!query) {
+      return {
+        statusCode: 400,
+        body: `{"statusText": "Bad Request","message": "검색어를 입력해주새요."}`,
+      };
+    }
+    if (parseFloat(long) > 131.87222222 && parseFloat(long) < 125.06666667) {
+      return {
+        statusCode: 400,
+        body: `{"statusText": "Bad Request","message": "한국 내 경도 범위를 입력하세요."}`,
+      };
+    }
+    if (parseFloat(lat) > 38.45 && parseFloat(lat) < 33.1) {
+      return {
+        statusCode: 400,
+        body: `{"statusText": "Bad Request","message": "한국 내 위도 범위를 입력하세요."}`,
+      };
+    }
+    var week = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
+    const today = new Date();
+    const nowTime = `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`;
+    const day = week[today.getDay()];
+    console.log(day, nowTime);
+    const clinics = await Dental_clinic.findAll({
+      attributes: [
+        "id",
+        "name",
+        "local",
+        "address",
+        "telNumber",
+        "website",
+        "geographLong",
+        "geographLat",
+        `${day}_Consulation_start_time`,
+        `${day}_Consulation_end_time`,
+        [
+          sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`),
+          "dinstance(km)",
+        ],
+        [sequelize.literal(`${day}_Consulation_start_time <= "${nowTime}" AND ${day}_Consulation_end_time >= "${nowTime}"`), "conclustionNow"],
+      ],
+      where: {
+        [sequelize.Op.all]: sequelize.literal(`${day}_Consulation_start_time != "00:00:00" AND ${day}_Consulation_end_time != "00:00:00"`),
+        [sequelize.Op.or]: [
+          {
+            name: {
+              [sequelize.Op.like]: `%${query}%`,
+            },
+          },
+          {
+            local: {
+              [sequelize.Op.like]: `%${query}%`,
+            },
+          },
+        ],
+      },
+      order: [
+        [sequelize.literal(`${day}_Consulation_start_time <= "${nowTime}" AND ${day}_Consulation_end_time >= "${nowTime}"`), "DESC"],
+        [sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`), "ASC"],
+      ],
+    });
+    console.log(clinics.length);
+    let response = {
+      statusCode: 200,
+      body: JSON.stringify(clinics),
+    };
+    return response;
+  } catch (error) {
+    console.log(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
+
+module.exports.reviews = async function reviewSearch(event) {
+  try {
+    const token = event.headers.Authorization;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const treatmentId = event.queryStringParameters.treatmentId;
+    const limit = parseInt(event.queryStringParameters.limit);
+    const offset = parseInt(event.queryStringParameters.offset);
+    const order = event.queryStringParameters.order;
+    var orderQuery;
+    if (order === "createdAt") {
+      orderQuery = ["createdAt", "DESC"];
+    } else if (order === "popular") {
+      orderQuery = ["", "ASC"];
+    }
+    const searchUser = await User.findOne({
+      where: {
+        id: decoded.id,
+      },
+    });
+    const treatment = await Treatment_item.findOne({
+      where: {
+        id: treatmentId,
+      },
+    });
+    const [search, created] = await Search_record.findOrCreate({
+      where: {
+        userId: searchUser.id,
+        query: treatment.name,
+        category: "review",
+      },
+    });
+    if (!created) {
+      await Search_record.update(
+        {
+          category: "review",
+        },
+        {
+          where: {
+            id: search.id,
+          },
+        }
+      );
+    }
+    const reviews = await treatment.getReviews({
+      through: {
+        attributes: [],
+      },
+      include: [
+        {
+          model: User,
+          attributes: ["id", "nickname", "profileImg"],
+        },
+        {
+          model: Treatment_item,
+          as: "TreatmentItems",
+          through: {
+            attributes: ["cost"],
+          },
+        },
+        {
+          model: Dental_clinic,
+          attributes: ["id", "name", "address", "telNumber"],
+        },
+        {
+          model: Review_content,
+        },
+      ],
+      order: [[orderQuery], ["review_contents", "index", "ASC"]],
+      offset: offset,
+      limit: limit,
+    });
+    await Promise.all(
+      reviews.map(async (review) => {
+        delete review.dataValues.review_treatment_item;
+        review.dataValues.viewerLikeReview = await review.hasLikers(searchUser);
+        review.dataValues.reviewCommentNum = await review.countReview_comments();
+        review.dataValues.reviewLikeNum = await review.countLikers();
+      })
+    );
+    return {
+      statusCode: 200,
+      body: JSON.stringify(reviews),
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
+
+module.exports.allTagItems = async function allTagItems(event) {
+  try {
+    const token = event.headers.Authorization;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const query = event.queryStringParameters.query;
+    const clinics = await Dental_clinic.findAll({
+      where: {
+        name: {
+          [sequelize.Op.like]: `${query}%`,
+        },
+      },
+      attributes: ["id", "name", "address"],
+    });
+    const treatments = await Treatment_item.findAll({
+      where: {
+        name: {
+          [sequelize.Op.like]: `${query}%`,
+        },
+      },
+      attributes: ["id", "name"],
+    });
+    clinics.forEach((clinic) => clinic.setDataValue("categoty", "clinic"));
+    const symptoms = await Symptom_item.findAll({
+      where: {
+        name: {
+          [sequelize.Op.like]: `${query}%`,
+        },
+      },
+      attributes: ["id", "name"],
+    });
+    symptoms.forEach((symptom) => symptom.setDataValue("categoty", "symptom"));
+    const generaltags = await GeneralTag.findAll({
+      where: {
+        name: {
+          [sequelize.Op.like]: `${query}%`,
+        },
+      },
+      attributes: ["id", "name"],
+    });
+    generaltags.forEach((generaltag) => generaltag.setDataValue("categoty", "generaltag"));
+    var mergeResults = clinics.concat(treatments, symptoms, generaltags);
+    await Promise.all(
+      mergeResults.map(async (result) => {
+        result.dataValues.postNum = await result.countCommunties();
+      })
+    );
+    var sortReuslts = mergeResults.sort(function async(a, b) {
+      return b.dataValues.postNum - a.dataValues.postNum;
+    });
+    return {
+      statusCode: 200,
+      body: JSON.stringify(sortReuslts),
+    };
+  } catch (error) {
+    console.log(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};

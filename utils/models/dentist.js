@@ -1,0 +1,24 @@
+module.exports = (sequelize, DataTypes) =>
+  sequelize.define(
+    "dentist",
+    {
+      name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      profileImg: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      info: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+    },
+    {
+      timestamps: true,
+      paranoid: true,
+      charset: "utf8mb4",
+      collate: "utf8mb4_unicode_ci",
+    }
+  );

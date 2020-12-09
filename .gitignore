@@ -1,0 +1,13 @@
+/.vscode
+/node_modules
+*.env
+/uploads
+.eslintrc.json
+error.log
+combined.log
+node_modules/
+yarn-error.log
+.serverless
+secrets.json
+/dental_clinic_json
+/.serverless

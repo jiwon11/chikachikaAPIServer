@@ -1,0 +1,254 @@
+app: chikachika
+service: chikachika-API-serverless
+org: jiwon112
+
+custom:
+  secrets: ${file(secrets.json)}
+  apigwBinary:
+    types:           #list of mime-types 
+       - 'multipart/form-data'
+
+dashboard:
+  lambda:
+    enabled: false
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: prod # optional, default: dev
+  region: ap-northeast-1 # optional, default: us-east-1
+  apiGateway:
+    minimumCompressionSize: 1024
+    binaryMediaTypes:
+      - 'multipart/form-data'
+      - 'image/*'
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "s3:GetObject"
+      Resource: "arn:aws:s3:::chikachika-review-images/*"
+  environment:
+    JWT_SECRET: ${self:custom.secrets.JWT_SECRET}
+    NCP_access_token: ${self:custom.secrets.NCP_access_token}
+    NCP_secret_key: ${self:custom.secrets.NCP_secret_key}
+    NCP_serviceID: ${self:custom.secrets.NCP_serviceID}
+    AWS_Access_Key_ID: ${self:custom.secrets.AWS_Access_Key_ID}
+    AWS_Secret_Access_Key: ${self:custom.secrets.AWS_Secret_Access_Key}
+  memorySize: 1024 # optional, in MB, default: 1024
+  timeout: 6 # optional, in seconds, default: 6
+  versionFunctions: false # optional, default: true
+functions:
+  verify-token:
+    handler: services/authorize.verifyToken
+  api:
+    name: ${self:service}-${self:provider.stage}
+    handler: api/app.handler # ${DIR}/${FILE}.${MODULE}
+    events:
+      - http:
+          path: api/{proxy+}
+          method: ANY
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  allTagItems:
+    handler: services/search.allTagItems
+    events:
+      - http:
+          path: search/allTagItems
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  getRecentSearch:
+    handler: services/recentSearch.getRecent
+    events:
+      - http:
+          path: search/recent
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  delRecentSearch:
+    handler: services/recentSearch.delRecent
+    events:
+      - http:
+          path: search/recent
+          method: delete
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  reviewSearch:
+    handler: services/search.reviews
+    events:
+      - http:
+          path: search/reviews
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  localClinicSearch:
+    handler: services/search.localClinicSearch
+    events:
+      - http:
+          path: clinics
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  aroundClinics:
+    handler: services/around.clinics
+    events:
+      - http:
+          path: around/clinics
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  treatmentSearch:
+    handler: services/search.treatmentItems
+    events:
+      - http:
+          path: search/treatments
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  clinicSearch:
+    handler: services/search.dentalClinics
+    events:
+      - http:
+          path: search/clinics
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  symptomSearch:
+    handler: services/search.symptomItems
+    events:
+      - http:
+          path: search/symptoms
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  login:
+    handler: services/login.handler
+    events:
+      - http:
+          path: login
+          method: post
+          cors: true
+  sendTokenToPhoneNumber:
+    handler: services/register.sendTokenToPhoneNumber
+    events:
+      - http:
+          path: sendTokenToPhoneNumber
+          method: post
+          cors: true
+  verify_phoneNumber:
+    handler: services/register.verifyPhoneNumber
+    events:
+      - http:
+          path: verifyPhoneNumber
+          method: post
+          cors: true
+  register:
+    handler: services/register.handler
+    events:
+      - http:
+          path: register
+          method: post
+          cors: true
+  social_login:
+    handler: services/social_login.handler
+    events:
+      - http:
+          path: social_login
+          method: post
+          cors: true
+  importDentalClinic:
+    handler: services/dentalClinic.importDentalClinic
+    package:
+      include:
+        - dental_clinic_json/dental_database.json
+    events:
+      - http:
+          path: importDentalClinic
+          method: post
+          cors: true
+  importDentalSubject:
+    handler: services/subject.importDentalSubject
+    events:
+      - http:
+          path: importDentalSubject
+          method: post
+          cors: true
+  clinicSubjects:
+    handler: services/subject.clinicSubjects
+    package:
+      include:
+        - dental_clinic_json/dental_subject_database.json
+    events:
+      - http:
+          path: clinicSubjects
+          method: post
+          cors: true
+  getNonPaymentItemHospList:
+    handler: services/dentalClinic.getNonPaymentItemHospList
+    events:
+      - http:
+          path: getNonPaymentItemHospList
+          method: get
+          cors: true
+  dbUpdate:
+    handler: services/dbReset.handler
+    events:
+      - http:
+          path: dbUpdate
+          method: get
+          cors: true
+plugins:
+  - serverless-offline
+  - serverless-offline-scheduler
+  - serverless-apigw-binary
+  - serverless-plugin-cloudwatch-dashboard
