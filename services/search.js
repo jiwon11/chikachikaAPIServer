@@ -249,7 +249,7 @@ module.exports.allTagItems = async function allTagItems(event) {
   try {
     const token = event.headers.Authorization;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const query = event.queryStringParameters.query;
+    const query = event.queryStringParameters.q;
     const clinics = await Dental_clinic.findAll({
       where: {
         name: {
@@ -300,6 +300,38 @@ module.exports.allTagItems = async function allTagItems(event) {
     };
   } catch (error) {
     console.log(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
+
+module.exports.keywordSearchResults = async function keywordSearchResults(event) {
+  try {
+    const token = event.headers.Authorization;
+    const query = event.queryStringParameters.query;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const [search, created] = await Search_record.findOrCreate({
+      where: {
+        userId: decoded.id,
+        query: query,
+        category: "keyword",
+      },
+    });
+    if (!created) {
+      await Search_record.update(
+        {
+          category: "keyword",
+        },
+        {
+          where: {
+            id: search.id,
+          },
+        }
+      );
+    }
+  } catch (error) {
     return {
       statusCode: 500,
       body: `{"statusText": "Server error","message": "${error.message}"}`,
