@@ -120,7 +120,7 @@ router.post("/", getUserInToken, multerBody.none(), async (req, res, next) => {
   //localhost:3000/comment?type=review&commentId=1
   try {
     const userId = req.user.id;
-    const description = req.body.comment;
+    const description = req.body.description;
     const type = req.query.type;
     if (type === "review") {
       const reviewId = req.query.reviewId;
