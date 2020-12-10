@@ -3,7 +3,7 @@ service: chikachika-API-serverless
 org: jiwon112
 
 custom:
-  secrets: ${file(secrets.json)}
+  #secrets: ${file(secrets.json)}
   apigwBinary:
     types:           #list of mime-types 
        - 'multipart/form-data'
@@ -30,12 +30,12 @@ provider:
         - "s3:GetObject"
       Resource: "arn:aws:s3:::chikachika-review-images/*"
   environment:
-    JWT_SECRET: ${self:custom.secrets.JWT_SECRET}
-    NCP_access_token: ${self:custom.secrets.NCP_access_token}
-    NCP_secret_key: ${self:custom.secrets.NCP_secret_key}
-    NCP_serviceID: ${self:custom.secrets.NCP_serviceID}
-    AWS_Access_Key_ID: ${self:custom.secrets.AWS_Access_Key_ID}
-    AWS_Secret_Access_Key: ${self:custom.secrets.AWS_Secret_Access_Key}
+    JWT_SECRET: ${param:JWT_SECRET}
+    NCP_access_token: ${param:NCP_access_token}
+    NCP_secret_key: ${param:NCP_secret_key}
+    NCP_serviceID: ${param:NCP_serviceID}
+    AWS_Access_Key_ID: ${param:AWS_Access_Key_ID}
+    AWS_Secret_Access_Key: ${param:AWS_Secret_Access_Key}
   memorySize: 1024 # optional, in MB, default: 1024
   timeout: 6 # optional, in seconds, default: 6
   versionFunctions: false # optional, default: true
