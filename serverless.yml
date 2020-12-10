@@ -16,7 +16,7 @@ provider:
   name: aws
   runtime: nodejs12.x
   stage: test # optional, default: dev
-  profile: devProfile
+  profile: testProfile
   region: ap-northeast-1 # optional, default: us-east-1
   apiGateway:
     shouldStartNameWithService: true,
