@@ -250,6 +250,5 @@ functions:
           cors: true
 plugins:
   - serverless-offline
-  - serverless-offline-scheduler
   - serverless-apigw-binary
   - serverless-plugin-cloudwatch-dashboard
