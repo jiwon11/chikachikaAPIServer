@@ -307,6 +307,7 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
           userId: userId,
           description: description,
         });
+        await comment.addReply(reply);
         await pushNotification("reply", reply, comment, userId, "review"); //type, comment, target, userId
         return res.status(201).json({
           statusCode: 201,
@@ -336,10 +337,11 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
         ],
       });
       if (comment) {
-        const comment = await Community_comment.create({
+        const reply = await Community_comment.create({
           userId: userId,
           description: description,
         });
+        await comment.addReply(reply);
         await pushNotification("reply", reply, comment, userId, "community"); //type, comment, target, userId
         return res.status(201).json({
           statusCode: 201,
@@ -357,6 +359,45 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
         body: { statusText: "Bad Request", message: "유효하지 않는 타입입니다." },
       });
     }
+  } catch (error) {
+    return res.status(500).json({
+      statusCode: 500,
+      body: { statusText: "Server Error", message: error.message },
+    });
+  }
+});
+
+router.get("/lists", getUserInToken, async (req, res, next) => {
+  try {
+    const postId = req.query.postId;
+    const comments = await Community_comment.findAll({
+      where: {
+        communityId: postId,
+      },
+      attributes: ["id", "description", "createdAt", "userId"],
+      include: [
+        {
+          model: User,
+          attributes: ["id", "nickname", "profileImg"],
+        },
+        {
+          model: Community_comment,
+          as: "Replys",
+          attributes: ["id", "description", "createdAt", "userId"],
+          through: {
+            attributes: [],
+          },
+          include: [
+            {
+              model: User,
+              attributes: ["id", "nickname", "profileImg"],
+            },
+          ],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+    return res.status(200).json(comments);
   } catch (error) {
     return res.status(500).json({
       statusCode: 500,

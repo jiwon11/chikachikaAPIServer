@@ -151,16 +151,15 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
       },
       attributes: {
         include: [
-          /*
           [
             sequelize.literal(
               "(SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = community.id AND deletedAt IS null) + (SELECT COUNT(*) FROM Community_reply LEFT JOIN community_comments ON (community_comments.id = Community_reply.commentId) WHERE community_comments.communityId = community.id)"
             ),
             "postCommentsCount",
           ],
-          */
-          [sequelize.literal("(SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = community.id AND deletedAt IS null)"), "postCommentsCount"],
+          //[sequelize.literal("(SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = community.id AND deletedAt IS null)"), "postCommentsCount"],
           [sequelize.literal("(SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id)"), "postLikeCount"],
+          [sequelize.literal(`(SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id AND Like_Community.likerId = "${req.user.id}")`), "viewerLikeCommunityPost"],
         ],
       },
       include: [
@@ -215,6 +214,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
     });
     return res.json(communityPosts);
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       statusCode: 500,
       body: { statusText: "Server Error", message: error.message },
@@ -238,6 +238,20 @@ router.get("/", getUserInToken, async (req, res, next) => {
       where: {
         id: communityPostId,
       },
+      attributes: [
+        "id",
+        "type",
+        "description",
+        "wantDentistHelp",
+        "createdAt",
+        "userId",
+        [
+          sequelize.literal(
+            "(SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = community.id AND deletedAt IS null) + (SELECT COUNT(*) FROM Community_reply LEFT JOIN community_comments ON (community_comments.id = Community_reply.commentId) WHERE community_comments.communityId = community.id)"
+          ),
+          "postCommentsCount",
+        ],
+      ],
       include: [
         {
           model: User,
@@ -247,7 +261,6 @@ router.get("/", getUserInToken, async (req, res, next) => {
           model: Community_img,
         },
       ],
-      attributes: ["id", "type", "description", "wantDentistHelp", "createdAt", "userId"],
       order: [["community_imgs", "img_index", "ASC"]],
     });
     if (communityPost) {
