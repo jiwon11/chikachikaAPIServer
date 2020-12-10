@@ -177,7 +177,7 @@ router.post("/", getUserInToken, multerBody.none(), async (req, res, next) => {
       } else {
         return res.status(404).json({
           statusCode: 404,
-          body: { statusText: "Not Found", message: "리뷰를 찾을 수 없습니다." },
+          body: { statusText: "Not Found", message: "게시글을 찾을 수 없습니다." },
         });
       }
     } else {
@@ -315,7 +315,7 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
       } else {
         return res.status(404).json({
           statusCode: 404,
-          body: { statusText: "Not Found", message: "리뷰를 찾을 수 없습니다." },
+          body: { statusText: "Not Found", message: "댓글을 찾을 수 없습니다." },
         });
       }
     } else if (type === "community") {
@@ -348,7 +348,7 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
       } else {
         return res.status(404).json({
           statusCode: 404,
-          body: { statusText: "Not Found", message: "리뷰를 찾을 수 없습니다." },
+          body: { statusText: "Not Found", message: "댓글을 찾을 수 없습니다." },
         });
       }
     } else {
