@@ -18,7 +18,8 @@ provider:
   stage: test # optional, default: dev
   profile: testProfile
   region: ap-northeast-1 # optional, default: us-east-1
-  stackName: chikachika-serverless-${self:provider.stage} # Use a custom name for the CloudFormation stack
+  stackName: chikachika-API-serverless-${self:provider.stage} # Use a custom name for the CloudFormation stack
+  apiName: chikachika-API-serverless-${self:provider.stage} # Use a custom name for the API Gateway API
   apiGateway:
     shouldStartNameWithService: true,
     minimumCompressionSize: 1024
