@@ -15,8 +15,8 @@ dashboard:
 provider:
   name: aws
   runtime: nodejs12.x
-  stage: test # optional, default: dev
-  profile: testProfile
+  stage: ${opt:stage, 'dev'} # optional, default: dev
+  profile: ${self:provider.stage}Profile
   region: ap-northeast-1 # optional, default: us-east-1
   stackName: chikachika-API-serverless-${self:provider.stage} # Use a custom name for the CloudFormation stack
   apiName: chikachika-API-serverless-${self:provider.stage} # Use a custom name for the API Gateway API
