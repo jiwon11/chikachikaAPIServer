@@ -72,6 +72,7 @@ router.get("/", getUserInToken, async (req, res, next) => {
     });
     const reviewComments = await review.getReview_comments();
     const reviewLikeNum = await review.countLikers();
+    const reviewViewerNum = await review.countViewers();
     const viewer = await User.findOne({
       where: {
         id: req.user.id,
@@ -83,6 +84,7 @@ router.get("/", getUserInToken, async (req, res, next) => {
     const viewerLikeReview = await review.hasLikers(viewer);
     return res.status(200).json({
       reivewBody: review,
+      reviewViewerNum: reviewViewerNum,
       reviewComments: reviewComments,
       reviewLikeNum: reviewLikeNum,
       viewerLikeReview: viewerLikeReview,
