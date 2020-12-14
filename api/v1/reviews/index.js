@@ -103,6 +103,7 @@ router.get("/", getUserInToken, async (req, res, next) => {
 router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) => {
   try {
     const paragraphs = JSON.parse(req.body.paragraphs);
+    console.log("paragraphs: ", paragraphs);
     const { starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId } = JSON.parse(req.body.body);
     var concsulationDate;
     if (req.body.concsulationDate !== "undefined" && req.body.concsulationDate) {
@@ -159,6 +160,7 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
       body: { statusText: "Accepted", message: "리뷰 작성이 완료되었습니다!" },
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       statusCode: 500,
       body: { statusText: "Server Error", message: error.message },
