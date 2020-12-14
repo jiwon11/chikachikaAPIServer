@@ -102,69 +102,62 @@ router.get("/", getUserInToken, async (req, res, next) => {
  */
 router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) => {
   try {
-    const images = JSON.parse(req.body.images);
+    const paragraphs = JSON.parse(req.body.paragraphs);
     const { starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId } = JSON.parse(req.body.body);
-    if (images.length === descriptions.length && descriptions.length === imgBeforeAfters.length) {
-      var concsulationDate;
-      if (req.body.concsulationDate !== "undefined" && req.body.concsulationDate) {
-        concsulationDate = new Date(req.body.concsulationDate);
-      } else {
-        concsulationDate = new Date();
-      }
-      const review = await Review.create({
-        certifiedBill: certified_bill,
-        starRate_cost: parseFloat(starRate_cost),
-        starRate_service: parseFloat(starRate_service),
-        starRate_treatment: parseFloat(starRate_treatment),
-        concsulationDate: concsulationDate,
-        userId: req.user.id,
-        dentalClinicId: dentalClinicId,
+    var concsulationDate;
+    if (req.body.concsulationDate !== "undefined" && req.body.concsulationDate) {
+      concsulationDate = new Date(req.body.concsulationDate);
+    } else {
+      concsulationDate = new Date();
+    }
+    const review = await Review.create({
+      certifiedBill: certified_bill,
+      starRate_cost: parseFloat(starRate_cost),
+      starRate_service: parseFloat(starRate_service),
+      starRate_treatment: parseFloat(starRate_treatment),
+      concsulationDate: concsulationDate,
+      userId: req.user.id,
+      dentalClinicId: dentalClinicId,
+    });
+    for (const treatment of treatments) {
+      const treatmentItem = await Treatment_item.findOne({
+        where: {
+          id: treatment.id,
+        },
       });
-      for (const treatment of treatments) {
-        const treatmentItem = await Treatment_item.findOne({
-          where: {
-            id: treatment.id,
+      if (treatmentItem) {
+        await review.addTreatmentItem(treatmentItem, {
+          through: {
+            cost: treatment.cost,
           },
         });
-        if (treatmentItem) {
-          await review.addTreatmentItem(treatmentItem, {
-            through: {
-              cost: treatment.cost,
-            },
-          });
-        } else {
-          console.log(treatmentItem);
-          return res.status(404).json({
-            statusCode: 404,
-            body: { statusText: "Unaccepted", message: "진료 항목을 찾을 수 없습니다." },
-          });
-        }
+      } else {
+        console.log(treatmentItem);
+        return res.status(404).json({
+          statusCode: 404,
+          body: { statusText: "Unaccepted", message: "진료 항목을 찾을 수 없습니다." },
+        });
       }
-      const contents = await Promise.all(
-        images.map((image) =>
-          Review_content.create({
-            img_url: image.location, //`${cloudFrontUrl}/${image.key}`
-            img_name: image.originalname,
-            mime_type: image.mimetype,
-            img_size: image.size,
-            index: images.indexOf(image) + 1,
-            description: images.description,
-            img_before_after: image.imgBeforeAfter,
-            reviewId: review.id,
-          })
-        )
-      );
-      console.log(`콘텐츠 개수 : ${contents.length}`);
-      return res.status(201).json({
-        statusCode: 201,
-        body: { statusText: "Accepted", message: "리뷰 작성이 완료되었습니다!" },
-      });
-    } else {
-      return res.status(403).json({
-        statusCode: 403,
-        body: { statusText: "Unaccepted", message: "이미지 개수와 글 개수와 이미지 전후 개수가 다릅니다." },
-      });
     }
+    const contents = await Promise.all(
+      paragraphs.map((paragraph) =>
+        Review_content.create({
+          img_url: paragraph.location, //`${cloudFrontUrl}/${image.key}`
+          img_name: paragraph.originalname,
+          mime_type: paragraph.mimetype,
+          img_size: paragraph.size,
+          index: paragraphs.indexOf(paragraph) + 1,
+          description: paragraph.description,
+          img_before_after: paragraph.imgBeforeAfter,
+          reviewId: review.id,
+        })
+      )
+    );
+    console.log(`콘텐츠 개수 : ${contents.length}`);
+    return res.status(201).json({
+      statusCode: 201,
+      body: { statusText: "Accepted", message: "리뷰 작성이 완료되었습니다!" },
+    });
   } catch (error) {
     return res.status(500).json({
       statusCode: 500,
@@ -176,7 +169,7 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
 router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) => {
   try {
     const reviewId = req.query.reviewId;
-    const images = JSON.parse(req.body.images);
+    const paragraphs = JSON.parse(req.body.paragraphs);
     const { starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId } = JSON.parse(req.body.body);
     const review = await Review.findOne({
       where: {
@@ -185,79 +178,72 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
     });
     if (review) {
       if (review.userId === req.user.id) {
-        if (images.length === descriptions.length && descriptions.length === imgBeforeAfters.length) {
-          var concsulationDate;
-          if (req.body.concsulationDate !== "undefined" && req.body.concsulationDate) {
-            concsulationDate = new Date(req.body.concsulationDate);
-          } else {
-            concsulationDate = new Date();
-          }
-          await Review_content.destroy({
+        var concsulationDate;
+        if (req.body.concsulationDate !== "undefined" && req.body.concsulationDate) {
+          concsulationDate = new Date(req.body.concsulationDate);
+        } else {
+          concsulationDate = new Date();
+        }
+        await Review_content.destroy({
+          where: {
+            reviewId: review.id,
+          },
+        });
+        await Review_treatment_item.destroy({
+          where: {
+            reviewId: review.id,
+          },
+          force: true,
+        });
+        await review.update({
+          certifiedBill: certified_bill,
+          starRate_cost: parseFloat(starRate_cost),
+          starRate_service: parseFloat(starRate_service),
+          starRate_treatment: parseFloat(starRate_treatment),
+          concsulationDate: concsulationDate,
+          userId: req.user.id,
+          dentalClinicId: dentalClinicId,
+        });
+        for (const treatment of treatments) {
+          const treatmentItem = await Treatment_item.findOne({
             where: {
-              reviewId: review.id,
+              id: treatment.id,
             },
           });
-          await Review_treatment_item.destroy({
-            where: {
-              reviewId: review.id,
-            },
-            force: true,
-          });
-          await review.update({
-            certifiedBill: certified_bill,
-            starRate_cost: parseFloat(starRate_cost),
-            starRate_service: parseFloat(starRate_service),
-            starRate_treatment: parseFloat(starRate_treatment),
-            concsulationDate: concsulationDate,
-            userId: req.user.id,
-            dentalClinicId: dentalClinicId,
-          });
-          for (const treatment of treatments) {
-            const treatmentItem = await Treatment_item.findOne({
-              where: {
-                id: treatment.id,
+          if (treatmentItem) {
+            await review.addTreatmentItem(treatmentItem, {
+              through: {
+                cost: treatment.cost,
               },
             });
-            if (treatmentItem) {
-              await review.addTreatmentItem(treatmentItem, {
-                through: {
-                  cost: treatment.cost,
-                },
-              });
-            } else {
-              console.log(treatmentItem);
-              return res.status(404).json({
-                statusCode: 404,
-                body: { statusText: "Unaccepted", message: "진료 항목을 찾을 수 없습니다." },
-              });
-            }
+          } else {
+            console.log(treatmentItem);
+            return res.status(404).json({
+              statusCode: 404,
+              body: { statusText: "Unaccepted", message: "진료 항목을 찾을 수 없습니다." },
+            });
           }
-          console.log(`치료 항목 개수 : ${treatments.length}`);
-          const contents = await Promise.all(
-            images.map((image) =>
-              Review_content.create({
-                img_url: image.location, //`${cloudFrontUrl}/${image.key}`
-                img_name: image.originalname,
-                mime_type: image.mimetype,
-                img_size: image.size,
-                index: images.indexOf(image) + 1,
-                description: images.description,
-                img_before_after: image.imgBeforeAfter,
-                reviewId: review.id,
-              })
-            )
-          );
-          console.log(`콘텐츠 개수 : ${contents.length}`);
-          return res.status(200).json({
-            statusCode: 200,
-            message: "리뷰글을 수정하였습니다.",
-          });
-        } else {
-          return res.status(403).json({
-            statusCode: 403,
-            body: { statusText: "Unaccepted", message: "이미지 개수와 글 개수와 이미지 전후 개수가 다릅니다." },
-          });
         }
+        console.log(`치료 항목 개수 : ${treatments.length}`);
+        const contents = await Promise.all(
+          paragraphs.map((paragraph) =>
+            Review_content.create({
+              img_url: paragraph.location, //`${cloudFrontUrl}/${image.key}`
+              img_name: paragraph.originalname,
+              mime_type: paragraph.mimetype,
+              img_size: paragraph.size,
+              index: paragraphs.indexOf(paragraph) + 1,
+              description: paragraph.description,
+              img_before_after: paragraph.imgBeforeAfter,
+              reviewId: review.id,
+            })
+          )
+        );
+        console.log(`콘텐츠 개수 : ${contents.length}`);
+        return res.status(200).json({
+          statusCode: 200,
+          message: "리뷰글을 수정하였습니다.",
+        });
       } else {
         return res.status(401).json({
           statusCode: 401,
