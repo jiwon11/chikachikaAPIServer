@@ -25,9 +25,9 @@ const communityImgUpload = multer({
   },
 });
 
-router.post("/", getUserInToken, communityImgUpload.array("images"), async (req, res, next) => {
+router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, next) => {
   try {
-    const images = req.files;
+    const images = JSON.parse(req.body.images);
     const { description, wantDentistHelp, type } = req.body;
     const communityPost = await Community.create({
       description: description,
@@ -356,7 +356,7 @@ router.get("/", getUserInToken, async (req, res, next) => {
   }
 });
 
-router.put("/", getUserInToken, communityImgUpload.array("images"), async (req, res, next) => {
+router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next) => {
   try {
     const postId = req.query.postId;
     if (!postId) {
@@ -365,7 +365,7 @@ router.put("/", getUserInToken, communityImgUpload.array("images"), async (req, 
         body: { statusText: "Bad Request", message: "postId가 없습니다." },
       });
     }
-    const images = req.files;
+    const images = JSON.parse(req.body.images);
     const { description, wantDentistHelp, type } = req.body;
     const communityPost = await Community.findOne({
       where: {
