@@ -28,6 +28,7 @@ const communityImgUpload = multer({
 router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, next) => {
   try {
     const { description, wantDentistHelp, type, images } = JSON.parse(req.body);
+    console.log("images: ", image);
     const communityPost = await Community.create({
       description: description,
       wantDentistHelp: wantDentistHelp === "true",
