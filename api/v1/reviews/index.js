@@ -100,10 +100,10 @@ router.get("/", getUserInToken, async (req, res, next) => {
 /**
  * header 값에 "content-type": "multipart/form-data" 추가 필요
  */
-router.post("/", getUserInToken, reviewImgUpload.array("images"), async (req, res, next) => {
+router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) => {
   try {
-    const images = req.files;
-    const { descriptions, starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId, imgBeforeAfters } = JSON.parse(req.body.body);
+    const images = JSON.parse(req.body.images);
+    const { starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId } = JSON.parse(req.body.body);
     if (images.length === descriptions.length && descriptions.length === imgBeforeAfters.length) {
       var concsulationDate;
       if (req.body.concsulationDate !== "undefined" && req.body.concsulationDate) {
@@ -140,7 +140,6 @@ router.post("/", getUserInToken, reviewImgUpload.array("images"), async (req, re
           });
         }
       }
-      console.log(`치료 항목 개수 : ${treatments.length}`);
       const contents = await Promise.all(
         images.map((image) =>
           Review_content.create({
@@ -149,8 +148,8 @@ router.post("/", getUserInToken, reviewImgUpload.array("images"), async (req, re
             mime_type: image.mimetype,
             img_size: image.size,
             index: images.indexOf(image) + 1,
-            description: descriptions[images.indexOf(image)],
-            img_before_after: imgBeforeAfters[images.indexOf(image)],
+            description: images.description,
+            img_before_after: image.imgBeforeAfter,
             reviewId: review.id,
           })
         )
@@ -174,11 +173,11 @@ router.post("/", getUserInToken, reviewImgUpload.array("images"), async (req, re
   }
 });
 
-router.put("/", getUserInToken, reviewImgUpload.array("images"), async (req, res, next) => {
+router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) => {
   try {
     const reviewId = req.query.reviewId;
-    const images = req.files;
-    const { descriptions, starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId, imgBeforeAfters } = JSON.parse(req.body.body);
+    const images = JSON.parse(req.body.images);
+    const { starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId } = JSON.parse(req.body.body);
     const review = await Review.findOne({
       where: {
         id: reviewId,
@@ -242,8 +241,8 @@ router.put("/", getUserInToken, reviewImgUpload.array("images"), async (req, res
                 mime_type: image.mimetype,
                 img_size: image.size,
                 index: images.indexOf(image) + 1,
-                description: descriptions[images.indexOf(image)],
-                img_before_after: imgBeforeAfters[images.indexOf(image)],
+                description: images.description,
+                img_before_after: image.imgBeforeAfter,
                 reviewId: review.id,
               })
             )
