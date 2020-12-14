@@ -167,13 +167,13 @@ db.Review_comment.belongsTo(db.Review_comment, {
 db.User.belongsToMany(db.Review, {
   foreignKey: "likerId",
   as: "LikeReviews",
-  through: "Like",
+  through: "Like_Review",
   onDelete: "CASCADE",
 });
 db.Review.belongsToMany(db.User, {
   foreignKey: "likedReviewId",
   as: "Likers",
-  through: "Like",
+  through: "Like_Review",
   onDelete: "CASCADE",
 });
 /*리뷰 콘텐츠와 리뷰 관계형 - 조회*/
