@@ -27,8 +27,7 @@ const communityImgUpload = multer({
 
 router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, next) => {
   try {
-    const images = JSON.parse(req.body.images);
-    const { description, wantDentistHelp, type } = JSON.parse(req.body);
+    const { description, wantDentistHelp, type, images } = JSON.parse(req.body);
     const communityPost = await Community.create({
       description: description,
       wantDentistHelp: wantDentistHelp === "true",
@@ -365,8 +364,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
         body: { statusText: "Bad Request", message: "postId가 없습니다." },
       });
     }
-    const images = JSON.parse(req.body.images);
-    const { description, wantDentistHelp, type } = JSON.parse(req.body);
+    const { description, wantDentistHelp, type, images } = JSON.parse(req.body);
     const communityPost = await Community.findOne({
       where: {
         id: postId,
