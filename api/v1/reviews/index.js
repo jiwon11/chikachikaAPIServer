@@ -3,6 +3,7 @@ const AWS = require("aws-sdk");
 const multerS3 = require("multer-s3");
 const multer = require("multer");
 const path = require("path");
+const sequelize = require("sequelize");
 const ApiError = require("../../../utils/error");
 const { getUserInToken } = require("../middlewares");
 const { Review, User, Review_content, Treatment_item, Dental_clinic, Review_treatment_item } = require("../../../utils/models");
@@ -29,6 +30,64 @@ const reviewImgUpload = multer({
   limits: {
     fileSize: 100 * 1024 * 1024,
   },
+});
+
+router.get("/lists", getUserInToken, async (req, res, next) => {
+  try {
+    const limit = parseInt(req.query.limit);
+    const offset = parseInt(req.query.offset);
+    const order = req.query.order === "createdAt" ? "createdAt" : "popular";
+    const reviews = await Review.findAll({
+      attributes: {
+        include: [
+          [
+            sequelize.literal(
+              "(SELECT COUNT(*) FROM review_comments WHERE review_comments.reviewId = review.id AND deletedAt IS null) + (SELECT COUNT(*) FROM Review_reply LEFT JOIN review_comments ON (review_comments.id = Review_reply.commentId) WHERE review_comments.reviewId = review.id)"
+            ),
+            "reviewCommentsNum",
+          ],
+          [sequelize.literal("(SELECT COUNT(*) FROM Like_Review WHERE Like_Review.likedReviewId = review.id)"), "reviewLikeNum"],
+          [sequelize.literal(`(SELECT COUNT(*) FROM Like_Review WHERE Like_Review.likedReviewId = review.id AND Like_Review.likerId = "${req.user.id}")`), "viewerLikedReview"],
+          [sequelize.literal("(SELECT COUNT(*) FROM ViewReviews WHERE ViewReviews.viewedReviewId = review.id)"), "reviewViewNum"],
+        ],
+      },
+      include: [
+        {
+          model: User,
+          attributes: ["nickname", "profileImg"],
+        },
+        {
+          model: Review_content,
+          attributes: ["id", "description", "img_url", "index", "img_before_after"],
+        },
+        {
+          model: Dental_clinic,
+          attributes: ["id", "name"],
+        },
+        {
+          model: Treatment_item,
+          as: "TreatmentItems",
+          attributes: ["name"],
+          through: {
+            attributes: ["cost"],
+          },
+        },
+      ],
+      limit: limit,
+      offset: offset,
+      order: [
+        [order, "DESC"],
+        ["review_contents", "index", "ASC"],
+      ],
+    });
+    console.log(reviews.length);
+    return res.json(reviews);
+  } catch (error) {
+    return res.status(500).json({
+      statusCode: 500,
+      body: { statusText: "Server Error", message: error.message },
+    });
+  }
 });
 
 router.get("/", getUserInToken, async (req, res, next) => {
