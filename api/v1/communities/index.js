@@ -43,7 +43,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
           img_filename: image.key,
           img_size: image.size,
           img_url: image.location,
-          img_index: images.indexOf(image) + 1,
+          img_index: image.index,
           communityId: communityPost.id,
         })
       )
