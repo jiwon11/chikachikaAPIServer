@@ -250,6 +250,9 @@ module.exports.allTagItems = async function allTagItems(event) {
     const token = event.headers.Authorization;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const query = event.queryStringParameters.q;
+    const offset = Math.round(parseInt(event.queryStringParameters.offset) / 4);
+    const limit = Math.round(parseInt(event.queryStringParameters.limit) / 4);
+    console.log(limit);
     const clinics = await Dental_clinic.findAll({
       where: {
         name: {
@@ -257,6 +260,8 @@ module.exports.allTagItems = async function allTagItems(event) {
         },
       },
       attributes: ["id", "name", "address"],
+      offset: offset,
+      limit: limit,
     });
     const treatments = await Treatment_item.findAll({
       where: {
@@ -265,6 +270,8 @@ module.exports.allTagItems = async function allTagItems(event) {
         },
       },
       attributes: ["id", "name"],
+      offset: offset,
+      limit: limit,
     });
     clinics.forEach((clinic) => clinic.setDataValue("categoty", "clinic"));
     const symptoms = await Symptom_item.findAll({
@@ -274,6 +281,8 @@ module.exports.allTagItems = async function allTagItems(event) {
         },
       },
       attributes: ["id", "name"],
+      offset: offset,
+      limit: limit,
     });
     symptoms.forEach((symptom) => symptom.setDataValue("categoty", "symptom"));
     const generaltags = await GeneralTag.findAll({
@@ -283,6 +292,8 @@ module.exports.allTagItems = async function allTagItems(event) {
         },
       },
       attributes: ["id", "name"],
+      offset: offset,
+      limit: limit,
     });
     generaltags.forEach((generaltag) => generaltag.setDataValue("categoty", "generaltag"));
     var mergeResults = clinics.concat(treatments, symptoms, generaltags);
