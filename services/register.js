@@ -45,7 +45,6 @@ module.exports.verifyPhoneNumberFunc = verifyPhoneNumberFunc;
  * @returns {JSON} Response NCP의 SENS - SMS를 사용한 문자 전송 성공 여부
  */
 module.exports.sendTokenToPhoneNumber = async function sendTokenToPhoneNumber(event) {
-  console.log(event.body);
   const body = JSON.parse(event.body);
   const userPhoneNumber = body.userPhoneNumber;
   const response = await phone(userPhoneNumber);
@@ -62,23 +61,8 @@ module.exports.verifyPhoneNumber = async function verifyPhoneNumber(event) {
   const body = JSON.parse(event.body);
   const userPhoneNumber = body.userPhoneNumber;
   const token = body.token;
-  const existUser = await User.findOne({
-    where: {
-      phoneNumber: userPhoneNumber,
-    },
-  });
-  var exist;
-  if (existUser) {
-    exist = true;
-  } else {
-    exist = false;
-  }
   const response = await verifyPhoneNumberFunc(userPhoneNumber, token);
-  response["body"]["exist"] = exist;
-  return {
-    statusCode: 200,
-    body: JSON.stringify(response.body),
-  };
+  return response;
 };
 
 /**

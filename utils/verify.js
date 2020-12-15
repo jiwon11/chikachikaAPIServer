@@ -49,12 +49,22 @@ module.exports.phone = async function checkPhoneNumber(phoneNumber) {
   };
   try {
     const response = await axios.post(`https://sens.apigw.ntruss.com/sms/v2/services/${serviceID}/messages`, requestBody, axiosConfig);
-    console.log(response);
     if (response.status === 202) {
-      var responseBody = JSON.parse(`{"statusText": "Accepted","message": "인증번호 문자를 발신하였습니다."}`);
+      const existUser = await User.findOne({
+        where: {
+          phoneNumber: phoneNumber,
+        },
+      });
+      var exist;
+      if (existUser) {
+        exist = true;
+      } else {
+        exist = false;
+      }
+      var responseBody = `{"statusText": "Accepted","message": "인증번호 문자를 발신하였습니다.", "exist": ${exist}}`;
       return {
         statusCode: 200,
-        body: JSON.stringify(responseBody),
+        body: responseBody,
       };
     } else {
       return response.data;
