@@ -1,4 +1,4 @@
-const { verifyPhoneNumberFunc } = require("./register");
+const { verifyPhoneNumber } = require("./register");
 const { User, NotificationConfig } = require("../utils/models");
 const ApiError = require("../utils/error");
 const jwt = require("jsonwebtoken");
@@ -18,7 +18,7 @@ module.exports.handler = async function signInUser(event) {
         phoneNumber: userPhoneNumber,
       },
     });
-    const isValidPhoneNumber = await verifyPhoneNumberFunc(userPhoneNumber, token);
+    const isValidPhoneNumber = verifyPhoneNumber(event);
     if (isValidPhoneNumber.statusCode === 200) {
       console.log(user.dataValues.id);
       const token = jwt.sign({ id: user.dataValues.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
