@@ -1,4 +1,4 @@
-const { verifyPhoneNumber } = require("./register");
+const { verifyPhoneNumberFunc } = require("./register");
 const { User, NotificationConfig } = require("../utils/models");
 const ApiError = require("../utils/error");
 const jwt = require("jsonwebtoken");
@@ -11,14 +11,14 @@ const jwt = require("jsonwebtoken");
  * @returns {JSON} Response 인증번호와 핸드폰 번호의 확인 여부
  */
 module.exports.handler = async function signInUser(event) {
-  const body = JSON.parse(event.body);
+  const { userPhoneNumber, token } = JSON.parse(event.body);
   try {
     const user = await User.findOne({
       where: {
-        phoneNumber: body.userPhoneNumber,
+        phoneNumber: userPhoneNumber,
       },
     });
-    const isValidPhoneNumber = await verifyPhoneNumber(event);
+    const isValidPhoneNumber = await verifyPhoneNumberFunc(userPhoneNumber, token);
     if (isValidPhoneNumber.statusCode === 200) {
       console.log(user.dataValues.id);
       const token = jwt.sign({ id: user.dataValues.id }, process.env.JWT_SECRET, { expiresIn: "1y" });

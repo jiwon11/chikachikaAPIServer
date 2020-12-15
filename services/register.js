@@ -5,7 +5,7 @@ const { User, Phone_verify, NotificationConfig } = require("../utils/models");
 const jwt = require("jsonwebtoken");
 const { Base64 } = require("js-base64");
 
-const verifyPhoneNumberFunc = async (userPhoneNumber, token) => {
+const verifyPhoneNumberFunc = async function (userPhoneNumber, token) {
   const verifies = await Phone_verify.findOne({
     where: {
       phoneNumber: userPhoneNumber,
@@ -37,6 +37,8 @@ const verifyPhoneNumberFunc = async (userPhoneNumber, token) => {
     };
   }
 };
+
+module.exports.verifyPhoneNumberFunc = verifyPhoneNumberFunc;
 /**
  ### 사용자가 입력한 핸드폰 번호로 인증번호를 보내는 함수
  * @param {string} userPhoneNumber 사용자의 핸드폰 번호
