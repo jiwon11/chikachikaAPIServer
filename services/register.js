@@ -75,9 +75,8 @@ module.exports.verifyPhoneNumber = async function verifyPhoneNumber(event) {
  * @return {Object} Response 회원가입 성공 여부
  */
 module.exports.handler = async function registerUser(event) {
-  console.log(event.body);
-  const { userPhoneNumber, nickname, fcmToken, provider, token } = event.body;
   try {
+    const { userPhoneNumber, nickname, fcmToken, provider, token } = JSON.parse(event.body);
     const isVerify = await verifyPhoneNumberFunc(userPhoneNumber, token);
     if (isVerify.statusCode === 200) {
       const certifiedPhoneNumber = true;
