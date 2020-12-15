@@ -24,13 +24,13 @@ const verifyPhoneNumberFunc = async (userPhoneNumber, token) => {
   );
   if (verifies) {
     await verifies.destroy();
-    let responseBody = `{"statusText": "Accepted","message": "인증되었습니다."}`;
+    let responseBody = { statusText: "Accepted", message: "인증되었습니다." };
     return {
       statusCode: 200,
       body: responseBody,
     };
   } else {
-    let responseBody = `{"statusText": "Unaccepted","message": "인증번호가 틀립니다."}`;
+    let responseBody = { statusText: "Unaccepted", message: "인증번호가 틀립니다." };
     return {
       statusCode: 401,
       body: responseBody,
@@ -60,8 +60,20 @@ module.exports.verifyPhoneNumber = async function verifyPhoneNumber(event) {
   const body = JSON.parse(event.body);
   const userPhoneNumber = body.userPhoneNumber;
   const token = body.token;
+  const existUser = await User.findOne({
+    where: {
+      phoneNumber: userPhoneNumber,
+    },
+  });
+  var exist;
+  if (existUser) {
+    exist = true;
+  } else {
+    exist = false;
+  }
   const response = await verifyPhoneNumberFunc(userPhoneNumber, token);
-  return response;
+  response["body"]["exist"] = exist;
+  return JSON.stringify(response);
 };
 
 /**
