@@ -73,7 +73,10 @@ module.exports.verifyPhoneNumber = async function verifyPhoneNumber(event) {
   }
   const response = await verifyPhoneNumberFunc(userPhoneNumber, token);
   response["body"]["exist"] = exist;
-  return JSON.stringify(response);
+  return {
+    statusCode: 200,
+    body: JSON.stringify(response.body),
+  };
 };
 
 /**
