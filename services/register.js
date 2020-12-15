@@ -76,45 +76,39 @@ module.exports.verifyPhoneNumber = async function verifyPhoneNumber(event) {
  */
 module.exports.handler = async function registerUser(event) {
   try {
-    const { userPhoneNumber, nickname, fcmToken, provider, token } = JSON.parse(event.body);
-    const isVerify = await verifyPhoneNumberFunc(userPhoneNumber, token);
-    if (isVerify.statusCode === 200) {
-      const certifiedPhoneNumber = true;
-      const overlapPhoneNumber = await User.findOne({
-        where: {
-          phoneNumber: userPhoneNumber,
-        },
-        attributes: ["phoneNumber"],
-      });
-      if (overlapPhoneNumber) {
-        let responseBody = '{"statusText": "Unaccepted","message": "이미 가입 되어있는 전화번호입니다."}';
-        return {
-          statusCode: 403,
-          body: responseBody,
-        };
-      }
-      const user = await User.create({
+    const { userPhoneNumber, nickname, fcmToken, provider, certifiedPhoneNumber } = JSON.parse(event.body);
+    const overlapPhoneNumber = await User.findOne({
+      where: {
         phoneNumber: userPhoneNumber,
-        nickname: nickname,
-        provider: provider,
-        fcmToken: fcmToken,
-        certifiedPhoneNumber: certifiedPhoneNumber,
-      });
-      await NotificationConfig.create({
-        userId: user.id,
-        like: true,
-        comment: true,
-        timer: true,
-      });
-      const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
-      let responseBody = `{"statusText": "Accepted","message": "${user.nickname}님의 회원가입이 완료되었습니다.", "token": "${token}"}`;
+      },
+      attributes: ["phoneNumber"],
+    });
+    if (overlapPhoneNumber) {
+      let responseBody = '{"statusText": "Unaccepted","message": "이미 가입 되어있는 전화번호입니다."}';
       return {
-        statusCode: 201,
+        statusCode: 403,
         body: responseBody,
       };
-    } else {
-      return isVerify;
     }
+    const user = await User.create({
+      phoneNumber: userPhoneNumber,
+      nickname: nickname,
+      provider: provider,
+      fcmToken: fcmToken,
+      certifiedPhoneNumber: certifiedPhoneNumber,
+    });
+    await NotificationConfig.create({
+      userId: user.id,
+      like: true,
+      comment: true,
+      timer: true,
+    });
+    const jwtToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
+    let responseBody = `{"statusText": "Accepted","message": "${user.nickname}님의 회원가입이 완료되었습니다.", "token": "${jwtToken}"}`;
+    return {
+      statusCode: 201,
+      body: responseBody,
+    };
   } catch (error) {
     console.log(error);
     return {
