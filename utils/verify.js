@@ -9,17 +9,6 @@ module.exports.phone = async function checkPhoneNumber(phoneNumber) {
     token: token,
     phoneNumber: phoneNumber,
   });
-  const existUser = await User.findOne({
-    where: {
-      phoneNumber: phoneNumber,
-    },
-  });
-  var exist;
-  if (existUser) {
-    exist = true;
-  } else {
-    exist = false;
-  }
   const accessKey = process.env.NCP_access_token;
   const secretKey = process.env.NCP_secret_key;
   const serviceID = process.env.NCP_serviceID;
@@ -62,7 +51,7 @@ module.exports.phone = async function checkPhoneNumber(phoneNumber) {
     const response = await axios.post(`https://sens.apigw.ntruss.com/sms/v2/services/${serviceID}/messages`, requestBody, axiosConfig);
     console.log(response);
     if (response.status === 202) {
-      var responseBody = JSON.parse(`{"statusText": "Accepted","message": "인증번호 문자를 발신하였습니다.","exist" : ${exist}}`);
+      var responseBody = JSON.parse(`{"statusText": "Accepted","message": "인증번호 문자를 발신하였습니다."}`);
       return {
         statusCode: 200,
         body: JSON.stringify(responseBody),
