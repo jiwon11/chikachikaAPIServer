@@ -8,9 +8,9 @@ const development = {
   logging: false,
   timezone: "+09:00",
   pool: {
-    max: 20,
+    max: 1000,
     min: 5,
-    idle: 60000,
+    idle: 300000,
   },
   charset: "utf8mb4",
   collate: "utf8mb4_unicode_ci",
@@ -57,9 +57,9 @@ const production = {
   logging: false,
   timezone: "+09:00",
   pool: {
-    max: 20,
+    max: 1000,
     min: 5,
-    idle: 60000,
+    idle: 300000,
   },
   charset: "utf8mb4",
   collate: "utf8mb4_unicode_ci",
