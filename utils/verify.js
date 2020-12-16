@@ -73,3 +73,36 @@ module.exports.phone = async function checkPhoneNumber(phoneNumber) {
     return new ApiError(error.statusCode || 500, error.stack, error.message);
   }
 };
+
+module.exports.verifyPhoneNumberFunc = async function verifyPhoneNumberFunc(userPhoneNumber, token) {
+  const verifies = await Phone_verify.findOne({
+    where: {
+      phoneNumber: userPhoneNumber,
+      token: token,
+    },
+  });
+  if (verifies) {
+    await User.update(
+      {
+        certifiedPhoneNumber: true,
+      },
+      {
+        where: {
+          phoneNumber: userPhoneNumber,
+        },
+      }
+    );
+    await verifies.destroy();
+    let responseBody = { statusText: "Accepted", message: "인증되었습니다." };
+    return {
+      statusCode: 200,
+      body: responseBody,
+    };
+  } else {
+    let responseBody = { statusText: "Unaccepted", message: "인증번호가 틀립니다." };
+    return {
+      statusCode: 401,
+      body: responseBody,
+    };
+  }
+};
