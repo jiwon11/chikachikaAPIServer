@@ -22,6 +22,7 @@ const verifyPhoneNumberFunc = async function (userPhoneNumber, token) {
       },
     }
   );
+  console.log(verifies);
   if (verifies) {
     await verifies.destroy();
     let responseBody = { statusText: "Accepted", message: "인증되었습니다." };
