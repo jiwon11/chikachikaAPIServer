@@ -1,6 +1,6 @@
 const development = {
   database: "chikachika_db_dev",
-  port: 3306,
+  port: null,
   host: "database-1.c2g4zseshvri.ap-northeast-2.rds.amazonaws.com",
   username: "admin",
   password: "jeewon0109!",
