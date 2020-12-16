@@ -1,45 +1,10 @@
-const { phone } = require("../utils/verify");
+const { phone, verifyPhoneNumberFunc } = require("../utils/verify");
 const { Sequelize } = require("sequelize");
 const ApiError = require("../utils/error");
 const { User, Phone_verify, NotificationConfig } = require("../utils/models");
 const jwt = require("jsonwebtoken");
 const { Base64 } = require("js-base64");
 
-const verifyPhoneNumberFunc = async function (userPhoneNumber, token) {
-  const verifies = await Phone_verify.findOne({
-    where: {
-      phoneNumber: userPhoneNumber,
-      token: token,
-    },
-  });
-  await User.update(
-    {
-      certifiedPhoneNumber: true,
-    },
-    {
-      where: {
-        phoneNumber: userPhoneNumber,
-      },
-    }
-  );
-  console.log(verifies);
-  if (verifies) {
-    await verifies.destroy();
-    let responseBody = { statusText: "Accepted", message: "인증되었습니다." };
-    return {
-      statusCode: 200,
-      body: responseBody,
-    };
-  } else {
-    let responseBody = { statusText: "Unaccepted", message: "인증번호가 틀립니다." };
-    return {
-      statusCode: 401,
-      body: responseBody,
-    };
-  }
-};
-
-module.exports.verifyPhoneNumberFunc = verifyPhoneNumberFunc;
 /**
  ### 사용자가 입력한 핸드폰 번호로 인증번호를 보내는 함수
  * @param {string} userPhoneNumber 사용자의 핸드폰 번호
@@ -62,9 +27,6 @@ module.exports.verifyPhoneNumber = async function verifyPhoneNumber(event) {
   const body = JSON.parse(event.body);
   const userPhoneNumber = body.userPhoneNumber;
   const token = body.token;
-  console.log(`body: ${body}`);
-  console.log(`userPhoneNumber: ${userPhoneNumber}`);
-  console.log(`token: ${token}`);
   const response = await verifyPhoneNumberFunc(userPhoneNumber, token);
   return response;
 };
