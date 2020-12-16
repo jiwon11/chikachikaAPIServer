@@ -65,7 +65,7 @@ module.exports.verifyPhoneNumber = async function verifyPhoneNumber(event) {
   console.log(`body: ${body}`);
   console.log(`userPhoneNumber: ${userPhoneNumber}`);
   console.log(`token: ${token}`);
-  const response = await verifyPhoneNumberFunc(userPhoneNumber, token);
+  const response = verifyPhoneNumberFunc(userPhoneNumber, token);
   return response;
 };
 
