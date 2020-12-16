@@ -1,23 +1,41 @@
 const { User } = require("../utils/models");
 const jwt = require("jsonwebtoken");
 
-module.exports.handler = async function social_login(event) {
-  const { phoneNumber, nickname, fcmToken, provider, certifiedPhoneNumber, email, socialId, birthdate, profileImg, gender } = JSON.parse(event.body);
+module.exports.socialUserCheck = async function socialUserCheck(event) {
   try {
+    const { provider, email } = JSON.parse(event.body);
     const overlapSocialUser = await User.findOne({
       where: {
         email: email,
         provider: provider,
       },
-      attributes: ["email", "provider"],
+      attributes: ["id", "email", "provider"],
     });
     if (overlapSocialUser) {
-      let responseBody = `{"statusText": "Unaccepted","message": "${provider}로 이미 가입 되어있는 이메일입니다."}`;
+      const token = jwt.sign(overlapSocialUser.dataValues.id, process.env.JWT_SECRET, { expiresIn: "1y" });
+      let responseBody = `{"token": "${token}","statusText": "Accepted","message": "소셜 로그인되었습니다."}`;
       return {
-        statusCode: 403,
+        statusCode: 200,
+        body: responseBody,
+      };
+    } else {
+      let responseBody = `{"statusText": "Unaccepted","message": "가압된 소셜 회원이 없습니다."}`;
+      return {
+        statusCode: 401,
         body: responseBody,
       };
     }
+  } catch (error) {
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Unaccepted","message": "${err.message}"}`,
+    };
+  }
+};
+
+module.exports.handler = async function social_login(event) {
+  const { phoneNumber, nickname, fcmToken, provider, certifiedPhoneNumber, email, socialId, birthdate, profileImg, gender } = JSON.parse(event.body);
+  try {
     const user = await User.create({
       phoneNumber: phoneNumber,
       nickname: nickname,
@@ -30,9 +48,9 @@ module.exports.handler = async function social_login(event) {
       certifiedPhoneNumber: certifiedPhoneNumber === "true",
     });
     const token = jwt.sign(user.dataValues.id, process.env.JWT_SECRET, { expiresIn: "1y" });
-    let responseBody = `{"token": "${token}","statusText": "Accepted","message": "사용자 토큰이 발급되었습니다."}`;
+    let responseBody = `{"token": "${token}","statusText": "Accepted","message": "소셜 계정으로 회원가입 후, 사용자 토큰이 발급되었습니다."}`;
     return {
-      statusCode: 200,
+      statusCode: 201,
       body: responseBody,
     };
   } catch (err) {
