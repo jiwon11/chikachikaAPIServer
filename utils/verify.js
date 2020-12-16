@@ -61,16 +61,23 @@ module.exports.phone = async function checkPhoneNumber(phoneNumber) {
       } else {
         exist = false;
       }
-      var responseBody = `{"statusText": "Accepted","message": "인증번호 문자를 발신하였습니다.", "exist": ${exist}}`;
+      let responseBody = `{"statusText": "Accepted","message": "인증번호 문자를 발신하였습니다.", "exist": ${exist}}`;
       return {
         statusCode: 200,
         body: responseBody,
       };
     } else {
-      return response.data;
+      return {
+        statusCode: 403,
+        body: JSON.stringify(response.data),
+      };
     }
   } catch (error) {
-    return new ApiError(error.statusCode || 500, error.stack, error.message);
+    let responseBody = `{"statusText": "Server Error","message": ${error.message}}`;
+    return {
+      statusCode: 500,
+      body: responseBody,
+    };
   }
 };
 

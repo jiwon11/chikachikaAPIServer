@@ -210,6 +210,13 @@ functions:
           path: social_login
           method: post
           cors: true
+  socialUserCheck:
+    handler: services/social_login.socialUserCheck
+    events:
+      - http:
+          path: socialUserCheck
+          method: post
+          cors: true
   importDentalClinic:
     handler: services/dentalClinic.importDentalClinic
     package:
