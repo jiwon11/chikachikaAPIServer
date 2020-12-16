@@ -24,11 +24,19 @@ module.exports.sendTokenToPhoneNumber = async function sendTokenToPhoneNumber(ev
  * @returns {JSON} Response 인증번호와 핸드폰 번호의 확인 여부
  */
 module.exports.verifyPhoneNumber = async function verifyPhoneNumber(event) {
-  const body = JSON.parse(event.body);
-  const userPhoneNumber = body.userPhoneNumber;
-  const token = body.token;
-  const response = await verifyPhoneNumberFunc(userPhoneNumber, token);
-  return response;
+  try {
+    const body = JSON.parse(event.body);
+    const userPhoneNumber = body.userPhoneNumber;
+    const token = body.token;
+    const response = await verifyPhoneNumberFunc(userPhoneNumber, token);
+    return response;
+  } catch (error) {
+    console.log(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Unaccepted","message": "${error.message}"}`,
+    };
+  }
 };
 
 /**

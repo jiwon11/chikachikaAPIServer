@@ -67,9 +67,10 @@ module.exports.phone = async function checkPhoneNumber(phoneNumber) {
         body: responseBody,
       };
     } else {
+      let responseBody = `{"statusText": "Accepted","message": "${response.data}"}`;
       return {
         statusCode: 403,
-        body: JSON.stringify(response.data),
+        body: responseBody,
       };
     }
   } catch (error) {
@@ -100,13 +101,13 @@ module.exports.verifyPhoneNumberFunc = async function verifyPhoneNumberFunc(user
       }
     );
     await verifies.destroy();
-    let responseBody = { statusText: "Accepted", message: "인증되었습니다." };
+    let responseBody = JSON.stringify({ statusText: "Accepted", message: "인증되었습니다." });
     return {
       statusCode: 200,
       body: responseBody,
     };
   } else {
-    let responseBody = { statusText: "Unaccepted", message: "인증번호가 틀립니다." };
+    let responseBody = JSON.stringify({ statusText: "Unaccepted", message: "인증번호가 틀립니다." });
     return {
       statusCode: 401,
       body: responseBody,
