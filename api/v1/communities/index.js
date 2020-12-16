@@ -369,7 +369,12 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
         body: { statusText: "Bad Request", message: "postId가 없습니다." },
       });
     }
-    const { description, wantDentistHelp, type, images } = JSON.parse(req.body);
+    console.log(req.body);
+    const description = req.body.description;
+    const type = req.body.type;
+    const wantDentistHelp = req.body.type;
+    const images = JSON.parse(req.body.images);
+    console.log("images: ", images);
     const communityPost = await Community.findOne({
       where: {
         id: postId,
