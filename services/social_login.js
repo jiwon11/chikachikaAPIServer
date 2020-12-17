@@ -34,6 +34,7 @@ module.exports.socialUserCheck = async function socialUserCheck(event) {
 };
 
 module.exports.handler = async function social_login(event) {
+  console.log(event.body);
   const { phoneNumber, nickname, fcmToken, provider, certifiedPhoneNumber, email, socialId, birthdate, profileImg, gender } = JSON.parse(event.body);
   try {
     const user = await User.create({
