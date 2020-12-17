@@ -3,14 +3,28 @@ const jwt = require("jsonwebtoken");
 
 module.exports.socialUserCheck = async function socialUserCheck(event) {
   try {
-    const { provider, email } = JSON.parse(event.body);
-    const overlapSocialUser = await User.findOne({
-      where: {
-        email: email,
-        provider: provider,
-      },
-      attributes: ["id", "email", "provider"],
-    });
+    const body = JSON.parse(event.body);
+    const provider = body.provider;
+    const email = body.email;
+    const socialId = body.socialId;
+    var overlapSocialUser;
+    if (provider === "apple") {
+      overlapSocialUser = await User.findOne({
+        where: {
+          socialId: socialId,
+          provider: provider,
+        },
+        attributes: ["id", "email", "provider"],
+      });
+    } else {
+      overlapSocialUser = await User.findOne({
+        where: {
+          email: email,
+          provider: provider,
+        },
+        attributes: ["id", "email", "provider"],
+      });
+    }
     if (overlapSocialUser) {
       const token = jwt.sign({ id: overlapSocialUser.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
       let responseBody = `{"token": "${token}","statusText": "Accepted","message": "소셜 로그인되었습니다."}`;
