@@ -35,7 +35,8 @@ module.exports.socialUserCheck = async function socialUserCheck(event) {
 
 module.exports.handler = async function social_login(event) {
   console.log(event.body);
-  const { phoneNumber, nickname, fcmToken, provider, certifiedPhoneNumber, email, socialId, birthdate, profileImg, gender } = JSON.parse(event.body);
+  const { phoneNumber, nickname, fcmToken, provider, certifiedPhoneNumber, email, socialId, profileImg, gender } = JSON.parse(event.body);
+  const birthdate = req.body.birthdate | (req.body.birthdate !== "") ? req.body.birthdate : undefined;
   try {
     const user = await User.create({
       email: email,
@@ -43,7 +44,7 @@ module.exports.handler = async function social_login(event) {
       nickname: nickname,
       provider: provider,
       socialId: socialId,
-      birthdate: new Date(birthdate),
+      birthdate: birthdate,
       profileImg: profileImg,
       gender: gender,
       fcmToken: fcmToken,
