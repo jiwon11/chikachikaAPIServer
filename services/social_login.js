@@ -28,7 +28,7 @@ module.exports.socialUserCheck = async function socialUserCheck(event) {
   } catch (error) {
     return {
       statusCode: 500,
-      body: `{"statusText": "Unaccepted","message": "${err.message}"}`,
+      body: `{"statusText": "Unaccepted","message": "${error.message}"}`,
     };
   }
 };
