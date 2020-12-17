@@ -12,7 +12,7 @@ module.exports.socialUserCheck = async function socialUserCheck(event) {
       attributes: ["id", "email", "provider"],
     });
     if (overlapSocialUser) {
-      const token = jwt.sign(overlapSocialUser.dataValues.id, process.env.JWT_SECRET, { expiresIn: "1y" });
+      const token = jwt.sign({ id: overlapSocialUser.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
       let responseBody = `{"token": "${token}","statusText": "Accepted","message": "소셜 로그인되었습니다."}`;
       return {
         statusCode: 200,
