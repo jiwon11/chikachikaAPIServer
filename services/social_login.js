@@ -37,6 +37,7 @@ module.exports.handler = async function social_login(event) {
   const { phoneNumber, nickname, fcmToken, provider, certifiedPhoneNumber, email, socialId, birthdate, profileImg, gender } = JSON.parse(event.body);
   try {
     const user = await User.create({
+      email: email,
       phoneNumber: phoneNumber,
       nickname: nickname,
       provider: provider,
