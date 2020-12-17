@@ -92,7 +92,12 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
     });
     console.log(reviews.length);
     return res.json(reviews);
-  } catch (error) {}
+  } catch (error) {
+    return res.status(500).json({
+      statusCode: 500,
+      body: { statusText: "Server Error", message: error.message },
+    });
+  }
 });
 
 router.get("/", getUserInToken, async (req, res, next) => {
