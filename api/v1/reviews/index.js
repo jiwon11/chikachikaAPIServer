@@ -63,6 +63,12 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
         {
           model: Review_content,
           attributes: ["id", "img_url", "index", "img_before_after"],
+          required: false,
+          where: {
+            img_url: {
+              [sequelize.Op.not]: null,
+            },
+          },
         },
         {
           model: Dental_clinic,
@@ -86,12 +92,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
     });
     console.log(reviews.length);
     return res.json(reviews);
-  } catch (error) {
-    return res.status(500).json({
-      statusCode: 500,
-      body: { statusText: "Server Error", message: error.message },
-    });
-  }
+  } catch (error) {}
 });
 
 router.get("/", getUserInToken, async (req, res, next) => {
