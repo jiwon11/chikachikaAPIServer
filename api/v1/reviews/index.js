@@ -63,6 +63,12 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
         {
           model: Review_content,
           attributes: ["id", "img_url", "index", "img_before_after"],
+          required: false,
+          where: {
+            img_url: {
+              [sequelize.Op.not]: null,
+            },
+          },
         },
         {
           model: Dental_clinic,
