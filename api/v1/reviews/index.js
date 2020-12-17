@@ -49,6 +49,10 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
           [sequelize.literal("(SELECT COUNT(*) FROM Like_Review WHERE Like_Review.likedReviewId = review.id)"), "reviewLikeNum"],
           [sequelize.literal(`(SELECT COUNT(*) FROM Like_Review WHERE Like_Review.likedReviewId = review.id AND Like_Review.likerId = "${req.user.id}")`), "viewerLikedReview"],
           [sequelize.literal("(SELECT COUNT(*) FROM ViewReviews WHERE ViewReviews.viewedReviewId = review.id)"), "reviewViewNum"],
+          [
+            sequelize.literal("(SELECT GROUP_CONCAT(description ORDER BY review_contents.index ASC SEPARATOR ' ') FROM review_contents WHERE review_contents.reviewId = review.id)"),
+            "reviewDescriptions",
+          ],
         ],
       },
       include: [
@@ -58,7 +62,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
         },
         {
           model: Review_content,
-          attributes: ["id", "description", "img_url", "index", "img_before_after"],
+          attributes: ["id", "img_url", "index", "img_before_after"],
         },
         {
           model: Dental_clinic,
