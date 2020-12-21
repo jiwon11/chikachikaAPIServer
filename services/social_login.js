@@ -52,6 +52,21 @@ module.exports.handler = async function social_login(event) {
   const { phoneNumber, nickname, fcmToken, provider, certifiedPhoneNumber, email, socialId, profileImg, gender } = JSON.parse(event.body);
   const birthdate = event.body.birthdate | (event.body.birthdate !== "") ? event.body.birthdate : undefined;
   try {
+    if (phoneNumber !== "") {
+      const overlapPhoneNumber = await User.findOne({
+        where: {
+          phoneNumber: phoneNumber,
+        },
+        attributes: ["phoneNumber"],
+      });
+      if (overlapPhoneNumber) {
+        let responseBody = '{"statusText": "Unaccepted","message": "이미 가입 되어있는 전화번호입니다."}';
+        return {
+          statusCode: 403,
+          body: responseBody,
+        };
+      }
+    }
     const user = await User.create({
       email: email,
       phoneNumber: phoneNumber,
