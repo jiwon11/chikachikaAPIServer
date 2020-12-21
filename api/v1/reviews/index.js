@@ -6,7 +6,7 @@ const path = require("path");
 const sequelize = require("sequelize");
 const ApiError = require("../../../utils/error");
 const { getUserInToken } = require("../middlewares");
-const { Review, User, Review_content, Treatment_item, Dental_clinic, Review_treatment_item } = require("../../../utils/models");
+const { Review, User, Review_content, Treatment_item, Dental_clinic, Review_treatment_item, Review_comment } = require("../../../utils/models");
 
 const router = express.Router();
 
@@ -145,6 +145,16 @@ router.get("/", getUserInToken, async (req, res, next) => {
         {
           model: User,
           attributes: ["id", "nickname", "profileImg"],
+        },
+        {
+          model: Review_comment,
+          as: "Replys",
+          include: [
+            {
+              model: User,
+              attributes: ["id", "nickname", "profileImg"],
+            },
+          ],
         },
       ],
     });
