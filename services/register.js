@@ -70,7 +70,7 @@ module.exports.handler = async function registerUser(event) {
       nickname: nickname,
       provider: provider,
       fcmToken: fcmToken,
-      certifiedPhoneNumber: certifiedPhoneNumber,
+      certifiedPhoneNumber: certifiedPhoneNumber === "true",
     });
     await NotificationConfig.create({
       userId: user.id,
@@ -79,7 +79,7 @@ module.exports.handler = async function registerUser(event) {
       timer: true,
     });
     const jwtToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
-    let responseBody = `{"statusText": "Accepted","message": "${user.nickname}님의 회원가입이 완료되었습니다.", "token": "${jwtToken}"}`;
+    let responseBody = `{"statusText": "Accepted","message": "${user.nickname}님의 회원가입이 완료되었습니다.", "token": "${jwtToken}", "user":{"userId": "${user.id}", "userNickname":"${user.nickname}", "userProfileImg":"${user.profileImg}"}}`;
     return {
       statusCode: 201,
       body: responseBody,

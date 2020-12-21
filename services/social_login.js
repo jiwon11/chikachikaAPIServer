@@ -80,7 +80,7 @@ module.exports.handler = async function social_login(event) {
       certifiedPhoneNumber: certifiedPhoneNumber === "true",
     });
     const token = jwt.sign(user.dataValues.id, process.env.JWT_SECRET, { expiresIn: "1y" });
-    let responseBody = `{"token": "${token}","statusText": "Accepted","message": "소셜 계정으로 회원가입 후, 사용자 토큰이 발급되었습니다."}`;
+    let responseBody = `{"token": "${token}","statusText": "Accepted","message": "소셜 계정으로 회원가입 후, 사용자 토큰이 발급되었습니다.", "user":{"userId": "${user.id}", "userNickname":"${user.nickname}", "userProfileImg":"${user.profileImg}"}}`;
     return {
       statusCode: 201,
       body: responseBody,
