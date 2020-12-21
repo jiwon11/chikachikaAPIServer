@@ -48,7 +48,7 @@ module.exports = (sequelize, DataTypes) =>
       },
       phoneNumber: {
         type: DataTypes.STRING(50),
-        unique: true,
+        allowNull: true,
       },
       certifiedPhoneNumber: {
         type: DataTypes.BOOLEAN,
