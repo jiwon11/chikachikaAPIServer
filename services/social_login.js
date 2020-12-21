@@ -27,7 +27,7 @@ module.exports.socialUserCheck = async function socialUserCheck(event) {
     }
     if (overlapSocialUser) {
       const token = jwt.sign({ id: overlapSocialUser.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
-      let responseBody = `{"token": "${token}","statusText": "Accepted","message": "소셜 로그인되었습니다."}`;
+      let responseBody = `{"token": "${token}","statusText": "Accepted","message": "소셜 로그인되었습니다.","user":{"userId": "${overlapSocialUser.id}", "userNickname":"${overlapSocialUser.nickname}", "userProfileImg":"${overlapSocialUser.profileImg}"}}`;
       return {
         statusCode: 200,
         body: responseBody,
