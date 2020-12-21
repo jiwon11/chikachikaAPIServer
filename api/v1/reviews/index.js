@@ -140,7 +140,14 @@ router.get("/", getUserInToken, async (req, res, next) => {
       ],
       order: [["review_contents", "index", "ASC"]],
     });
-    const reviewComments = await review.getReview_comments();
+    const reviewComments = await review.getReview_comments({
+      include: [
+        {
+          model: User,
+          attributes: ["id", "nickname", "profileImg"],
+        },
+      ],
+    });
     const reviewLikeNum = await review.countLikers();
     const reviewViewerNum = await review.countViewers();
     const viewer = await User.findOne({
