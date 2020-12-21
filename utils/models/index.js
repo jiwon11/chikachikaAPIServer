@@ -38,6 +38,7 @@ db.Community_dental_clinic = require("./community_dental_clinic")(sequelize, Seq
 db.Community_symptom = require("./community_symptom")(sequelize, Sequelize);
 db.Community_treatment = require("./community_treatment")(sequelize, Sequelize);
 db.CommunityGeneralTag = require("./communityGeneralTag")(sequelize, Sequelize);
+db.City = require("./city")(sequelize, Sequelize);
 /*사용자와 타이머 관걔형 */
 db.User.hasMany(db.Timer, {
   foreignKey: "userId",
@@ -478,4 +479,17 @@ db.Notification.belongsTo(db.Community_comment, {
   onDelete: "CASCADE",
 });
 
+db.User.belongsToMany(db.City, {
+  foreignKey: "resident",
+  as: "Cities",
+  through: "UsersCities",
+  onDelete: "CASCADE",
+});
+
+db.City.belongsToMany(db.User, {
+  foreignKey: "city",
+  as: "Residents",
+  through: "UsersCities",
+  onDelete: "CASCADE",
+});
 module.exports = db;
