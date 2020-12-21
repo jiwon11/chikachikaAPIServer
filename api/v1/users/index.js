@@ -14,10 +14,10 @@ router.get("/", getUserInToken, async (req, res, next) => {
   res.send("get all users");
 });
 
-router.get("/:nickname/reviews", getUserInToken, async (req, res, next) => {
+router.get("/:userId/reviews", getUserInToken, async (req, res, next) => {
   try {
     const viewUserId = req.user.id;
-    const targetUserNickname = req.params.nickname;
+    const targetUserId = req.params.userId;
     const limit = parseInt(req.query.limit);
     const offset = parseInt(req.query.offset);
     const order = req.query.order === "createdAt" ? "createdAt" : "popular";
@@ -45,7 +45,7 @@ router.get("/:nickname/reviews", getUserInToken, async (req, res, next) => {
           model: User,
           attributes: ["nickname", "profileImg"],
           where: {
-            nickname: targetUserNickname,
+            id: targetUserId,
           },
         },
         {
@@ -87,10 +87,10 @@ router.get("/:nickname/reviews", getUserInToken, async (req, res, next) => {
   }
 });
 
-router.get("/:nickname/communities", getUserInToken, async (req, res, next) => {
+router.get("/:userId/communities", getUserInToken, async (req, res, next) => {
   try {
     const viewUserId = req.user.id;
-    const targetUserNickname = req.params.nickname;
+    const targetUserId = req.params.userId;
     const type = req.query.type === "All" ? ["Question", "FreeTalk"] : [req.query.type];
     const limit = parseInt(req.query.limit);
     const offset = parseInt(req.query.offset);
@@ -119,7 +119,7 @@ router.get("/:nickname/communities", getUserInToken, async (req, res, next) => {
           model: User,
           attributes: ["nickname", "profileImg"],
           where: {
-            nickname: targetUserNickname,
+            id: targetUserId,
           },
         },
         {

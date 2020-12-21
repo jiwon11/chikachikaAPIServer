@@ -22,7 +22,7 @@ module.exports.handler = async function signInUser(event) {
     if (isValidPhoneNumber.statusCode === 200) {
       console.log(user.dataValues.id);
       const token = jwt.sign({ id: user.dataValues.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
-      let responseBody = `{"token": "${token}","statusText": "Accepted","message": "사용자 토큰이 발급되었습니다."}`;
+      let responseBody = `{"token": "${token}","statusText": "Accepted","message": "사용자 토큰이 발급되었습니다.", "user":{"userId": "${user.id}", "userNickname":"${user.nickname}", "userProfileImg":"${user.profileImg}"}}`;
       return {
         statusCode: 200,
         body: responseBody,
