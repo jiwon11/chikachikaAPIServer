@@ -6,7 +6,7 @@ const path = require("path");
 const sequelize = require("sequelize");
 const ApiError = require("../../../utils/error");
 const { getUserInToken } = require("../middlewares");
-const { Review, User, Review_content, Treatment_item, Dental_clinic, Review_treatment_item } = require("../../../utils/models");
+const { Review, User, Review_content, Treatment_item, Dental_clinic, Review_treatment_item, Review_comment } = require("../../../utils/models");
 
 const router = express.Router();
 
@@ -140,7 +140,24 @@ router.get("/", getUserInToken, async (req, res, next) => {
       ],
       order: [["review_contents", "index", "ASC"]],
     });
-    const reviewComments = await review.getReview_comments();
+    const reviewComments = await review.getReview_comments({
+      include: [
+        {
+          model: User,
+          attributes: ["id", "nickname", "profileImg"],
+        },
+        {
+          model: Review_comment,
+          as: "Replys",
+          include: [
+            {
+              model: User,
+              attributes: ["id", "nickname", "profileImg"],
+            },
+          ],
+        },
+      ],
+    });
     const reviewLikeNum = await review.countLikers();
     const reviewViewerNum = await review.countViewers();
     const viewer = await User.findOne({
