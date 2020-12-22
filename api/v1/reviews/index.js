@@ -79,8 +79,9 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
           model: Treatment_item,
           as: "TreatmentItems",
           attributes: ["name"],
+          order: [["index", "ASC"]],
           through: {
-            attributes: ["cost"],
+            attributes: ["cost", "index"],
           },
         },
       ],
@@ -117,6 +118,9 @@ router.get("/", getUserInToken, async (req, res, next) => {
       where: {
         id: reviewId,
       },
+      attributes: {
+        include: [[sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.updatedAt,NOW()))`), "createdDiff(second)"]],
+      },
       include: [
         {
           model: User,
@@ -133,50 +137,59 @@ router.get("/", getUserInToken, async (req, res, next) => {
           model: Treatment_item,
           as: "TreatmentItems",
           attributes: ["name"],
+          order: [["index", "ASC"]],
           through: {
-            attributes: ["cost"],
+            attributes: ["cost", "index"],
           },
         },
       ],
       order: [["review_contents", "index", "ASC"]],
     });
-    const reviewComments = await review.getReview_comments({
-      include: [
-        {
-          model: User,
-          attributes: ["id", "nickname", "profileImg"],
+    if (review) {
+      const reviewComments = await review.getReview_comments({
+        include: [
+          {
+            model: User,
+            attributes: ["id", "nickname", "profileImg"],
+          },
+          {
+            model: Review_comment,
+            as: "Replys",
+            include: [
+              {
+                model: User,
+                attributes: ["id", "nickname", "profileImg"],
+              },
+            ],
+          },
+        ],
+      });
+      const reviewLikeNum = await review.countLikers();
+      const reviewViewerNum = await review.countViewers();
+      const viewer = await User.findOne({
+        where: {
+          id: req.user.id,
         },
-        {
-          model: Review_comment,
-          as: "Replys",
-          include: [
-            {
-              model: User,
-              attributes: ["id", "nickname", "profileImg"],
-            },
-          ],
-        },
-      ],
-    });
-    const reviewLikeNum = await review.countLikers();
-    const reviewViewerNum = await review.countViewers();
-    const viewer = await User.findOne({
-      where: {
-        id: req.user.id,
-      },
-    });
-    if (viewer.id !== review.userId) {
-      await review.addViewer(viewer);
+      });
+      if (viewer.id !== review.userId) {
+        await review.addViewer(viewer);
+      }
+      const viewerLikeReview = await review.hasLikers(viewer);
+      return res.status(200).json({
+        reviewBody: review,
+        reviewViewerNum: reviewViewerNum,
+        reviewComments: reviewComments,
+        reviewLikeNum: reviewLikeNum,
+        viewerLikeReview: viewerLikeReview,
+      });
+    } else {
+      return res.status(404).json({
+        statusCode: 404,
+        body: { statusText: "Not Found", message: "리뷰를 찾을 수 없습니다." },
+      });
     }
-    const viewerLikeReview = await review.hasLikers(viewer);
-    return res.status(200).json({
-      reivewBody: review,
-      reviewViewerNum: reviewViewerNum,
-      reviewComments: reviewComments,
-      reviewLikeNum: reviewLikeNum,
-      viewerLikeReview: viewerLikeReview,
-    });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       statusCode: 500,
       body: { statusText: "Server Error", message: error.message },
@@ -191,7 +204,7 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
   try {
     const paragraphs = JSON.parse(req.body.paragraphs);
     console.log("paragraphs: ", paragraphs);
-    const { starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId } = JSON.parse(req.body.body);
+    const { starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId, totalCost } = JSON.parse(req.body.body);
     var concsulationDate;
     if (req.body.concsulationDate !== "undefined" && req.body.concsulationDate) {
       concsulationDate = new Date(req.body.concsulationDate);
@@ -203,6 +216,7 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
       starRate_cost: parseFloat(starRate_cost),
       starRate_service: parseFloat(starRate_service),
       starRate_treatment: parseFloat(starRate_treatment),
+      totalCost: parseInt(totalCost),
       concsulationDate: concsulationDate,
       userId: req.user.id,
       dentalClinicId: dentalClinicId,
@@ -217,6 +231,7 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
         await review.addTreatmentItem(treatmentItem, {
           through: {
             cost: treatment.cost,
+            index: treatments.indexOf(treatment) + 1,
           },
         });
       } else {
@@ -259,7 +274,7 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
   try {
     const reviewId = req.query.reviewId;
     const paragraphs = JSON.parse(req.body.paragraphs);
-    const { starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId } = JSON.parse(req.body.body);
+    const { starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId, totalCost } = JSON.parse(req.body.body);
     const review = await Review.findOne({
       where: {
         id: reviewId,
@@ -289,6 +304,7 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
           starRate_cost: parseFloat(starRate_cost),
           starRate_service: parseFloat(starRate_service),
           starRate_treatment: parseFloat(starRate_treatment),
+          totalCost: parseInt(totalCost),
           concsulationDate: concsulationDate,
           userId: req.user.id,
           dentalClinicId: dentalClinicId,
@@ -303,6 +319,7 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
             await review.addTreatmentItem(treatmentItem, {
               through: {
                 cost: treatment.cost,
+                index: treatments.indexOf(treatment) + 1,
               },
             });
           } else {
