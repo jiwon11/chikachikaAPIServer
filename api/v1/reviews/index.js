@@ -81,6 +81,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
           attributes: ["name"],
           order: [["index", "ASC"]],
           through: {
+            model: Review_treatment_item,
             attributes: ["cost", "index"],
           },
         },
@@ -89,6 +90,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
       offset: offset,
       order: [
         [order, "DESC"],
+        ["TreatmentItems", Review_treatment_item, "index", "ASC"],
         ["review_contents", "index", "ASC"],
       ],
     });
@@ -137,13 +139,16 @@ router.get("/", getUserInToken, async (req, res, next) => {
           model: Treatment_item,
           as: "TreatmentItems",
           attributes: ["name"],
-          order: [["index", "ASC"]],
           through: {
+            model: Review_treatment_item,
             attributes: ["cost", "index"],
           },
         },
       ],
-      order: [["review_contents", "index", "ASC"]],
+      order: [
+        ["review_contents", "index", "ASC"],
+        ["TreatmentItems", Review_treatment_item, "index", "ASC"],
+      ],
     });
     if (review) {
       const reviewComments = await review.getReview_comments({
