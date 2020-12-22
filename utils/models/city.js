@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) =>
-  sequelize.define("city", {
+  sequelize.define("cities", {
     sido: {
       type: DataTypes.CHAR,
       allowNull: false,
