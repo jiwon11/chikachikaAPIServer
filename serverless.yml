@@ -217,6 +217,71 @@ functions:
           path: socialUserCheck
           method: post
           cors: true
+  findCities:
+    handler: services/residence.findCities
+    events:
+      - http:
+          path: residence/cities
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  addUserResidence:
+    handler: services/residence.addUserResidence
+    events:
+      - http:
+          path: residence
+          method: post
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  changeUserResidence:
+    handler: services/residence.changeUserResidence
+    events:
+      - http:
+          path: residence
+          method: put
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  deleteUserResidence:
+    handler: services/residence.deleteUserResidence
+    events:
+      - http:
+          path: residence
+          method: delete
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  getUserResidence:
+    handler: services/residence.getUserResidence
+    events:
+      - http:
+          path: residence
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   importDentalClinic:
     handler: services/dentalClinic.importDentalClinic
     package:
