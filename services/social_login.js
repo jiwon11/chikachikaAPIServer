@@ -49,7 +49,7 @@ module.exports.socialUserCheck = async function socialUserCheck(event) {
 
 module.exports.handler = async function social_login(event) {
   console.log(event.body);
-  const { phoneNumber, nickname, fcmToken, provider, certifiedPhoneNumber, email, socialId, profileImg, gender } = JSON.parse(event.body);
+  const { phoneNumber, nickname, fcmToken, provider, certifiedPhoneNumber, email, socialId, profileImg, gender, cityId } = JSON.parse(event.body);
   const birthdate = event.body.birthdate | (event.body.birthdate !== "") ? event.body.birthdate : undefined;
   try {
     if (phoneNumber !== "") {
@@ -79,8 +79,21 @@ module.exports.handler = async function social_login(event) {
       fcmToken: fcmToken,
       certifiedPhoneNumber: certifiedPhoneNumber === "true",
     });
+    await NotificationConfig.create({
+      userId: user.id,
+      like: true,
+      comment: true,
+      timer: true,
+    });
+    const city = await City.findOne({
+      attributes: ["id", "emdName"],
+      where: {
+        id: cityId,
+      },
+    });
+    await user.addCities(city);
     const token = jwt.sign(user.dataValues.id, process.env.JWT_SECRET, { expiresIn: "1y" });
-    let responseBody = `{"token": "${token}","statusText": "Accepted","message": "소셜 계정으로 회원가입 후, 사용자 토큰이 발급되었습니다.", "user":{"userId": "${user.id}", "userNickname":"${user.nickname}", "userProfileImg":"${user.profileImg}"}}`;
+    let responseBody = `{"token": "${token}","statusText": "Accepted","message": "소셜 계정으로 회원가입 후, 사용자 토큰이 발급되었습니다.", "user":{"userId": "${user.id}", "userNickname":"${user.nickname}", "userProfileImg":"${user.profileImg}", "userResident":"${city.emdName}"}}`;
     return {
       statusCode: 201,
       body: responseBody,

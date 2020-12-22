@@ -51,7 +51,7 @@ module.exports.verifyPhoneNumber = async function verifyPhoneNumber(event) {
  */
 module.exports.handler = async function registerUser(event) {
   try {
-    const { userPhoneNumber, nickname, fcmToken, provider, certifiedPhoneNumber } = JSON.parse(event.body);
+    const { userPhoneNumber, nickname, fcmToken, provider, certifiedPhoneNumber, cityId } = JSON.parse(event.body);
     const overlapPhoneNumber = await User.findOne({
       where: {
         phoneNumber: userPhoneNumber,
@@ -78,8 +78,15 @@ module.exports.handler = async function registerUser(event) {
       comment: true,
       timer: true,
     });
+    const city = await City.findOne({
+      attributes: ["id", "emdName"],
+      where: {
+        id: cityId,
+      },
+    });
+    await user.addCities(city);
     const jwtToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
-    let responseBody = `{"statusText": "Accepted","message": "${user.nickname}님의 회원가입이 완료되었습니다.", "token": "${jwtToken}", "user":{"userId": "${user.id}", "userNickname":"${user.nickname}", "userProfileImg":"${user.profileImg}"}}`;
+    let responseBody = `{"statusText": "Accepted","message": "${user.nickname}님의 회원가입이 완료되었습니다.", "token": "${jwtToken}", "user":{"userId": "${user.id}", "userNickname":"${user.nickname}", "userProfileImg":"${user.profileImg}","userResident":"${city.emdName}"}}`;
     return {
       statusCode: 201,
       body: responseBody,

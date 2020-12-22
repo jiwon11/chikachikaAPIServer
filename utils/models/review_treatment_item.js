@@ -6,6 +6,10 @@ module.exports = (sequelize, DataTypes) =>
         type: DataTypes.INTEGER,
         allowNull: true,
       },
+      index: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
     },
     {
       timestamps: true,
