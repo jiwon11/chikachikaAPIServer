@@ -217,11 +217,11 @@ functions:
           path: socialUserCheck
           method: post
           cors: true
-  findCities:
-    handler: services/residence.findCities
+  searchCities:
+    handler: services/residence.searchCities
     events:
       - http:
-          path: residence/cities
+          path: search/cities
           method: get
           cors: true
           authorizer:
