@@ -4,7 +4,7 @@ const { sequelize, Sequelize } = require("../utils/models");
 const city = require("../utils/models/city");
 const user = require("../utils/models/user");
 
-module.exports.findCities = async function findCities(event) {
+module.exports.searchCities = async function searchCities(event) {
   try {
     const query = event.queryStringParameters.q;
     const offset = parseInt(event.queryStringParameters.offset);
@@ -105,7 +105,7 @@ module.exports.addUserResidence = async function addUserResidence(event) {
     });
     if (user.Cities.length == 2) {
       return {
-        statusCode: 400,
+        statusCode: 403,
         body: `{"statusText": "Upper Set Cities","message": "거주지는 2곳을 초과할 수 없습니다."}`,
       };
     } else {
