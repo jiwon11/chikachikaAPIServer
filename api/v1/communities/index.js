@@ -180,7 +180,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
         {
           model: Dental_clinic,
           as: "Clinics",
-          attributes: ["name"],
+          attributes: ["id", "name"],
           through: {
             attributes: ["index"],
           },
@@ -188,7 +188,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
         {
           model: Treatment_item,
           as: "TreatmentItems",
-          attributes: ["name"],
+          attributes: ["id", "name"],
           through: {
             attributes: ["index"],
           },
@@ -196,15 +196,15 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
         {
           model: Symptom_item,
           as: "SymptomItems",
-          attributes: ["name"],
+          attributes: ["id", "name"],
           through: {
-            attributes: ["index"],
+            attributes: ["id", "index"],
           },
         },
         {
           model: GeneralTag,
           as: "GeneralTags",
-          attributes: ["name"],
+          attributes: ["id", "name"],
           through: {
             attributes: ["index"],
           },
