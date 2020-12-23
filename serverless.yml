@@ -355,7 +355,7 @@ functions:
               identitySource: method.request.header.Authorization
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   addScrapCommunity:
-    handler: services/scrap.addScrapCommunity
+    handler: services/scrap.addScrapCommunities
     events:
       - http:
           path: scrap/communityPost
@@ -368,7 +368,7 @@ functions:
               identitySource: method.request.header.Authorization
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   removeScrapCommunity:
-    handler: services/scrap.removeScrapCommunity
+    handler: services/scrap.removeScrapCommunities
     events:
       - http:
           path: scrap/communityPost
