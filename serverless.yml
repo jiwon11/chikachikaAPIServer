@@ -334,6 +334,58 @@ functions:
               # in our case the HTTP Authorization header
               identitySource: method.request.header.Authorization
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  addScrapReview:
+    handler: services/scrap.addScrapReview
+    events:
+      - http:
+          path: scrap/review
+          method: post
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  removeScrapeReview:
+    handler: services/scrap.removeScrapReview
+    events:
+      - http:
+          path: scrap/review
+          method: delete
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  addScrapCommunity:
+    handler: services/scrap.addScrapCommunity
+    events:
+      - http:
+          path: scrap/communityPost
+          method: post
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  removeScrapCommunity:
+    handler: services/scrap.removeScrapCommunity
+    events:
+      - http:
+          path: scrap/communityPost
+          method: delete
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   importDentalClinic:
     handler: services/dentalClinic.importDentalClinic
     package:
