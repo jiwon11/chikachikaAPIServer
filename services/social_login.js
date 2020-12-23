@@ -1,4 +1,4 @@
-const { User, NotificationConfig } = require("../utils/models");
+const { User, NotificationConfig, City } = require("../utils/models");
 const jwt = require("jsonwebtoken");
 
 module.exports.socialUserCheck = async function socialUserCheck(event) {

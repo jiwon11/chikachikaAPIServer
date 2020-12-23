@@ -1,7 +1,7 @@
 const { phone, verifyPhoneNumberFunc } = require("../utils/verify");
 const { Sequelize } = require("sequelize");
 const ApiError = require("../utils/error");
-const { User, Phone_verify, NotificationConfig } = require("../utils/models");
+const { User, Phone_verify, NotificationConfig, City } = require("../utils/models");
 const jwt = require("jsonwebtoken");
 const { Base64 } = require("js-base64");
 
