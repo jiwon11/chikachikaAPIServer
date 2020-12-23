@@ -74,7 +74,7 @@ router.get("/:userId/reviews", getUserInToken, async (req, res, next) => {
       limit: limit,
       offset: offset,
       order: [
-        ["Like_Reivew", "createdAt", "DESC"],
+        [order, "DESC"],
         ["TreatmentItems", Review_treatment_item, "index", "ASC"],
         ["review_contents", "index", "ASC"],
       ],
@@ -287,7 +287,6 @@ router.get("/likes", getUserInToken, async (req, res, next) => {
         limit: limit,
         offset: offset,
         order: [
-          [sequelize.literal("`Like_Review.createdAt`"), "DESC"],
           ["TreatmentItems", Review_treatment_item, "index", "ASC"],
           ["review_contents", "index", "ASC"],
         ],
@@ -355,7 +354,7 @@ router.get("/likes", getUserInToken, async (req, res, next) => {
         limit: limit,
         offset: offset,
         order: [
-          [sequelize.literal("`Like_Community.createdAt`"), "DESC"],
+          ["createdAt", "DESC"],
           ["community_imgs", "img_index", "ASC"],
         ],
       });
@@ -434,7 +433,7 @@ router.get("/scraps", getUserInToken, async (req, res, next) => {
         limit: limit,
         offset: offset,
         order: [
-          [sequelize.literal("`Scrap.createdAt`"), "DESC"],
+          ["createdAt", "DESC"],
           ["TreatmentItems", Review_treatment_item, "index", "ASC"],
           ["review_contents", "index", "ASC"],
         ],
@@ -502,7 +501,7 @@ router.get("/scraps", getUserInToken, async (req, res, next) => {
         limit: limit,
         offset: offset,
         order: [
-          [sequelize.literal("`Scrap_Community.createdAt`"), "DESC"],
+          ["createdAt", "DESC"],
           ["community_imgs", "img_index", "ASC"],
         ],
       });
