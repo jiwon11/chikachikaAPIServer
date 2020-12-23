@@ -198,7 +198,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
           as: "SymptomItems",
           attributes: ["id", "name"],
           through: {
-            attributes: ["id", "index"],
+            attributes: ["index"],
           },
         },
         {
