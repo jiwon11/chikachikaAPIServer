@@ -351,21 +351,94 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
           )
         );
         console.log(`콘텐츠 개수 : ${contents.length}`);
-        return res.status(200).json({
-          statusCode: 200,
-          message: "리뷰글을 수정하였습니다.",
+        const updateReview = await Review.findOne({
+          where: {
+            id: reviewId,
+          },
+          attributes: {
+            include: [[sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.updatedAt,NOW()))`), "createdDiff(second)"]],
+          },
+          include: [
+            {
+              model: User,
+              attributes: ["nickname", "profileImg"],
+            },
+            {
+              model: Dental_clinic,
+              attributes: ["name", "address"],
+            },
+            {
+              model: Review_content,
+            },
+            {
+              model: Treatment_item,
+              as: "TreatmentItems",
+              attributes: ["id", "name"],
+              through: {
+                model: Review_treatment_item,
+                attributes: ["cost", "index"],
+              },
+            },
+          ],
+          order: [
+            ["review_contents", "index", "ASC"],
+            ["TreatmentItems", Review_treatment_item, "index", "ASC"],
+          ],
         });
+        if (updateReview) {
+          const reviewComments = await updateReview.getReview_comments({
+            include: [
+              {
+                model: User,
+                attributes: ["id", "nickname", "profileImg"],
+              },
+              {
+                model: Review_comment,
+                as: "Replys",
+                include: [
+                  {
+                    model: User,
+                    attributes: ["id", "nickname", "profileImg"],
+                  },
+                ],
+              },
+            ],
+          });
+          const reviewLikeNum = await updateReview.countLikers();
+          const reviewViewerNum = await updateReview.countViewers();
+          const viewer = await User.findOne({
+            where: {
+              id: req.user.id,
+            },
+          });
+          if (viewer.id !== updateReview.userId) {
+            await updateReview.addViewer(updateReview);
+          }
+          const viewerLikeReview = await updateReview.hasLikers(viewer);
+          const updateReviewResult = {
+            reviewBody: review,
+            reviewViewerNum: reviewViewerNum,
+            reviewComments: reviewComments,
+            reviewLikeNum: reviewLikeNum,
+            viewerLikeReview: viewerLikeReview,
+          };
+          return res.status(200).json({
+            statusCode: 200,
+            message: "리뷰글을 수정하였습니다.",
+            updateReview: updateReviewResult,
+          });
+        } else {
+          return res.status(401).json({
+            statusCode: 401,
+            body: { statusText: "Unauthorized", message: "글을 수정할 권한이 없습니다." },
+          });
+        }
       } else {
-        return res.status(401).json({
-          statusCode: 401,
-          body: { statusText: "Unauthorized", message: "글을 수정할 권한이 없습니다." },
+        return res.status(404).json({
+          statusCode: 404,
+          body: { statusText: "Unauthorized", message: "리뷰가 없습니다." },
         });
       }
-    } else {
-      return res.status(404).json({
-        statusCode: 404,
-        body: { statusText: "Unauthorized", message: "리뷰가 없습니다." },
-      });
     }
   } catch (error) {
     console.log(error);
