@@ -78,7 +78,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
         {
           model: Treatment_item,
           as: "TreatmentItems",
-          attributes: ["name"],
+          attributes: ["id", "name"],
           order: [["index", "ASC"]],
           through: {
             model: Review_treatment_item,
@@ -111,7 +111,7 @@ router.get("/", getUserInToken, async (req, res, next) => {
       return res.status(404).json({
         statusCode: 404,
         body: {
-          statusText: "Unaccepted",
+          statusText: "Not Found",
           message: "Not Found Query",
         },
       });
@@ -138,7 +138,7 @@ router.get("/", getUserInToken, async (req, res, next) => {
         {
           model: Treatment_item,
           as: "TreatmentItems",
-          attributes: ["name"],
+          attributes: ["id", "name"],
           through: {
             model: Review_treatment_item,
             attributes: ["cost", "index"],
