@@ -500,9 +500,72 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
         }
       }
     }
+    const updateCommunityPost = await Community.findOne({
+      where: {
+        id: communityPost.id,
+      },
+      attributes: {
+        include: [
+          [sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,community.updatedAt,NOW()))`), "createdDiff(second)"],
+          [
+            sequelize.literal(
+              "(SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = community.id AND deletedAt IS null) + (SELECT COUNT(*) FROM Community_reply LEFT JOIN community_comments ON (community_comments.id = Community_reply.commentId) WHERE community_comments.communityId = community.id)"
+            ),
+            "postCommentsNum",
+          ],
+          //[sequelize.literal("(SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = community.id AND deletedAt IS null)"), "postCommentsCount"],
+          [sequelize.literal("(SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id)"), "postLikeNum"],
+          [sequelize.literal(`(SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id AND Like_Community.likerId = "${req.user.id}")`), "viewerLikeCommunityPost"],
+          [sequelize.literal("(SELECT COUNT(*) FROM ViewCommunities WHERE ViewCommunities.viewedCommunityId = community.id)"), "postViewNum"],
+        ],
+      },
+      include: [
+        {
+          model: User,
+          attributes: ["nickname", "profileImg"],
+        },
+        {
+          model: Community_img,
+          attributes: ["id", "img_originalname", "img_mimetype", "img_filename", "img_url", "img_size", "img_index"],
+        },
+        {
+          model: Dental_clinic,
+          as: "Clinics",
+          attributes: ["id", "name"],
+          through: {
+            attributes: ["index"],
+          },
+        },
+        {
+          model: Treatment_item,
+          as: "TreatmentItems",
+          attributes: ["id", "name"],
+          through: {
+            attributes: ["index"],
+          },
+        },
+        {
+          model: Symptom_item,
+          as: "SymptomItems",
+          attributes: ["id", "name"],
+          through: {
+            attributes: ["index"],
+          },
+        },
+        {
+          model: GeneralTag,
+          as: "GeneralTags",
+          attributes: ["id", "name"],
+          through: {
+            attributes: ["index"],
+          },
+        },
+      ],
+      order: [["community_imgs", "img_index", "ASC"]],
+    });
     return res.status(200).json({
       statusCode: 200,
-      body: { statusText: "Accepted", message: "수다방 글을 수정하였습니다." },
+      body: { statusText: "Accepted", message: "수다방 글을 수정하였습니다.", updateCommunityPost: updateCommunityPost },
     });
   } catch (error) {
     console.log(error);
