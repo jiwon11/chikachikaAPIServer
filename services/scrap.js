@@ -112,7 +112,7 @@ module.exports.addScrapCommunities = async function addScrapCommunities(event) {
   }
 };
 
-module.exports.removeScrapCommunity = async function removeScrapCommunity(event) {
+module.exports.removeScrapCommunities = async function removeScrapCommunities(event) {
   try {
     const token = event.headers.Authorization;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -129,7 +129,7 @@ module.exports.removeScrapCommunity = async function removeScrapCommunity(event)
           id: userId,
         },
       });
-      await user.removeScrapCommunity(post);
+      await user.removeScrapCommunities(post);
       return {
         statusCode: 200,
         body: `{"statusText": "OK","message": "수다방 글을 스크랩 취소하였습니다."}`,
