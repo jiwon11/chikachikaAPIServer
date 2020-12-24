@@ -1,4 +1,5 @@
-const { Dental_clinic } = require("../utils/models");
+const { Dental_clinic, City } = require("../utils/models");
+const { sequelize, Sequelize } = require("../utils/models");
 
 module.exports.importDentalClinic = async function importDentalClinic(event) {
   try {
@@ -75,6 +76,47 @@ module.exports.getNonPaymentItemHospList = async function getNonPaymentItemHospL
     return {
       statusCode: 500,
       body: `{"statusText": "Unaccepted","message": "${err.message}"}`,
+    };
+  }
+};
+
+module.exports.importDentalClinicCity = async function importDentalClinicCity(event) {
+  try {
+    sequelize.sync({});
+    const results = {};
+    const clinics = await Dental_clinic.findAll({
+      attributes: ["id", "name", "local", "address"],
+    });
+    for (let clinic of clinics) {
+      const clinicSido = clinic.address.split(" ")[0];
+      const clinicSigungu = clinic.local.split(" ")[0];
+      const clinicEmdCity = clinic.local.split(" ")[1];
+      const city = await City.findOne({
+        where: {
+          sido: clinicSido,
+          sigungu: clinicSigungu,
+          emdName: clinicEmdCity,
+        },
+        attributes: ["id", "sido", "sigungu", "emdName"],
+      });
+      if (city) {
+        await city.addDental_clinics(clinic);
+        console.log(`${clinic.name} : 있음 (${city.sido} ${city.sigungu} ${city.emdName})`);
+        results[clinic.name] = `있음 (${city.sido} ${city.sigungu} ${city.emdName})`;
+      } else {
+        console.log(`${clinic.name} : 없음`);
+        results[clinic.name] = "없음";
+      }
+    }
+    return {
+      statusCode: 200,
+      body: JSON.stringify(results),
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
     };
   }
 };

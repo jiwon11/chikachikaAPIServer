@@ -390,6 +390,13 @@ functions:
           path: importDentalClinic
           method: post
           cors: true
+  importDentalClinicCity:
+    handler: services/dentalClinic.importDentalClinicCity
+    events:
+      - http:
+          path: importDentalClinicCity
+          method: post
+          cors: true
   importDentalSubject:
     handler: services/subject.importDentalSubject
     events:
