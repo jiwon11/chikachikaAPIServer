@@ -492,4 +492,10 @@ db.City.belongsToMany(db.User, {
   through: "UsersCities",
   onDelete: "CASCADE",
 });
+
+db.City.hasMany(db.Dental_clinic, {
+  foreignKey: "cityId",
+  onDelete: "CASCADE",
+});
+db.Dental_clinic.belongsTo(db.City);
 module.exports = db;
