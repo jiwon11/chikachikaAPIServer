@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) =>
         type: DataTypes.INTEGER,
         defaultValue: 0,
       },
-      concsulationDate: {
+      treatmentDate: {
         type: DataTypes.DATEONLY,
         allowNull: false,
       },
