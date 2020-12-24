@@ -6,7 +6,6 @@ module.exports.handler = async function dbReset(event) {
   try {
     const clinicNames = await sequelize.query("SELECT name, COUNT(name) FROM dental_clinics GROUP BY name HAVING COUNT(name) >= 2;", { type: QueryTypes.SELECT });
     console.log(clinicNames);
-    /*
     clinicNames.forEach(async (clinicName) => {
       const duplicateClinics = await Dental_clinic.findAll({
         where: {
@@ -29,7 +28,6 @@ module.exports.handler = async function dbReset(event) {
         console.log(`updatedClinic Name: ${name}(${locals[0]}-${locals[1]})`);
       }
     });
-    */
   } catch (error) {
     console.log(error);
   }

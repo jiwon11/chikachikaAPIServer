@@ -18,8 +18,10 @@ module.exports.searchCities = async function searchCities(event) {
         "sido",
         "sigungu",
         "emdName",
+        "legalCity",
         [Sequelize.literal("CONCAT(sido, ' ', sigungu, ' ',emdName)"), "fullCityName"],
         [Sequelize.literal("GROUP_CONCAT(IF(legalCity != emdName, legalCity, NULL))"), "relativeAddress"],
+        [Sequelize.literal("(SELECT COUNT(*) FROM dental_clinics WHERE dental_clinics.cityId = cities.id)"), "clinicsNum"],
       ],
       group: "emdName",
       having: {
