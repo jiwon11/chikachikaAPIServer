@@ -210,11 +210,11 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
     const paragraphs = JSON.parse(req.body.paragraphs);
     console.log("paragraphs: ", paragraphs);
     const { starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId, totalCost } = JSON.parse(req.body.body);
-    var concsulationDate;
-    if (req.body.concsulationDate !== "undefined" && req.body.concsulationDate) {
-      concsulationDate = new Date(req.body.concsulationDate);
+    var treatmentDate;
+    if (req.body.treatmentDate !== "undefined" && req.body.treatmentDate) {
+      treatmentDate = new Date(req.body.treatmentDate);
     } else {
-      concsulationDate = new Date();
+      treatmentDate = new Date();
     }
     const review = await Review.create({
       certifiedBill: certified_bill,
@@ -222,7 +222,7 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
       starRate_service: parseFloat(starRate_service),
       starRate_treatment: parseFloat(starRate_treatment),
       totalCost: parseInt(totalCost),
-      concsulationDate: concsulationDate,
+      treatmentDate: treatmentDate,
       userId: req.user.id,
       dentalClinicId: dentalClinicId,
     });
@@ -287,11 +287,11 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
     });
     if (review) {
       if (review.userId === req.user.id) {
-        var concsulationDate;
-        if (req.body.concsulationDate !== "undefined" && req.body.concsulationDate) {
-          concsulationDate = new Date(req.body.concsulationDate);
+        var treatmentDate;
+        if (req.body.treatmentDate !== "undefined" && req.body.treatmentDate) {
+          treatmentDate = new Date(req.body.treatmentDate);
         } else {
-          concsulationDate = new Date();
+          treatmentDate = new Date();
         }
         await Review_content.destroy({
           where: {
@@ -310,7 +310,7 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
           starRate_service: parseFloat(starRate_service),
           starRate_treatment: parseFloat(starRate_treatment),
           totalCost: parseInt(totalCost),
-          concsulationDate: concsulationDate,
+          treatmentDate: treatmentDate,
           userId: req.user.id,
           dentalClinicId: dentalClinicId,
         });
