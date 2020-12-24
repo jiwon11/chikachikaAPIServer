@@ -49,6 +49,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
           ],
           [sequelize.literal("(SELECT COUNT(*) FROM Like_Review WHERE Like_Review.likedReviewId = review.id)"), "reviewLikeNum"],
           [sequelize.literal(`(SELECT COUNT(*) FROM Like_Review WHERE Like_Review.likedReviewId = review.id AND Like_Review.likerId = "${req.user.id}")`), "viewerLikedReview"],
+          [sequelize.literal(`(SELECT COUNT(*) FROM Scrap WHERE Scrap.scrapedReviewId = review.id AND Scrap.scraperId = "${req.user.id}")`), "viewerScrapedReview"],
           [sequelize.literal("(SELECT COUNT(*) FROM ViewReviews WHERE ViewReviews.viewedReviewId = review.id)"), "reviewViewNum"],
           [
             sequelize.literal("(SELECT GROUP_CONCAT(description ORDER BY review_contents.index ASC SEPARATOR ' ') FROM review_contents WHERE review_contents.reviewId = review.id)"),
@@ -180,12 +181,14 @@ router.get("/", getUserInToken, async (req, res, next) => {
         await review.addViewer(viewer);
       }
       const viewerLikeReview = await review.hasLikers(viewer);
+      const viewerScrapReview = await review.hasScrapers(viewer);
       return res.status(200).json({
         reviewBody: review,
         reviewViewerNum: reviewViewerNum,
         reviewComments: reviewComments,
         reviewLikeNum: reviewLikeNum,
         viewerLikeReview: viewerLikeReview,
+        viewerScrapReview: viewerScrapReview,
       });
     } else {
       return res.status(404).json({
@@ -415,12 +418,14 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
             await updateReview.addViewer(updateReview);
           }
           const viewerLikeReview = await updateReview.hasLikers(viewer);
+          const viewerScrapReview = await review.hasScrapers(viewer);
           const updateReviewResult = {
             reviewBody: updateReview,
             reviewViewerNum: reviewViewerNum,
             reviewComments: reviewComments,
             reviewLikeNum: reviewLikeNum,
             viewerLikeReview: viewerLikeReview,
+            viewerScrapReview: viewerScrapReview,
           };
           return res.status(200).json({
             statusCode: 200,

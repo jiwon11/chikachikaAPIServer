@@ -229,6 +229,7 @@ module.exports.reviews = async function reviewSearch(event) {
       reviews.map(async (review) => {
         delete review.dataValues.review_treatment_item;
         review.dataValues.viewerLikeReview = await review.hasLikers(searchUser);
+        review.dataValues.viewerScrapReview = await review.hasScrapers(searchUser);
         review.dataValues.reviewCommentNum = await review.countReview_comments();
         review.dataValues.reviewLikeNum = await review.countLikers();
       })
