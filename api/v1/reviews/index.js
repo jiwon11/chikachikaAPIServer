@@ -353,7 +353,7 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
         console.log(`콘텐츠 개수 : ${contents.length}`);
         const updateReview = await Review.findOne({
           where: {
-            id: reviewId,
+            id: review.id,
           },
           attributes: {
             include: [[sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.updatedAt,NOW()))`), "createdDiff(second)"]],
@@ -416,7 +416,7 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
           }
           const viewerLikeReview = await updateReview.hasLikers(viewer);
           const updateReviewResult = {
-            reviewBody: review,
+            reviewBody: updateReview,
             reviewViewerNum: reviewViewerNum,
             reviewComments: reviewComments,
             reviewLikeNum: reviewLikeNum,
@@ -427,18 +427,18 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
             message: "리뷰글을 수정하였습니다.",
             updateReview: updateReviewResult,
           });
-        } else {
-          return res.status(401).json({
-            statusCode: 401,
-            body: { statusText: "Unauthorized", message: "글을 수정할 권한이 없습니다." },
-          });
         }
       } else {
-        return res.status(404).json({
-          statusCode: 404,
-          body: { statusText: "Unauthorized", message: "리뷰가 없습니다." },
+        return res.status(401).json({
+          statusCode: 401,
+          body: { statusText: "Unauthorized", message: "글을 수정할 권한이 없습니다." },
         });
       }
+    } else {
+      return res.status(404).json({
+        statusCode: 404,
+        body: { statusText: "Unauthorized", message: "리뷰가 없습니다." },
+      });
     }
   } catch (error) {
     console.log(error);
