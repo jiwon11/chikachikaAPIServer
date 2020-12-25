@@ -212,12 +212,13 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
   try {
     const paragraphs = JSON.parse(req.body.paragraphs);
     console.log("paragraphs: ", paragraphs);
-    const { starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId, totalCost } = JSON.parse(req.body.body);
-    var treatmentDate;
-    if (req.body.treatmentDate !== "undefined" && req.body.treatmentDate) {
-      treatmentDate = new Date(req.body.treatmentDate);
+    const body = req.body.body;
+    const { starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId, totalCost, treatmentDate } = JSON.parse(body);
+    var parseTreatmentDate;
+    if (treatmentDate !== "undefined" && treatmentDate) {
+      parseTreatmentDate = new Date(treatmentDate);
     } else {
-      treatmentDate = new Date();
+      parseTreatmentDate = new Date();
     }
     const review = await Review.create({
       certifiedBill: certified_bill,
@@ -225,7 +226,7 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
       starRate_service: parseFloat(starRate_service),
       starRate_treatment: parseFloat(starRate_treatment),
       totalCost: parseInt(totalCost),
-      treatmentDate: treatmentDate,
+      treatmentDate: parseTreatmentDate,
       userId: req.user.id,
       dentalClinicId: dentalClinicId,
     });
@@ -282,7 +283,8 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
   try {
     const reviewId = req.query.reviewId;
     const paragraphs = JSON.parse(req.body.paragraphs);
-    const { starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId, totalCost } = JSON.parse(req.body.body);
+    const body = req.body.body;
+    const { starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId, totalCost, treatmentDate } = JSON.parse(body);
     const review = await Review.findOne({
       where: {
         id: reviewId,
@@ -290,11 +292,11 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
     });
     if (review) {
       if (review.userId === req.user.id) {
-        var treatmentDate;
-        if (req.body.treatmentDate !== "undefined" && req.body.treatmentDate) {
-          treatmentDate = new Date(req.body.treatmentDate);
+        var parseTreatmentDate;
+        if (treatmentDate !== "undefined" && treatmentDate) {
+          parseTreatmentDate = new Date(treatmentDate);
         } else {
-          treatmentDate = new Date();
+          parseTreatmentDate = new Date();
         }
         await Review_content.destroy({
           where: {
@@ -313,7 +315,7 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
           starRate_service: parseFloat(starRate_service),
           starRate_treatment: parseFloat(starRate_treatment),
           totalCost: parseInt(totalCost),
-          treatmentDate: treatmentDate,
+          treatmentDate: parseTreatmentDate,
           userId: req.user.id,
           dentalClinicId: dentalClinicId,
         });
