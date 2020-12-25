@@ -214,9 +214,11 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
     console.log("paragraphs: ", paragraphs);
     const body = req.body.body;
     const { starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId, totalCost, treatmentDate } = JSON.parse(body);
+    console.log(`treatmentDate : ${treatmentDate}`);
     var parseTreatmentDate;
     if (treatmentDate !== "undefined" && treatmentDate) {
       parseTreatmentDate = new Date(treatmentDate);
+      console.log(`parseTreatmentDate : ${parseTreatmentDate}`);
     } else {
       parseTreatmentDate = new Date();
     }
