@@ -1,5 +1,5 @@
 const sequelize = require("sequelize");
-const { Dental_clinic, Review } = require("../utils/models");
+const { Dental_clinic, Review, Korea_holiday } = require("../utils/models");
 
 module.exports.clinics = async function clinics(event) {
   try {
@@ -77,15 +77,42 @@ module.exports.clinics = async function clinics(event) {
       satTolStartTimeQuery = { [sequelize.Op.not]: null };
       satTolEndTimeQuery = { [sequelize.Op.not]: null };
     }
-    const clinics = await Dental_clinic.findAll({
-      attributes: {
-        include: [
-          [
-            sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`),
-            "dinstance(km)",
-          ],
-        ],
+    var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
+    const today = new Date();
+    const nowTime = `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`;
+    const day = weekDay[today.getDay()];
+    const todayHoliday = await Korea_holiday.findAll({
+      where: {
+        date: today,
       },
+    });
+    console.log(day, nowTime);
+    console.log(todayHoliday);
+    const clinics = await Dental_clinic.findAll({
+      attributes: [
+        "id",
+        "name",
+        "local",
+        "address",
+        "telNumber",
+        "website",
+        "geographLong",
+        "geographLat",
+        `${day}_Consulation_start_time`,
+        `${day}_Consulation_end_time`,
+        [
+          sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`),
+          "dinstance(km)",
+        ],
+        day === "Sun" || todayHoliday.length > 0
+          ? [sequelize.literal(`holiday_treatment_start_time <= "${nowTime}" AND holiday_treatment_end_time >= "${nowTime}"`), "conclustionNow"]
+          : [sequelize.literal(`${day}_Consulation_start_time <= "${nowTime}" AND ${day}_Consulation_end_time >= "${nowTime}"`), "conclustionNow"],
+        day !== "Sat" && day !== "Sun" && todayHoliday.length === 0
+          ? [sequelize.literal(`weekday_TOL_start <= "${nowTime}" AND weekday_TOL_end >= "${nowTime}"`), "lunchTimeNow"]
+          : day !== "Sun" && todayHoliday.length === 0
+          ? [sequelize.literal(`sat_TOL_start <= "${nowTime}" AND sat_TOL_end >= "${nowTime}"`), "lunchTimeNow"]
+          : [sequelize.literal(`1 != 1`), "lunchNow"],
+      ],
       where: {
         [sequelize.Op.all]: sequelize.literal(
           `(6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat))))<=${radius}`

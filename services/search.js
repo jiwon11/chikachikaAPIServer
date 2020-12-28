@@ -96,16 +96,17 @@ module.exports.localClinicSearch = async function localClinicSearch(event) {
         body: `{"statusText": "Bad Request","message": "한국 내 위도 범위를 입력하세요."}`,
       };
     }
-    var week = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
+    var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
     const today = new Date();
     const nowTime = `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`;
-    const day = week[today.getDay()];
+    const day = weekDay[today.getDay()];
     const todayHoliday = await Korea_holiday.findAll({
       where: {
         date: today,
       },
     });
     console.log(day, nowTime);
+    console.log(todayHoliday);
     const clinics = await Dental_clinic.findAll({
       attributes: [
         "id",
@@ -125,6 +126,11 @@ module.exports.localClinicSearch = async function localClinicSearch(event) {
         day === "Sun" || todayHoliday.length > 0
           ? [sequelize.literal(`holiday_treatment_start_time <= "${nowTime}" AND holiday_treatment_end_time >= "${nowTime}"`), "conclustionNow"]
           : [sequelize.literal(`${day}_Consulation_start_time <= "${nowTime}" AND ${day}_Consulation_end_time >= "${nowTime}"`), "conclustionNow"],
+        day !== "Sat" && day !== "Sun" && todayHoliday.length === 0
+          ? [sequelize.literal(`weekday_TOL_start <= "${nowTime}" AND weekday_TOL_end >= "${nowTime}"`), "lunchTimeNow"]
+          : day !== "Sun" && todayHoliday.length === 0
+          ? [sequelize.literal(`sat_TOL_start <= "${nowTime}" AND sat_TOL_end >= "${nowTime}"`), "lunchTimeNow"]
+          : [sequelize.literal(`1 != 1`), "lunchNow"],
       ],
       where: {
         [sequelize.Op.all]: sequelize.literal(`${day}_Consulation_start_time != "00:00:00" AND ${day}_Consulation_end_time != "00:00:00"`),
