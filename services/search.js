@@ -1,6 +1,6 @@
 const sequelize = require("sequelize");
 const jwt = require("jsonwebtoken");
-const { Symptom_item, Dental_clinic, Treatment_item, Review, User, Review_content, Search_record, GeneralTag } = require("../utils/models");
+const { Symptom_item, Dental_clinic, Treatment_item, Review, User, Review_content, Search_record, GeneralTag, Korea_holiday } = require("../utils/models");
 
 module.exports.treatmentItems = async function treatmentItems(event) {
   try {
@@ -100,6 +100,11 @@ module.exports.localClinicSearch = async function localClinicSearch(event) {
     const today = new Date();
     const nowTime = `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`;
     const day = week[today.getDay()];
+    const todayHoliday = await Korea_holiday.findAll({
+      where: {
+        date: today,
+      },
+    });
     console.log(day, nowTime);
     const clinics = await Dental_clinic.findAll({
       attributes: [
@@ -117,7 +122,9 @@ module.exports.localClinicSearch = async function localClinicSearch(event) {
           sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`),
           "dinstance(km)",
         ],
-        [sequelize.literal(`${day}_Consulation_start_time <= "${nowTime}" AND ${day}_Consulation_end_time >= "${nowTime}"`), "conclustionNow"],
+        day === "Sun" || todayHoliday.length > 0
+          ? [sequelize.literal(`holiday_treatment_start_time <= "${nowTime}" AND holiday_treatment_end_time >= "${nowTime}"`), "conclustionNow"]
+          : [sequelize.literal(`${day}_Consulation_start_time <= "${nowTime}" AND ${day}_Consulation_end_time >= "${nowTime}"`), "conclustionNow"],
       ],
       where: {
         [sequelize.Op.all]: sequelize.literal(`${day}_Consulation_start_time != "00:00:00" AND ${day}_Consulation_end_time != "00:00:00"`),

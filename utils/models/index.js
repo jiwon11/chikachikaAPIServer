@@ -39,6 +39,7 @@ db.Community_symptom = require("./community_symptom")(sequelize, Sequelize);
 db.Community_treatment = require("./community_treatment")(sequelize, Sequelize);
 db.CommunityGeneralTag = require("./communityGeneralTag")(sequelize, Sequelize);
 db.City = require("./city")(sequelize, Sequelize);
+db.Korea_holiday = require("./korea_holiday")(sequelize, Sequelize);
 /*사용자와 타이머 관걔형 */
 db.User.hasMany(db.Timer, {
   foreignKey: "userId",
