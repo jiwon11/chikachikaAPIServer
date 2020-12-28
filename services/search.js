@@ -53,45 +53,13 @@ module.exports.symptomItems = async function symptomItems(event) {
 module.exports.dentalClinics = async function dentalClinics(event) {
   try {
     const query = event.queryStringParameters.q;
-    var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
-    const today = new Date();
-    const nowTime = `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`;
-    const day = weekDay[today.getDay()];
-    const todayHoliday = await Korea_holiday.findAll({
-      where: {
-        date: today,
-      },
-    });
     const clinics = await Dental_clinic.findAll({
       where: {
         name: {
           [sequelize.Op.like]: `${query}%`,
         },
       },
-      attributes: [
-        "id",
-        "name",
-        "local",
-        "address",
-        "telNumber",
-        "website",
-        "geographLong",
-        "geographLat",
-        `${day}_Consulation_start_time`,
-        `${day}_Consulation_end_time`,
-        [
-          sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`),
-          "dinstance(km)",
-        ],
-        day === "Sun" || todayHoliday.length > 0
-          ? [sequelize.literal(`holiday_treatment_start_time <= "${nowTime}" AND holiday_treatment_end_time >= "${nowTime}"`), "conclustionNow"]
-          : [sequelize.literal(`${day}_Consulation_start_time <= "${nowTime}" AND ${day}_Consulation_end_time >= "${nowTime}"`), "conclustionNow"],
-        day !== "Sat" && day !== "Sun" && todayHoliday.length === 0
-          ? [sequelize.literal(`weekday_TOL_start <= "${nowTime}" AND weekday_TOL_end >= "${nowTime}"`), "lunchTimeNow"]
-          : day !== "Sun" && todayHoliday.length === 0
-          ? [sequelize.literal(`sat_TOL_start <= "${nowTime}" AND sat_TOL_end >= "${nowTime}"`), "lunchTimeNow"]
-          : [sequelize.literal(`1 != 1`), "lunchNow"],
-      ],
+      attributes: ["id", "name", "local", "address"],
     });
     let response = {
       statusCode: 200,
