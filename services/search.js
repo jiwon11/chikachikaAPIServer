@@ -107,6 +107,18 @@ module.exports.localClinicSearch = async function localClinicSearch(event) {
     });
     console.log(day, nowTime);
     console.log(todayHoliday);
+    var TOLTimeAttrStart;
+    var TOLTimeAttrEnd;
+    if (day !== "Sun" && day !== "Sat") {
+      TOLTimeAttrStart = "weekday_TOL_start";
+      TOLTimeAttrEnd = "weekday_TOL_end";
+    } else if (day !== "Sun") {
+      TOLTimeAttrStart = "sat_TOL_start";
+      TOLTimeAttrEnd = "sat_TOL_end";
+    } else {
+      TOLTimeAttrStart = [sequelize.literal(`1 != 1`), "sun_TOL_start"];
+      TOLTimeAttrEnd = [sequelize.literal(`1 != 1`), "sun_TOL_end"];
+    }
     const clinics = await Dental_clinic.findAll({
       attributes: [
         "id",
@@ -117,12 +129,15 @@ module.exports.localClinicSearch = async function localClinicSearch(event) {
         "website",
         "geographLong",
         "geographLat",
-        `${day}_Consulation_start_time`,
-        `${day}_Consulation_end_time`,
+        day === "Sun" || todayHoliday.length > 0 ? "holiday_treatment_start_time" : `${day}_Consulation_start_time`,
+        day === "Sun" || todayHoliday.length > 0 ? "holiday_treatment_end_time" : `${day}_Consulation_end_time`,
+        TOLTimeAttrStart,
+        TOLTimeAttrEnd,
         [
           sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`),
           "dinstance(km)",
         ],
+        [sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NOT NULL)`), "reviewNum"],
         day === "Sun" || todayHoliday.length > 0
           ? [sequelize.literal(`holiday_treatment_start_time <= "${nowTime}" AND holiday_treatment_end_time >= "${nowTime}"`), "conclustionNow"]
           : [sequelize.literal(`${day}_Consulation_start_time <= "${nowTime}" AND ${day}_Consulation_end_time >= "${nowTime}"`), "conclustionNow"],
@@ -131,9 +146,18 @@ module.exports.localClinicSearch = async function localClinicSearch(event) {
           : day !== "Sun" && todayHoliday.length === 0
           ? [sequelize.literal(`sat_TOL_start <= "${nowTime}" AND sat_TOL_end >= "${nowTime}"`), "lunchTimeNow"]
           : [sequelize.literal(`1 != 1`), "lunchNow"],
+        [
+          sequelize.literal(
+            `(SELECT ROUND(((SELECT AVG(starRate_cost) FROM reviews where reviews.dentalClinicId = dental_clinic.id)+(SELECT AVG(starRate_treatment) FROM reviews where reviews.dentalClinicId = dental_clinic.id)+(SELECT AVG(starRate_service) FROM reviews where reviews.dentalClinicId = dental_clinic.id))/3,2))`
+          ),
+          "reviewAVGStarRate",
+        ],
       ],
       where: {
-        [sequelize.Op.all]: sequelize.literal(`${day}_Consulation_start_time != "00:00:00" AND ${day}_Consulation_end_time != "00:00:00"`),
+        [sequelize.Op.all]:
+          day === "Sun" || todayHoliday.length > 0
+            ? sequelize.literal(`deletedAt IS NULL`)
+            : sequelize.literal(`${day}_Consulation_start_time != "00:00:00" AND ${day}_Consulation_end_time != "00:00:00"`),
         [sequelize.Op.or]: [
           {
             name: {
@@ -148,7 +172,9 @@ module.exports.localClinicSearch = async function localClinicSearch(event) {
         ],
       },
       order: [
-        [sequelize.literal(`${day}_Consulation_start_time <= "${nowTime}" AND ${day}_Consulation_end_time >= "${nowTime}"`), "DESC"],
+        day === "Sun" || todayHoliday.length > 0
+          ? [sequelize.literal(`holiday_treatment_start_time <= "${nowTime}" AND holiday_treatment_end_time >= "${nowTime}"`), "DESC"]
+          : [sequelize.literal(`${day}_Consulation_start_time <= "${nowTime}" AND ${day}_Consulation_end_time >= "${nowTime}"`), "DESC"],
         [sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`), "ASC"],
       ],
     });
