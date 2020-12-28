@@ -152,12 +152,12 @@ module.exports = (sequelize, DataTypes) =>
         defaltValue: false,
         allowNullL: false,
       },
-      holiday_treatment: {
-        type: DataTypes.BOOLEAN,
-        allowNullL: false,
+      holiday_treatment_start_time: {
+        type: DataTypes.TIME,
+        allowNullL: true,
       },
-      weekend_treatment: {
-        type: DataTypes.BOOLEAN,
+      holiday_treatment_end_time: {
+        type: DataTypes.TIME,
         allowNullL: true,
       },
       ykiho: {
