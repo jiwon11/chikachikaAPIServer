@@ -85,6 +85,10 @@ module.exports.handler = async function registerUser(event) {
       },
     });
     await user.addCities(city);
+    const userResidences = await user.getCities({
+      attributes: ["sido", "sigungu", "emdName"],
+      joinTableAttributes: [],
+    });
     const jwtToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
     let responseBody = `{"statusText": "Accepted","message": "${user.nickname}님의 회원가입이 완료되었습니다.", "token": "${jwtToken}", "user":{"userId": "${user.id}", "userNickname":"${user.nickname}", "userProfileImg":"${user.profileImg}","userResident":"${city.emdName}"}}`;
     return {

@@ -428,6 +428,13 @@ functions:
           path: dbUpdate
           method: get
           cors: true
+  duplicateNameClinics:
+    handler: services/dentalClinic.duplicateNameClinics
+    events:
+      - http:
+          path: duplicateNameClinics
+          method: get
+          cors: true
 plugins:
   - serverless-offline
   - serverless-apigw-binary

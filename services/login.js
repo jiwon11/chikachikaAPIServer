@@ -1,5 +1,5 @@
 const { verifyPhoneNumberFunc } = require("../utils/verify");
-const { User, NotificationConfig } = require("../utils/models");
+const { User, NotificationConfig, City } = require("../utils/models");
 const ApiError = require("../utils/error");
 const jwt = require("jsonwebtoken");
 
@@ -17,12 +17,26 @@ module.exports.handler = async function signInUser(event) {
       where: {
         phoneNumber: userPhoneNumber,
       },
+      include: [
+        {
+          model: City,
+          as: "Cities",
+          attributes: ["sido", "sigungu", "emdName"],
+          through: {
+            attributes: [],
+          },
+        },
+      ],
     });
     const isValidPhoneNumber = await verifyPhoneNumberFunc(userPhoneNumber, token);
     if (isValidPhoneNumber.statusCode === 200) {
       console.log(user.dataValues.id);
       const token = jwt.sign({ id: user.dataValues.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
-      let responseBody = `{"token": "${token}","statusText": "Accepted","message": "사용자 토큰이 발급되었습니다.", "user":{"userId": "${user.id}", "userNickname":"${user.nickname}", "userProfileImg":"${user.profileImg}"}}`;
+      let responseBody = `{"token": "${token}","statusText": "Accepted","message": "사용자 토큰이 발급되었습니다.", "user":{"userId": "${user.id}", "userNickname":"${
+        user.nickname
+      }", "userProfileImg":"${user.profileImg}", "userPhoneNumber":"${user.phoneNumber}", "userGender":"${user.gender}", "userBirthdate":"${user.birthdate}", "userProvider":"${
+        user.provider
+      }","userResidences": ${JSON.stringify(user.Cities)}}}`;
       return {
         statusCode: 200,
         body: responseBody,
