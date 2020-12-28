@@ -53,6 +53,15 @@ module.exports.symptomItems = async function symptomItems(event) {
 module.exports.dentalClinics = async function dentalClinics(event) {
   try {
     const query = event.queryStringParameters.q;
+    var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
+    const today = new Date();
+    const nowTime = `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`;
+    const day = weekDay[today.getDay()];
+    const todayHoliday = await Korea_holiday.findAll({
+      where: {
+        date: today,
+      },
+    });
     const clinics = await Dental_clinic.findAll({
       where: {
         name: {
@@ -300,6 +309,7 @@ module.exports.allTagItems = async function allTagItems(event) {
       offset: offset,
       limit: limit,
     });
+    clinics.forEach((clinic) => clinic.setDataValue("categoty", "clinic"));
     const treatments = await Treatment_item.findAll({
       where: {
         name: {
@@ -310,7 +320,7 @@ module.exports.allTagItems = async function allTagItems(event) {
       offset: offset,
       limit: limit,
     });
-    clinics.forEach((clinic) => clinic.setDataValue("categoty", "clinic"));
+    treatments.forEach((treatment) => treatment.setDataValue("categoty", "treatment"));
     const symptoms = await Symptom_item.findAll({
       where: {
         name: {
