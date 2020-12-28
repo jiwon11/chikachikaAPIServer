@@ -165,6 +165,10 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
           //[sequelize.literal("(SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = community.id AND deletedAt IS null)"), "postCommentsCount"],
           [sequelize.literal("(SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id)"), "postLikeNum"],
           [sequelize.literal(`(SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id AND Like_Community.likerId = "${req.user.id}")`), "viewerLikeCommunityPost"],
+          [
+            sequelize.literal(`(SELECT COUNT(*) FROM Scrap_Community WHERE Scrap_Community.scrapedCommunityId = community.id AND Like_Community.scraperId = "${req.user.id}")`),
+            "viewerScrapCommunityPost",
+          ],
           [sequelize.literal("(SELECT COUNT(*) FROM ViewCommunities WHERE ViewCommunities.viewedCommunityId = community.id)"), "postViewNum"],
         ],
       },
@@ -243,21 +247,25 @@ router.get("/", getUserInToken, async (req, res, next) => {
       where: {
         id: communityPostId,
       },
-      attributes: [
-        "id",
-        "type",
-        "description",
-        "wantDentistHelp",
-        "createdAt",
-        "userId",
-        [
-          sequelize.literal(
-            "(SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = community.id AND deletedAt IS null) + (SELECT COUNT(*) FROM Community_reply LEFT JOIN community_comments ON (community_comments.id = Community_reply.commentId) WHERE community_comments.communityId = community.id)"
-          ),
-          "postCommentsCount",
+      attributes: {
+        include: [
+          [sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,community.updatedAt,NOW()))`), "createdDiff(second)"],
+          [
+            sequelize.literal(
+              "(SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = community.id AND deletedAt IS null) + (SELECT COUNT(*) FROM Community_reply LEFT JOIN community_comments ON (community_comments.id = Community_reply.commentId) WHERE community_comments.communityId = community.id)"
+            ),
+            "postCommentsNum",
+          ],
+          //[sequelize.literal("(SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = community.id AND deletedAt IS null)"), "postCommentsCount"],
+          [sequelize.literal("(SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id)"), "postLikeNum"],
+          [sequelize.literal(`(SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id AND Like_Community.likerId = "${req.user.id}")`), "viewerLikeCommunityPost"],
+          [
+            sequelize.literal(`(SELECT COUNT(*) FROM Scrap_Community WHERE Scrap_Community.scrapedCommunityId = community.id AND Like_Community.scraperId = "${req.user.id}")`),
+            "viewerScrapCommunityPost",
+          ],
+          [sequelize.literal("(SELECT COUNT(*) FROM ViewCommunities WHERE ViewCommunities.viewedCommunityId = community.id)"), "postViewNum"],
         ],
-        [sequelize.literal("(SELECT COUNT(*) FROM ViewCommunities WHERE ViewCommunities.viewedCommunityId = community.id)"), "postViewNum"],
-      ],
+      },
       include: [
         {
           model: User,
@@ -266,84 +274,51 @@ router.get("/", getUserInToken, async (req, res, next) => {
         {
           model: Community_img,
         },
+        {
+          model: Dental_clinic,
+          as: "Clinics",
+          attributes: ["id", "name"],
+          through: {
+            attributes: ["index"],
+          },
+        },
+        {
+          model: Treatment_item,
+          as: "TreatmentItems",
+          attributes: ["id", "name"],
+          through: {
+            attributes: ["index"],
+          },
+        },
+        {
+          model: Symptom_item,
+          as: "SymptomItems",
+          attributes: ["id", "name"],
+          through: {
+            attributes: ["index"],
+          },
+        },
+        {
+          model: GeneralTag,
+          as: "GeneralTags",
+          attributes: ["id", "name"],
+          through: {
+            attributes: ["index"],
+          },
+        },
       ],
       order: [["community_imgs", "img_index", "ASC"]],
     });
     if (communityPost) {
-      const symptomItems = await communityPost.getSymptomItems({
-        attributes: ["id", "name"],
-        through: {
-          attributes: ["index"],
-        },
-      });
-      const treatmentItems = await communityPost.getTreatmentItems({
-        attributes: ["id", "name"],
-        through: {
-          attributes: ["index"],
-        },
-      });
-      const clinics = await communityPost.getClinics({
-        attributes: ["id", "name"],
-      });
-      const generalTags = await communityPost.getGeneralTags({
-        attributes: ["id", "name"],
-      });
-      const tags = symptomItems.concat(treatmentItems, clinics, generalTags);
-      tags.sort(function (a, b) {
-        var nameA = a.hasOwnProperty("community_treatment")
-          ? a["community_treatment"]["index"]
-          : a.hasOwnProperty("community_dental_clinic")
-          ? a["community_dental_clinic"]["index"]
-          : a.hasOwnProperty("community_symptom")
-          ? a["community_symptom"]["index"]
-          : a.hasOwnProperty("communityGeneralTag")
-          ? a["communityGeneralTag"]["index"]
-          : null;
-        var nameB = b.hasOwnProperty("community_treatment")
-          ? b["community_treatment"]["index"]
-          : b.hasOwnProperty("community_dental_clinic")
-          ? b["community_dental_clinic"]["index"]
-          : b.hasOwnProperty("community_symptom")
-          ? b["community_symptom"]["index"]
-          : b.hasOwnProperty("communityGeneralTag")
-          ? b["communityGeneralTag"]["index"]
-          : null;
-        if (nameA < nameB) {
-          return -1;
-        }
-        if (nameA > nameB) {
-          return 1;
-        }
-        return 0;
-      });
-      const communityComments = await communityPost.getCommunity_comments({
-        include: [
-          {
-            model: User,
-          },
-          {
-            model: Community_comment,
-            as: "Replys",
-          },
-        ],
-      });
-      const communityLikeNum = await communityPost.countLikers();
       const viewer = await User.findOne({
         where: {
           id: req.user.id,
         },
       });
-      const viewerLikeCommunityPost = await communityPost.hasLikers(viewer);
       if (viewer.id !== communityPost.userId) {
         await communityPost.addViewer(viewer);
       }
-      return res.status(200).json({
-        communityPost: communityPost,
-        tags: tags,
-        communityComments: communityComments,
-        communityLikeNum: communityLikeNum,
-        viewerLikeCommunityPost: viewerLikeCommunityPost,
-      });
+      return res.status(200).json(communityPost);
     } else {
       return res.status(404).json({
         statusCode: 404,
@@ -516,6 +491,10 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
           //[sequelize.literal("(SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = community.id AND deletedAt IS null)"), "postCommentsCount"],
           [sequelize.literal("(SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id)"), "postLikeNum"],
           [sequelize.literal(`(SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id AND Like_Community.likerId = "${req.user.id}")`), "viewerLikeCommunityPost"],
+          [
+            sequelize.literal(`(SELECT COUNT(*) FROM Scrap_Community WHERE Scrap_Community.scrapedCommunityId = community.id AND Like_Community.scraperId = "${req.user.id}")`),
+            "viewerScrapCommunityPost",
+          ],
           [sequelize.literal("(SELECT COUNT(*) FROM ViewCommunities WHERE ViewCommunities.viewedCommunityId = community.id)"), "postViewNum"],
         ],
       },
