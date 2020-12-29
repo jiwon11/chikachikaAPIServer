@@ -224,6 +224,13 @@ functions:
           path: search/cities
           method: get
           cors: true
+  citiesBycurrentLocation:
+    handler: services/residence.citiesBycurrentLocation
+    events:
+      - http:
+          path: search/cities/currentLocation
+          method: get
+          cors: true
   addUserResidence:
     handler: services/residence.addUserResidence
     events:
@@ -426,6 +433,13 @@ functions:
     events:
       - http:
           path: dbUpdate
+          method: get
+          cors: true
+  duplicateNameClinics:
+    handler: services/dentalClinic.duplicateNameClinics
+    events:
+      - http:
+          path: duplicateNameClinics
           method: get
           cors: true
 plugins:

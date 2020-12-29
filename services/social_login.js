@@ -23,11 +23,25 @@ module.exports.socialUserCheck = async function socialUserCheck(event) {
           provider: provider,
         },
         attributes: ["id", "email", "provider"],
+        include: [
+          {
+            model: City,
+            as: "Cities",
+            attributes: ["sido", "sigungu", "emdName"],
+            through: {
+              attributes: [],
+            },
+          },
+        ],
       });
     }
     if (overlapSocialUser) {
       const token = jwt.sign({ id: overlapSocialUser.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
-      let responseBody = `{"token": "${token}","statusText": "Accepted","message": "소셜 로그인되었습니다.","user":{"userId": "${overlapSocialUser.id}", "userNickname":"${overlapSocialUser.nickname}", "userProfileImg":"${overlapSocialUser.profileImg}"}}`;
+      let responseBody = `{"token": "${token}","statusText": "Accepted","message": "사용자 토큰이 발급되었습니다.", "user":{"userId": "${user.id}", "userNickname":"${
+        user.nickname
+      }", "userProfileImg":"${user.profileImg}", "userPhoneNumber":"${user.phoneNumber}", "userGender":"${user.gender}", "userBirthdate":"${user.birthdate}", "userProvider":"${
+        user.provider
+      }","userResidences": ${JSON.stringify(user.Cities)}}}`;
       return {
         statusCode: 200,
         body: responseBody,
@@ -93,7 +107,15 @@ module.exports.handler = async function social_login(event) {
     });
     await user.addCities(city);
     const token = jwt.sign(user.dataValues.id, process.env.JWT_SECRET, { expiresIn: "1y" });
-    let responseBody = `{"token": "${token}","statusText": "Accepted","message": "소셜 계정으로 회원가입 후, 사용자 토큰이 발급되었습니다.", "user":{"userId": "${user.id}", "userNickname":"${user.nickname}", "userProfileImg":"${user.profileImg}", "userResident":"${city.emdName}"}}`;
+    const userResidences = await user.getCities({
+      attributes: ["sido", "sigungu", "emdName"],
+      joinTableAttributes: [],
+    });
+    let responseBody = `{"token": "${token}","statusText": "Accepted","message": "사용자 토큰이 발급되었습니다.", "user":{"userId": "${user.id}", "userNickname":"${
+      user.nickname
+    }", "userProfileImg":"${user.profileImg}", "userPhoneNumber":"${user.phoneNumber}", "userGender":"${user.gender}", "userBirthdate":"${user.birthdate}", "userProvider":"${
+      user.provider
+    }","userResidences": ${JSON.stringify(userResidences)}}}`;
     return {
       statusCode: 201,
       body: responseBody,

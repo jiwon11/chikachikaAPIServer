@@ -205,7 +205,7 @@ router.put("/", getUserInToken, userProfileUpload.none(), async (req, res, next)
         },
         attributes: ["id", "nickname"],
       });
-      if (uniqNickname.id !== userId) {
+      if (uniqNickname) {
         return res.status(403).json({
           statusCode: 403,
           body: { statusText: "Unaccepted", message: "이미 있는 닉네임입니다." },
@@ -230,6 +230,7 @@ router.put("/", getUserInToken, userProfileUpload.none(), async (req, res, next)
       body: { statusText: "Accepted", message: "프로필을 업데이트하였습니다." },
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       statusCode: 500,
       body: { statusText: "Server Error", message: error.message },
