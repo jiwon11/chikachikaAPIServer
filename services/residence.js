@@ -55,6 +55,40 @@ module.exports.searchCities = async function searchCities(event) {
   }
 };
 
+module.exports.citiesBycurrentLocation = async function citiesBycurrentLocation(event) {
+  try {
+    const long = event.queryStringParameters.long;
+    const lat = event.queryStringParameters.lat;
+    const cities = await City.findAll({
+      logging: true,
+      define: {
+        timestamps: false,
+      },
+      attributes: [
+        "id",
+        "sido",
+        "sigungu",
+        "emdName",
+        "legalCity",
+        [Sequelize.literal("CONCAT(sido, ' ', sigungu, ' ',emdName)"), "fullCityName"],
+        [Sequelize.literal("GROUP_CONCAT(IF(legalCity != emdName, legalCity, NULL))"), "relativeAddress"],
+        [Sequelize.literal("(SELECT COUNT(*) FROM dental_clinics WHERE dental_clinics.cityId = cities.id)"), "clinicsNum"],
+      ],
+      where: Sequelize.literal(`MBRContains(geometry,ST_GeomFromText("point(${long} ${lat})"))`),
+    });
+    return {
+      statusCode: 200,
+      body: JSON.stringify(cities),
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
+
 module.exports.getUserResidence = async function getUserResidence(event) {
   try {
     const token = event.headers.Authorization;
