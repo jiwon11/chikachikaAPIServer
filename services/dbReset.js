@@ -1,5 +1,5 @@
-const { sequelize } = require("../utils/models");
-const { Dental_clinic, Korea_holiday } = require("../utils/models");
+const { sequelize, Sequelize } = require("../utils/models");
+const { Dental_clinic, Korea_holiday, City } = require("../utils/models");
 const { QueryTypes } = require("sequelize");
 
 const request = require("request");
@@ -143,6 +143,7 @@ module.exports.handler = async function dbReset(event) {
       }
     });
     */
+  /*
   var year = "2021";
   try {
     const results = await getHolidaysByMonthCount(2021, 1, 12);
@@ -160,6 +161,38 @@ module.exports.handler = async function dbReset(event) {
     return {
       statusCode: 200,
       body: JSON.stringify(results),
+    };
+    */
+  try {
+    const groupingCities = await City.findAll({
+      attributes: [
+        "id",
+        "sido",
+        "sigungu",
+        "emdName",
+        "legalCity",
+        [Sequelize.literal("CONCAT(sido,' ', sigungu,' ',emdName)"), "fullCityName"],
+        [Sequelize.literal("GROUP_CONCAT(IF(legalCity != emdName, legalCity, NULL))"), "relativeAddress"],
+        [Sequelize.literal("(SELECT COUNT(*) FROM dental_clinics WHERE dental_clinics.cityId = cities.id)"), "clinicsNum"],
+      ],
+      group: "emdName",
+      raw: true,
+    });
+    for (const groupingCity of groupingCities) {
+      await City.update(
+        {
+          relativeAddress: groupingCity.relativeAddress,
+        },
+        {
+          where: {
+            id: groupingCity.id,
+          },
+        }
+      );
+    }
+    return {
+      statusCode: 500,
+      body: JSON.stringify(groupingCities),
     };
   } catch (err) {
     console.info("Error login", err);

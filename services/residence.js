@@ -1,8 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { User, City } = require("../utils/models");
 const { sequelize, Sequelize } = require("../utils/models");
-const city = require("../utils/models/city");
-const user = require("../utils/models/user");
 
 module.exports.searchCities = async function searchCities(event) {
   try {
@@ -10,27 +8,22 @@ module.exports.searchCities = async function searchCities(event) {
     const offset = parseInt(event.queryStringParameters.offset);
     const limit = parseInt(event.queryStringParameters.limit);
     const cities = await City.findAll({
-      define: {
-        timestamps: false,
-      },
+      logging: true,
       attributes: [
         "id",
         "sido",
         "sigungu",
         "emdName",
         "legalCity",
+        "relativeAddress",
         [Sequelize.literal("CONCAT(sido, ' ', sigungu, ' ',emdName)"), "fullCityName"],
-        [Sequelize.literal("GROUP_CONCAT(IF(legalCity != emdName, legalCity, NULL))"), "relativeAddress"],
         [Sequelize.literal("(SELECT COUNT(*) FROM dental_clinics WHERE dental_clinics.cityId = cities.id)"), "clinicsNum"],
       ],
-      group: "emdName",
-      having: {
+      where: {
         [Sequelize.Op.or]: [
-          {
-            fullCityName: {
-              [Sequelize.Op.like]: `%${query}%`,
-            },
-          },
+          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
+            [Sequelize.Op.like]: `%${query}%`,
+          }),
           {
             relativeAddress: {
               [Sequelize.Op.like]: `%${query}%`,
@@ -59,26 +52,44 @@ module.exports.citiesBycurrentLocation = async function citiesBycurrentLocation(
   try {
     const long = event.queryStringParameters.long;
     const lat = event.queryStringParameters.lat;
-    const cities = await City.findAll({
-      logging: true,
-      define: {
-        timestamps: false,
-      },
+    const currentCity = await City.findOne({
       attributes: [
         "id",
         "sido",
         "sigungu",
         "emdName",
         "legalCity",
+        "geometry",
+        "relativeAddress",
         [Sequelize.literal("CONCAT(sido, ' ', sigungu, ' ',emdName)"), "fullCityName"],
-        [Sequelize.literal("GROUP_CONCAT(IF(legalCity != emdName, legalCity, NULL))"), "relativeAddress"],
         [Sequelize.literal("(SELECT COUNT(*) FROM dental_clinics WHERE dental_clinics.cityId = cities.id)"), "clinicsNum"],
       ],
       where: Sequelize.literal(`MBRContains(geometry,ST_GeomFromText("point(${long} ${lat})"))`),
+      raw: true,
     });
+    console.log(currentCity.sido, " ", currentCity.sigungu, " ", currentCity.emdName);
+    const intersectCities = await City.findAll({
+      attributes: [
+        "id",
+        "sido",
+        "sigungu",
+        "emdName",
+        "legalCity",
+        "relativeAddress",
+        [Sequelize.literal("CONCAT(sido,' ', sigungu,' ',emdName)"), "fullCityName"],
+        [Sequelize.literal("(SELECT COUNT(*) FROM dental_clinics WHERE dental_clinics.cityId = cities.id)"), "clinicsNum"],
+      ],
+      where: Sequelize.literal(`MBRIntersects(geometry, ST_GeomFromGeoJSON('${JSON.stringify(currentCity.geometry)}',2,0)) AND cities.id != ${currentCity.id}`),
+      raw: true,
+    });
+    delete currentCity.geometry;
+    const results = {
+      currentCity: currentCity,
+      intersectCities: intersectCities,
+    };
     return {
       statusCode: 200,
-      body: JSON.stringify(cities),
+      body: JSON.stringify(results),
     };
   } catch (error) {
     console.error(error);
