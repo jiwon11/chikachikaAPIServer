@@ -40,6 +40,11 @@ module.exports.clinics = async function clinics(event) {
         days.split(",").forEach((day) => {
           week[day] = time;
         });
+      } else {
+        const today = new Date();
+        const weekDay = ["sun", "mon", "tus", "wed", "thu", "fri", "sat"];
+        const day = weekDay[today.getDay()];
+        week[day] = time;
       }
     }
     console.log(week);

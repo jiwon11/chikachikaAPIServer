@@ -28,4 +28,8 @@ module.exports = (sequelize, DataTypes) =>
       type: DataTypes.GEOMETRY,
       allowNull: false,
     },
+    relativeAddress: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
   });
