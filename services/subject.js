@@ -1,4 +1,5 @@
 const { Dental_subject, Dental_clinic, Special_treatment } = require("../utils/models");
+const { Op } = require("sequelize");
 
 module.exports.importDentalSubject = async function importDentalSubject(event) {
   try {
@@ -33,6 +34,9 @@ module.exports.clinicSubjects = async function clinicSubjects(event) {
       const clinic = await Dental_clinic.findOne({
         where: {
           ykiho: data.암호화YKIHO코드,
+          createdAt: {
+            [Op.gt]: new Date("2020-12-30"),
+          },
         },
       });
       if (clinic) {

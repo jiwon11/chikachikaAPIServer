@@ -414,7 +414,7 @@ functions:
               identitySource: method.request.header.Authorization
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   importDentalClinic:
-    handler: services/dentalClinic.importDentalClinic
+    handler: services/dbReset.importDentalClinic
     package:
       include:
         - dental_clinic_json/dental_database.json
@@ -424,7 +424,7 @@ functions:
           method: post
           cors: true
   importDentalClinicCity:
-    handler: services/dentalClinic.importDentalClinicCity
+    handler: services/dbReset.importDentalClinicCity
     events:
       - http:
           path: importDentalClinicCity
@@ -448,7 +448,7 @@ functions:
           method: post
           cors: true
   getNonPaymentItemHospList:
-    handler: services/dentalClinic.getNonPaymentItemHospList
+    handler: services/dbReset.getNonPaymentItemHospList
     events:
       - http:
           path: getNonPaymentItemHospList
@@ -462,7 +462,7 @@ functions:
           method: get
           cors: true
   duplicateNameClinics:
-    handler: services/dentalClinic.duplicateNameClinics
+    handler: services/dbReset.duplicateNameClinics
     events:
       - http:
           path: duplicateNameClinics
