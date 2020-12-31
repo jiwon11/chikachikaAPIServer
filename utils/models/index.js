@@ -40,7 +40,8 @@ db.Community_treatment = require("./community_treatment")(sequelize, Sequelize);
 db.CommunityGeneralTag = require("./communityGeneralTag")(sequelize, Sequelize);
 db.City = require("./city")(sequelize, Sequelize);
 db.Korea_holiday = require("./korea_holiday")(sequelize, Sequelize);
-db.Clinic_subject = require('./clinic_subject')(sequelize, Sequelize);
+db.Clinic_subject = require("./clinic_subject")(sequelize, Sequelize);
+db.Special_treatment = require("./specialTreatment")(sequelize, Sequelize);
 /*사용자와 타이머 관걔형 */
 db.User.hasMany(db.Timer, {
   foreignKey: "userId",
@@ -203,6 +204,19 @@ db.Dental_subject.belongsToMany(db.Dentist, {
   foreignKey: "dentalSubjectId",
   as: "Dentists",
   through: "Dentist_subject",
+  onDelete: "CASCADE",
+});
+/*치과병원과 특수진료항목 관계형*/
+db.Dental_clinic.belongsToMany(db.Special_treatment, {
+  foreignKey: "dentalClinicId",
+  as: "SpecialTreatments",
+  through: "Clinic_special_treatment",
+  onDelete: "CASCADE",
+});
+db.Special_treatment.belongsToMany(db.Dental_clinic, {
+  foreignKey: "specialTreatmentId",
+  as: "Clinics",
+  through: "Clinic_special_treatment",
   onDelete: "CASCADE",
 });
 /*치과의사와 병원 관계형 */

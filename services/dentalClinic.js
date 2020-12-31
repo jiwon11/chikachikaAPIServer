@@ -1,4 +1,4 @@
-const { Dental_clinic, City, Korea_holiday, Dental_subject, Review, User, Review_content, Treatment_item, Review_treatment_item, Review_comment } = require("../utils/models");
+const { Dental_clinic, City, Korea_holiday, Dental_subject, Review, User, Review_content, Treatment_item, Review_treatment_item, Review_comment, Special_treatment } = require("../utils/models");
 const { sequelize, Sequelize } = require("../utils/models");
 const { QueryTypes } = require("sequelize");
 const axios = require("axios");
@@ -212,6 +212,12 @@ module.exports.detailClinics = async function detailClinics(event) {
           attributes: ["name"],
           through: { attributes: ["SpecialistDentist_NUM", "choiceTreatmentDentist_NUM"] },
         },
+        {
+          model: Special_treatment,
+          as: "SpecialTreatments",
+          attributes: ["name"],
+          through: { attributes: [] },
+        },
       ],
     });
     const response = await axios({
@@ -297,6 +303,7 @@ module.exports.detailClinics = async function detailClinics(event) {
     clinicInfoBody.description = clinic.description ? clinic.description : "";
     clinicInfoBody.treatmentTime = clinicTreatmentTime;
     clinicInfoBody.treatmentSubject = clinic.get("Subjects");
+    clinicInfoBody.SpecialTreatment = clinic.get("SpecialTreatments");
     clinicInfoBody.dentistInfo = dentistInfo;
     clinicInfoBody.parkingInfo = parkingInfo;
     clinicInfoBody.location = clinicLocation;
