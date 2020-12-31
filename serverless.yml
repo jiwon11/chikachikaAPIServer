@@ -441,7 +441,7 @@ functions:
     handler: services/subject.clinicSubjects
     package:
       include:
-        - dental_clinic_json/dental_subject_database.json
+        - dental_clinic_json/dental_treatment_subject_kid.json
     events:
       - http:
           path: clinicSubjects
@@ -467,6 +467,13 @@ functions:
       - http:
           path: duplicateNameClinics
           method: get
+          cors: true
+  specialTreatment:
+    handler: services/subject.specialTreatment
+    events:
+      - http:
+          path: specialTreatment
+          method: post
           cors: true
 plugins:
   - serverless-offline

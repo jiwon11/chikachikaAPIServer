@@ -1,4 +1,4 @@
-const { Dental_subject, Dental_clinic } = require("../utils/models");
+const { Dental_subject, Dental_clinic, Special_treatment } = require("../utils/models");
 
 module.exports.importDentalSubject = async function importDentalSubject(event) {
   try {
@@ -48,6 +48,40 @@ module.exports.clinicSubjects = async function clinicSubjects(event) {
     return {
       statusCode: 200,
       body: `{"statusText": "Accepted"}`,
+    };
+  } catch (err) {
+    console.info("Error login", err);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Unaccepted","message": "${err.message}"}`,
+    };
+  }
+};
+module.exports.specialTreatment = async function specialTreatment(event) {
+  try {
+    const nonclinic = [];
+    const specialTreatmentDatabase = require("../dental_clinic_json/specialTreatment.json");
+    for (var data of specialTreatmentDatabase) {
+      const specialTreatment = await Special_treatment.findOne({
+        where: {
+          name: data.특수진료코드명,
+        },
+      });
+      const clinic = await Dental_clinic.findOne({
+        where: {
+          ykiho: data.암호화YKIHO코드,
+        },
+      });
+      if (clinic) {
+        await clinic.addSpecialTreatment(specialTreatment);
+        console.log(clinic.name);
+      } else {
+        nonclinic.push(data.암호화YKIHO코드);
+      }
+    }
+    return {
+      statusCode: 200,
+      body: `{"statusText": "Accepted", "nonclinic":${JSON.stringify(nonclinic)}}`,
     };
   } catch (err) {
     console.info("Error login", err);
