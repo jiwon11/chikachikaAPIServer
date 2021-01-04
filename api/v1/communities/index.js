@@ -262,7 +262,6 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
       ],
       offset: offset,
       limit: limit,
-      raw: true,
     });
     return res.json(communityPosts);
   } catch (error) {
