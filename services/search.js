@@ -304,7 +304,7 @@ module.exports.allTagItems = async function allTagItems(event) {
       offset: offset,
       limit: limit,
     });
-    clinics.forEach((clinic) => clinic.setDataValue("categoty", "clinic"));
+    clinics.forEach((clinic) => clinic.setDataValue("category", "clinic"));
     const treatments = await Treatment_item.findAll({
       where: {
         name: {
@@ -315,7 +315,7 @@ module.exports.allTagItems = async function allTagItems(event) {
       offset: offset,
       limit: limit,
     });
-    treatments.forEach((treatment) => treatment.setDataValue("categoty", "treatment"));
+    treatments.forEach((treatment) => treatment.setDataValue("category", "treatment"));
     const symptoms = await Symptom_item.findAll({
       where: {
         name: {
@@ -326,7 +326,7 @@ module.exports.allTagItems = async function allTagItems(event) {
       offset: offset,
       limit: limit,
     });
-    symptoms.forEach((symptom) => symptom.setDataValue("categoty", "symptom"));
+    symptoms.forEach((symptom) => symptom.setDataValue("category", "symptom"));
     const generaltags = await GeneralTag.findAll({
       where: {
         name: {
@@ -337,7 +337,7 @@ module.exports.allTagItems = async function allTagItems(event) {
       offset: offset,
       limit: limit,
     });
-    generaltags.forEach((generaltag) => generaltag.setDataValue("categoty", "generaltag"));
+    generaltags.forEach((generaltag) => generaltag.setDataValue("category", "generaltag"));
     var cities;
     if (purpose === "autoComplete") {
       cities = await City.findAll({
@@ -348,7 +348,7 @@ module.exports.allTagItems = async function allTagItems(event) {
             }),
           ],
         },
-        attributes: ["id", "sido", "sigungu", "emdName", [Sequelize.literal("CONCAT(emdName, '(',REPLACE(sigungu,' ', '-'),')')"), "fullCityName"], "relativeAddress"],
+        attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(emdName, '(',REPLACE(sigungu,' ', '-'),')')"), "fullCityName"], "relativeAddress"],
         offset: offset,
         limit: limit,
       });
@@ -366,12 +366,12 @@ module.exports.allTagItems = async function allTagItems(event) {
             },
           ],
         },
-        attributes: ["id", "sido", "sigungu", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName)"), "fullCityName"], "relativeAddress"],
+        attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName)"), "fullCityName"], "relativeAddress"],
         offset: offset,
         limit: limit,
       });
     }
-    cities.forEach((city) => city.setDataValue("categoty", "city"));
+    cities.forEach((city) => city.setDataValue("category", "city"));
     var mergeResults = clinics.concat(treatments, symptoms, generaltags, cities);
     await Promise.all(
       mergeResults.map(async (result) => {
