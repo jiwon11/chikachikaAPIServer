@@ -38,6 +38,7 @@ db.Community_dental_clinic = require("./community_dental_clinic")(sequelize, Seq
 db.Community_symptom = require("./community_symptom")(sequelize, Sequelize);
 db.Community_treatment = require("./community_treatment")(sequelize, Sequelize);
 db.CommunityGeneralTag = require("./communityGeneralTag")(sequelize, Sequelize);
+db.CommunityCityTag = require("./communityCityTag")(sequelize, Sequelize);
 db.City = require("./city")(sequelize, Sequelize);
 db.Korea_holiday = require("./korea_holiday")(sequelize, Sequelize);
 db.Clinic_subject = require("./clinic_subject")(sequelize, Sequelize);
@@ -377,6 +378,19 @@ db.GeneralTag.belongsToMany(db.Community, {
   foreignKey: "deneralTagId",
   as: "Communties",
   through: db.CommunityGeneralTag,
+  onDelete: "CASCADE",
+});
+/* 도시 태그와 커뮤니티글 관계형*/
+db.Community.belongsToMany(db.City, {
+  foreignKey: "communityId",
+  as: "CityTags",
+  through: db.CommunityCityTag,
+  onDelete: "CASCADE",
+});
+db.City.belongsToMany(db.Community, {
+  foreignKey: "cityId",
+  as: "Communties",
+  through: db.CommunityCityTag,
   onDelete: "CASCADE",
 });
 /*커뮤니티글과 사용자 관계형 -좋아요*/
