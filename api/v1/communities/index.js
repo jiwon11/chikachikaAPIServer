@@ -6,7 +6,7 @@ const multer = require("multer");
 const multerS3 = require("multer-s3");
 const path = require("path");
 const sequelize = require("sequelize");
-const { User, Community, Community_img, Symptom_item, Dental_clinic, Treatment_item, GeneralTag, Community_comment, City, NewTown } = require("../../../utils/models");
+const { User, Community, Community_img, Symptom_item, Dental_clinic, Treatment_item, GeneralTag, Community_comment, City, NewTown, Sequelize } = require("../../../utils/models");
 const user = require("../../../utils/models/user");
 
 const router = express.Router();
@@ -108,14 +108,9 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
             let city = await City.findOne({
               where: {
                 [Sequelize.Op.or]: [
-                  Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
-                    [Sequelize.Op.like]: `${hashtag}%`,
+                  Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("adCity")), {
+                    [Sequelize.Op.like]: `${hashtag}`,
                   }),
-                  {
-                    relativeAddress: {
-                      [Sequelize.Op.like]: `${hashtag}%`,
-                    },
-                  },
                 ],
               },
             });
@@ -172,20 +167,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
     const offset = parseInt(req.query.offset);
     const order = req.query.order === "createdAt" ? "createdAt" : "popular";
     const user = req.user;
-    const userResidence = await user.getCities({
-      attributes: ["id", "emdName"],
-      include: [
-        {
-          model: NewTown,
-        },
-      ],
-      joinTableAttributes: [],
-    });
-    console.log(JSON.stringify(userResidence.newTown));
-    if (userResidence.newTown) {
-      console.log(userResidence.newTown);
-    } else {
-    }
+    const clusterId = parseInt(req.query.clusterId);
     const communityPosts = await Community.findAll({
       where: {
         type: type,
@@ -212,7 +194,20 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
       include: [
         {
           model: User,
-          attributes: ["nickname", "profileImg"],
+          attributes: ["id", "nickname", "profileImg"],
+          required: true,
+          include: [
+            {
+              model: City,
+              as: "Cities",
+              attributes: {
+                exclude: ["geometry"],
+              },
+              where: {
+                newTownId: clusterId,
+              },
+            },
+          ],
         },
         {
           model: Community_img,
@@ -257,9 +252,16 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
       ],
       offset: offset,
       limit: limit,
+      raw: true,
     });
     return res.json(communityPosts);
-  } catch (error) {}
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      statusCode: 500,
+      body: { statusText: "Server Error", message: error.message },
+    });
+  }
 });
 
 router.get("/", getUserInToken, async (req, res, next) => {
@@ -484,14 +486,9 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
             let city = await City.findOne({
               where: {
                 [Sequelize.Op.or]: [
-                  Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
-                    [Sequelize.Op.like]: `${hashtag}%`,
+                  Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("adCity")), {
+                    [Sequelize.Op.like]: `${hashtag}`,
                   }),
-                  {
-                    relativeAddress: {
-                      [Sequelize.Op.like]: `${hashtag}%`,
-                    },
-                  },
                 ],
               },
             });

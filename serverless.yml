@@ -75,7 +75,7 @@ functions:
     handler: services/search.allTagItems
     events:
       - http:
-          path: search/allTagItems
+          path: search/allTagItems/{purpose}
           method: get
           cors: true
           authorizer:
