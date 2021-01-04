@@ -53,7 +53,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
       )
     );
     var hashtags = [];
-    const regex = /\{\{[가-힣|ㄱ-ㅎ|ㅏ-ㅣ|0-9|a-zA-Z]+\}\}/gm;
+    const regex = /\{\{[가-힣|ㄱ-ㅎ|ㅏ-ㅣ|0-9|a-zA-Z|(|)]+\}\}/gm;
     let m;
     while ((m = regex.exec(description)) !== null) {
       if (m.index === regex.lastIndex) {
@@ -69,6 +69,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
       });
     }
     for (const hashtag of hashtags) {
+      console.log(hashtag);
       let clinic = await Dental_clinic.findOne({
         where: {
           name: hashtag,
@@ -108,8 +109,8 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
             let city = await City.findOne({
               where: {
                 [Sequelize.Op.or]: [
-                  Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("adCity")), {
-                    [Sequelize.Op.like]: `${hashtag}`,
+                  Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), {
+                    [Sequelize.Op.like]: `%${hashtag}%`,
                   }),
                 ],
               },
@@ -440,7 +441,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
       )
     );
     var hashtags = [];
-    const regex = /\{\{[가-힣|ㄱ-ㅎ|ㅏ-ㅣ|0-9|a-zA-Z]+\}\}/gm;
+    const regex = /\{\{[가-힣|ㄱ-ㅎ|ㅏ-ㅣ|0-9|a-zA-Z|(|)]+\}\}/gm;
     let m;
     while ((m = regex.exec(description)) !== null) {
       if (m.index === regex.lastIndex) {
@@ -494,11 +495,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
           } else {
             let city = await City.findOne({
               where: {
-                [Sequelize.Op.or]: [
-                  Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("adCity")), {
-                    [Sequelize.Op.like]: `${hashtag}`,
-                  }),
-                ],
+                [Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")")]: { [Sequelize.Op.like]: `${hashtag}` },
               },
             });
             if (city) {
