@@ -348,7 +348,7 @@ module.exports.allTagItems = async function allTagItems(event) {
             }),
           ],
         },
-        attributes: ["id", "sido", "sigungu", "emdName", [Sequelize.literal("CONCAT(emdName, '(',REPLACE(sigungu,' ', '-'),')')"), "fullCityName"], "relativeAddress"],
+        attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(emdName, '(',REPLACE(sigungu,' ', '-'),')')"), "fullCityName"], "relativeAddress"],
         offset: offset,
         limit: limit,
       });
@@ -366,7 +366,7 @@ module.exports.allTagItems = async function allTagItems(event) {
             },
           ],
         },
-        attributes: ["id", "sido", "sigungu", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName)"), "fullCityName"], "relativeAddress"],
+        attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName)"), "fullCityName"], "relativeAddress"],
         offset: offset,
         limit: limit,
       });
