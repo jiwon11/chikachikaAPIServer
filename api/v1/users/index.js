@@ -15,6 +15,8 @@ const {
   Review_treatment_item,
   Review_comment,
   Community_comment,
+  City,
+  Sequelize,
 } = require("../../../utils/models");
 const { getUserInToken } = require("../middlewares");
 
