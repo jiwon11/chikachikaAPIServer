@@ -37,11 +37,11 @@ module.exports.socialUserCheck = async function socialUserCheck(event) {
     }
     if (overlapSocialUser) {
       const token = jwt.sign({ id: overlapSocialUser.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
-      let responseBody = `{"token": "${token}","statusText": "Accepted","message": "사용자 토큰이 발급되었습니다.", "user":{"userId": "${user.id}", "userNickname":"${
-        user.nickname
-      }", "userProfileImg":"${user.profileImg}", "userPhoneNumber":"${user.phoneNumber}", "userGender":"${user.gender}", "userBirthdate":"${user.birthdate}", "userProvider":"${
-        user.provider
-      }","userResidences": ${JSON.stringify(user.Cities)}}}`;
+      let responseBody = `{"token": "${token}","statusText": "Accepted","message": "사용자 토큰이 발급되었습니다.", "user":{"userId": "${overlapSocialUser.id}", "userNickname":"${
+        overlapSocialUser.nickname
+      }", "userProfileImg":"${overlapSocialUser.profileImg}", "userPhoneNumber":"${overlapSocialUser.phoneNumber}", "userGender":"${overlapSocialUser.gender}", "userBirthdate":"${
+        overlapSocialUser.birthdate
+      }", "userProvider":"${overlapSocialUser.provider}","userResidences": ${JSON.stringify(overlapSocialUser.Cities)}}}`;
       return {
         statusCode: 200,
         body: responseBody,
@@ -56,7 +56,7 @@ module.exports.socialUserCheck = async function socialUserCheck(event) {
   } catch (error) {
     return {
       statusCode: 500,
-      body: `{"statusText": "Unaccepted","message": "${error.message}"}`,
+      body: `{"statusText": "Server Error","message": "${error.message}"}`,
     };
   }
 };
