@@ -292,6 +292,7 @@ module.exports.allTagItems = async function allTagItems(event) {
     const query = event.queryStringParameters.q;
     const offset = Math.round(parseInt(event.queryStringParameters.offset) / 5);
     const limit = Math.round(parseInt(event.queryStringParameters.limit) / 5);
+    const purpose = event.pathParameters.purpose;
     console.log(limit);
     const clinics = await Dental_clinic.findAll({
       where: {
@@ -337,23 +338,39 @@ module.exports.allTagItems = async function allTagItems(event) {
       limit: limit,
     });
     generaltags.forEach((generaltag) => generaltag.setDataValue("categoty", "generaltag"));
-    const cities = await City.findAll({
-      where: {
-        [Sequelize.Op.or]: [
-          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
-            [Sequelize.Op.like]: `%${query}%`,
-          }),
-          {
-            relativeAddress: {
+    var cities;
+    if (purpose === "autoComplete") {
+      cities = await City.findAll({
+        where: {
+          [Sequelize.Op.or]: [
+            Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), {
+              [Sequelize.Op.like]: `${query}%`,
+            }),
+          ],
+        },
+        attributes: ["id", "sido", "sigungu", "emdName", [Sequelize.literal("CONCAT(emdName, '(',REPLACE(sigungu,' ', '-'),')')"), "fullCityName"], "relativeAddress"],
+        offset: offset,
+        limit: limit,
+      });
+    } else if (purpose === "keywordSearch") {
+      cities = await City.findAll({
+        where: {
+          [Sequelize.Op.or]: [
+            Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
               [Sequelize.Op.like]: `%${query}%`,
+            }),
+            {
+              relativeAddress: {
+                [Sequelize.Op.like]: `%${query}%`,
+              },
             },
-          },
-        ],
-      },
-      attributes: ["id", "sido", "sigungu", "emdName", [Sequelize.literal("CONCAT(sido, ' ', sigungu, ' ',emdName)"), "fullCityName"], "relativeAddress"],
-      offset: offset,
-      limit: limit,
-    });
+          ],
+        },
+        attributes: ["id", "sido", "sigungu", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName)"), "fullCityName"], "relativeAddress"],
+        offset: offset,
+        limit: limit,
+      });
+    }
     cities.forEach((city) => city.setDataValue("categoty", "city"));
     var mergeResults = clinics.concat(treatments, symptoms, generaltags, cities);
     await Promise.all(
