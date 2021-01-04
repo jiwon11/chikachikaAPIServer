@@ -166,8 +166,20 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
     const limit = parseInt(req.query.limit);
     const offset = parseInt(req.query.offset);
     const order = req.query.order === "createdAt" ? "createdAt" : "popular";
-    const user = req.user;
-    const clusterId = parseInt(req.query.clusterId);
+    const cityId = req.query.cityId;
+    var userResidence = await City.findOne({
+      where: {
+        id: cityId,
+      },
+    });
+    const cluster = userResidence.newTownId
+      ? {
+          newTownId: userResidence.newTownId,
+        }
+      : {
+          sigungu: userResidence.sigungu,
+        };
+    console.log(`cluster: ${JSON.stringify(cluster)}`);
     const communityPosts = await Community.findAll({
       where: {
         type: type,
@@ -203,9 +215,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
               attributes: {
                 exclude: ["geometry"],
               },
-              where: {
-                newTownId: clusterId,
-              },
+              where: cluster,
             },
           ],
         },
