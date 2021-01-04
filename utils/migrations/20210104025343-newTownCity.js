@@ -8,11 +8,12 @@ module.exports = {
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-    await queryInterface.addColumn("cities", "relativeAddress", {
-      type: Sequelize.STRING,
-      allowNull: true,
-      charset: "utf8mb4",
-      collate: "utf8mb4_unicode_ci",
+    await queryInterface.addColumn("cities", "newTownId", {
+      type: Sequelize.INTEGER(11),
+      references: {
+        model: "newTowns",
+        key: "id",
+      },
     });
   },
 

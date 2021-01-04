@@ -475,6 +475,13 @@ functions:
           path: specialTreatment
           method: post
           cors: true
+  newTownCity:
+    handler: services/dbReset.newTownCity
+    events:
+      - http:
+          path: newTownCity
+          method: post
+          cors: true
 plugins:
   - serverless-offline
   - serverless-apigw-binary

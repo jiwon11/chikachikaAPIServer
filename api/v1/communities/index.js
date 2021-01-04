@@ -6,7 +6,7 @@ const multer = require("multer");
 const multerS3 = require("multer-s3");
 const path = require("path");
 const sequelize = require("sequelize");
-const { User, Community, Community_img, Symptom_item, Dental_clinic, Treatment_item, GeneralTag, Community_comment, City } = require("../../../utils/models");
+const { User, Community, Community_img, Symptom_item, Dental_clinic, Treatment_item, GeneralTag, Community_comment, City, NewTown } = require("../../../utils/models");
 const user = require("../../../utils/models/user");
 
 const router = express.Router();
@@ -171,6 +171,21 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
     const limit = parseInt(req.query.limit);
     const offset = parseInt(req.query.offset);
     const order = req.query.order === "createdAt" ? "createdAt" : "popular";
+    const user = req.user;
+    const userResidence = await user.getCities({
+      attributes: ["id", "emdName"],
+      include: [
+        {
+          model: NewTown,
+        },
+      ],
+      joinTableAttributes: [],
+    });
+    console.log(JSON.stringify(userResidence.newTown));
+    if (userResidence.newTown) {
+      console.log(userResidence.newTown);
+    } else {
+    }
     const communityPosts = await Community.findAll({
       where: {
         type: type,
@@ -244,13 +259,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
       limit: limit,
     });
     return res.json(communityPosts);
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      statusCode: 500,
-      body: { statusText: "Server Error", message: error.message },
-    });
-  }
+  } catch (error) {}
 });
 
 router.get("/", getUserInToken, async (req, res, next) => {

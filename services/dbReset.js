@@ -1,5 +1,5 @@
 const { sequelize, Sequelize } = require("../utils/models");
-const { Dental_clinic, Korea_holiday, City } = require("../utils/models");
+const { Dental_clinic, Korea_holiday, City, NewTown } = require("../utils/models");
 const { QueryTypes } = require("sequelize");
 
 const request = require("request");
@@ -372,6 +372,48 @@ module.exports.importDentalClinicCity = async function importDentalClinicCity(ev
     return {
       statusCode: 200,
       body: JSON.stringify(results),
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
+
+module.exports.newTownCity = async function newTownCity(event) {
+  try {
+    const newTown = await NewTown.create({
+      where: {
+        name: "",
+      },
+    });
+    const newTownCities = await City.findAll({
+      where: {
+        id: {
+          [Sequelize.Op.or]: [],
+        },
+      },
+      attributes: {
+        exclude: ["geometry"],
+      },
+    });
+    for (const city of newTownCities) {
+      await City.update(
+        {
+          newTownId: GwanggyoNewTown.id,
+        },
+        {
+          where: {
+            id: city.id,
+          },
+        }
+      );
+    }
+    return {
+      statusCode: 200,
+      body: JSON.stringify(newTownCities),
     };
   } catch (error) {
     console.error(error);

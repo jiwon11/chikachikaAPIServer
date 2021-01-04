@@ -40,6 +40,7 @@ db.Community_treatment = require("./community_treatment")(sequelize, Sequelize);
 db.CommunityGeneralTag = require("./communityGeneralTag")(sequelize, Sequelize);
 db.CommunityCityTag = require("./communityCityTag")(sequelize, Sequelize);
 db.City = require("./city")(sequelize, Sequelize);
+db.NewTown = require("./newTown")(sequelize, Sequelize);
 db.Korea_holiday = require("./korea_holiday")(sequelize, Sequelize);
 db.Clinic_subject = require("./clinic_subject")(sequelize, Sequelize);
 db.Special_treatment = require("./specialTreatment")(sequelize, Sequelize);
@@ -528,4 +529,10 @@ db.City.hasMany(db.Dental_clinic, {
   onDelete: "CASCADE",
 });
 db.Dental_clinic.belongsTo(db.City);
+
+db.NewTown.hasMany(db.City, {
+  foreignKey: "newTownId",
+  onDelete: "CASCADE",
+});
+db.City.belongsTo(db.NewTown);
 module.exports = db;
