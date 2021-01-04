@@ -4,7 +4,7 @@ const { Dental_clinic, Review, Korea_holiday } = require("../utils/models");
 module.exports.clinics = async function clinics(event) {
   try {
     const { lat, long, wantParking, sort, days, time } = event.queryStringParameters;
-    const radius = 2;
+    const radius = 0.7;
     var parking;
     if (wantParking === "y") {
       parking = {
