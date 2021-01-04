@@ -108,7 +108,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
             let city = await City.findOne({
               where: {
                 [Sequelize.Op.or]: [
-                  Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("adCity")), {
+                  Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), {
                     [Sequelize.Op.like]: `${hashtag}`,
                   }),
                 ],
@@ -495,7 +495,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
             let city = await City.findOne({
               where: {
                 [Sequelize.Op.or]: [
-                  Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("adCity")), {
+                  Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), {
                     [Sequelize.Op.like]: `${hashtag}`,
                   }),
                 ],
