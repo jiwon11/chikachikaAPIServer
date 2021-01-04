@@ -1,6 +1,6 @@
 const sequelize = require("sequelize");
 const jwt = require("jsonwebtoken");
-const { Symptom_item, Dental_clinic, Treatment_item, Review, User, Review_content, Search_record, GeneralTag, Korea_holiday } = require("../utils/models");
+const { Symptom_item, Dental_clinic, Treatment_item, Review, User, Review_content, Search_record, GeneralTag, Korea_holiday, City, Sequelize } = require("../utils/models");
 
 module.exports.treatmentItems = async function treatmentItems(event) {
   try {
@@ -290,8 +290,8 @@ module.exports.allTagItems = async function allTagItems(event) {
     const token = event.headers.Authorization;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const query = event.queryStringParameters.q;
-    const offset = Math.round(parseInt(event.queryStringParameters.offset) / 4);
-    const limit = Math.round(parseInt(event.queryStringParameters.limit) / 4);
+    const offset = Math.round(parseInt(event.queryStringParameters.offset) / 5);
+    const limit = Math.round(parseInt(event.queryStringParameters.limit) / 5);
     console.log(limit);
     const clinics = await Dental_clinic.findAll({
       where: {
@@ -337,7 +337,25 @@ module.exports.allTagItems = async function allTagItems(event) {
       limit: limit,
     });
     generaltags.forEach((generaltag) => generaltag.setDataValue("categoty", "generaltag"));
-    var mergeResults = clinics.concat(treatments, symptoms, generaltags);
+    const cities = await City.findAll({
+      where: {
+        [Sequelize.Op.or]: [
+          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
+            [Sequelize.Op.like]: `%${query}%`,
+          }),
+          {
+            relativeAddress: {
+              [Sequelize.Op.like]: `%${query}%`,
+            },
+          },
+        ],
+      },
+      attributes: ["id", [Sequelize.literal("CONCAT(sido, ' ', sigungu, ' ',emdName)"), "fullCityName"], "relativeAddress"],
+      offset: offset,
+      limit: limit,
+    });
+    cities.forEach((city) => city.setDataValue("categoty", "city"));
+    var mergeResults = clinics.concat(treatments, symptoms, generaltags, cities);
     await Promise.all(
       mergeResults.map(async (result) => {
         result.dataValues.postNum = await result.countCommunties();

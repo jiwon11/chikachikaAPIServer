@@ -6,7 +6,7 @@ const multer = require("multer");
 const multerS3 = require("multer-s3");
 const path = require("path");
 const sequelize = require("sequelize");
-const { User, Community, Community_img, Symptom_item, Dental_clinic, Treatment_item, GeneralTag, Community_comment } = require("../../../utils/models");
+const { User, Community, Community_img, Symptom_item, Dental_clinic, Treatment_item, GeneralTag, Community_comment, City } = require("../../../utils/models");
 const user = require("../../../utils/models/user");
 
 const router = express.Router();
@@ -105,26 +105,48 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
               },
             });
           } else {
-            let generalTag = await GeneralTag.findOne({
+            let city = await City.findOne({
               where: {
-                name: hashtag,
+                [Sequelize.Op.or]: [
+                  Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
+                    [Sequelize.Op.like]: `${hashtag}%`,
+                  }),
+                  {
+                    relativeAddress: {
+                      [Sequelize.Op.like]: `${hashtag}%`,
+                    },
+                  },
+                ],
               },
             });
-            if (generalTag) {
-              await communityPost.addGeneralTag(generalTag, {
+            if (city) {
+              await communityPost.addCityTag(city, {
                 through: {
                   index: hashtags.indexOf(hashtag) + 1,
                 },
               });
             } else {
-              let newGeneralTag = await GeneralTag.create({
-                name: hashtag,
-              });
-              await communityPost.addGeneralTag(newGeneralTag, {
-                through: {
-                  index: hashtags.indexOf(hashtag) + 1,
+              let generalTag = await GeneralTag.findOne({
+                where: {
+                  name: hashtag,
                 },
               });
+              if (generalTag) {
+                await communityPost.addGeneralTag(generalTag, {
+                  through: {
+                    index: hashtags.indexOf(hashtag) + 1,
+                  },
+                });
+              } else {
+                let newGeneralTag = await GeneralTag.create({
+                  name: hashtag,
+                });
+                await communityPost.addGeneralTag(newGeneralTag, {
+                  through: {
+                    index: hashtags.indexOf(hashtag) + 1,
+                  },
+                });
+              }
             }
           }
         }
@@ -450,26 +472,48 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
               },
             });
           } else {
-            let generalTag = await GeneralTag.findOne({
+            let city = await City.findOne({
               where: {
-                name: hashtag,
+                [Sequelize.Op.or]: [
+                  Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
+                    [Sequelize.Op.like]: `${hashtag}%`,
+                  }),
+                  {
+                    relativeAddress: {
+                      [Sequelize.Op.like]: `${hashtag}%`,
+                    },
+                  },
+                ],
               },
             });
-            if (generalTag) {
-              await communityPost.addGeneralTag(generalTag, {
+            if (city) {
+              await communityPost.addCityTag(city, {
                 through: {
                   index: hashtags.indexOf(hashtag) + 1,
                 },
               });
             } else {
-              let newGeneralTag = await GeneralTag.create({
-                name: hashtag,
-              });
-              await communityPost.addGeneralTag(newGeneralTag, {
-                through: {
-                  index: hashtags.indexOf(hashtag) + 1,
+              let generalTag = await GeneralTag.findOne({
+                where: {
+                  name: hashtag,
                 },
               });
+              if (generalTag) {
+                await communityPost.addGeneralTag(generalTag, {
+                  through: {
+                    index: hashtags.indexOf(hashtag) + 1,
+                  },
+                });
+              } else {
+                let newGeneralTag = await GeneralTag.create({
+                  name: hashtag,
+                });
+                await communityPost.addGeneralTag(newGeneralTag, {
+                  through: {
+                    index: hashtags.indexOf(hashtag) + 1,
+                  },
+                });
+              }
             }
           }
         }
