@@ -41,6 +41,9 @@ module.exports.detailClinics = async function detailClinics(event) {
             ),
             "reviewAVGStarRate",
           ],
+          [sequelize.literal(`(SELECT ROUND((SELECT AVG(starRate_cost) FROM reviews where reviews.dentalClinicId = dental_clinic.id),1))`), "reviewCostAVGStarRate"],
+          [sequelize.literal(`(SELECT ROUND((SELECT AVG(starRate_treatment) FROM reviews where reviews.dentalClinicId = dental_clinic.id),1))`), "reviewTreatmentAVGStarRate"],
+          [sequelize.literal(`(SELECT ROUND((SELECT AVG(starRate_service) FROM reviews where reviews.dentalClinicId = dental_clinic.id),1))`), "reviewServiceAVGStarRate"],
         ],
       },
       include: [
@@ -76,7 +79,12 @@ module.exports.detailClinics = async function detailClinics(event) {
       reviewNum: clinic.get("reviewNum"),
       conclustionNow: clinic.get("conclustionNow"),
       lunchTimeNow: clinic.get("lunchTimeNow"),
-      reviewAVGStarRate: clinic.get("reviewAVGStarRate"),
+      reviewAVGStarRate: {
+        all: clinic.get("reviewAVGStarRate"),
+        cost: clinic.get("reviewCostAVGStarRate"),
+        treatment: clinic.get("reviewTreatmentAVGStarRate"),
+        service: clinic.get("reviewServiceAVGStarRate"),
+      },
     };
     const clinicInfoBody = {};
     const clinicTreatmentTime = {
