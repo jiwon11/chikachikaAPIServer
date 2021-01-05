@@ -76,7 +76,7 @@ module.exports.handler = async function registerUser(event) {
       userId: user.id,
       like: true,
       comment: true,
-      timer: true,
+      event: true,
     });
     const city = await City.findOne({
       attributes: ["id", "emdName"],
