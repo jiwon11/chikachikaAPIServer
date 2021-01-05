@@ -44,6 +44,8 @@ db.NewTown = require("./newTown")(sequelize, Sequelize);
 db.Korea_holiday = require("./korea_holiday")(sequelize, Sequelize);
 db.Clinic_subject = require("./clinic_subject")(sequelize, Sequelize);
 db.Special_treatment = require("./specialTreatment")(sequelize, Sequelize);
+db.ClinicStaticMap = require("./clinicStaticMap")(sequelize, Sequelize);
+
 /*사용자와 타이머 관걔형 */
 db.User.hasMany(db.Timer, {
   foreignKey: "userId",
@@ -535,4 +537,6 @@ db.NewTown.hasMany(db.City, {
   onDelete: "CASCADE",
 });
 db.City.belongsTo(db.NewTown);
+
+db.ClinicStaticMap.belongsTo(db.Dental_clinic);
 module.exports = db;

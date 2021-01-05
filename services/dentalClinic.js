@@ -1,8 +1,30 @@
-const { Dental_clinic, City, Korea_holiday, Dental_subject, Review, User, Review_content, Treatment_item, Review_treatment_item, Review_comment, Special_treatment } = require("../utils/models");
+const {
+  Dental_clinic,
+  City,
+  Korea_holiday,
+  Dental_subject,
+  Review,
+  User,
+  Review_content,
+  Treatment_item,
+  Review_treatment_item,
+  Review_comment,
+  Special_treatment,
+  ClinicStaticMap,
+} = require("../utils/models");
 const { sequelize, Sequelize } = require("../utils/models");
 const { QueryTypes } = require("sequelize");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
+var iconv = require("iconv-lite");
+const AWS = require("aws-sdk");
+const fs = require("fs");
+
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_Access_Key_ID,
+  secretAccessKey: process.env.AWS_Secret_Access_Key,
+  region: "ap-northeast-2",
+});
 
 module.exports.detailClinics = async function detailClinics(event) {
   try {
@@ -61,15 +83,45 @@ module.exports.detailClinics = async function detailClinics(event) {
         },
       ],
     });
-    const response = await axios({
-      url: `https://naveropenapi.apigw.ntruss.com/map-static/v2/raster?w=300&h=300&center=${clinic.geographLong},${clinic.geographLat}&level=16&format=jpg`,
-      headers: {
-        "X-NCP-APIGW-API-KEY-ID": "n44tammhdm",
-        "X-NCP-APIGW-API-KEY": "yCv33j48N7t9uGvh0BPDwcG3Nj7tfKmBH5YQ44wR",
+    const requestUrl = `https://naveropenapi.apigw.ntruss.com/map-static/v2/raster?w=300&h=300&center=${clinic.geographLong},${clinic.geographLat}&markers=type:d|size:mid|pos:${clinic.geographLong}%20${clinic.geographLat}&level=16&format=jpg`;
+    const [clinicMap, created] = await ClinicStaticMap.findOrCreate({
+      where: {
+        requestUrl: requestUrl,
+        dentalClinicId: clinic.id,
       },
-      responseType: "arraybuffer",
     });
-    const clinicStaticMap = response.data;
+    var clinicStaticMap;
+    if (created === false) {
+      clinicStaticMap = clinicMap.imgUrl;
+    } else {
+      console.time("stasticMap API 호출");
+      const staticMapResponse = await axios({
+        url: requestUrl,
+        headers: {
+          "X-NCP-APIGW-API-KEY-ID": "n44tammhdm",
+          "X-NCP-APIGW-API-KEY": "yCv33j48N7t9uGvh0BPDwcG3Nj7tfKmBH5YQ44wR",
+        },
+        responseType: "arraybuffer",
+      });
+      console.timeEnd("stasticMap API 호출");
+      var param = {
+        Bucket: "chikachika-clinic-static-map",
+        Key: `${clinic.name}-static-map.jpg`,
+        ACL: "public-read",
+        Body: Buffer.from(staticMapResponse.data),
+        ContentType: "image/jpg",
+      };
+      var uploadS3 = await s3.upload(param).promise();
+      clinicStaticMap = uploadS3.Location;
+      await ClinicStaticMap.update(
+        {
+          imgUrl: uploadS3.Location,
+        },
+        {
+          where: { id: clinicMap.id },
+        }
+      );
+    }
     const clinicInfoHeader = {
       name: clinic.name,
       address: clinic.address,

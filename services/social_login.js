@@ -97,7 +97,7 @@ module.exports.handler = async function social_login(event) {
       userId: user.id,
       like: true,
       comment: true,
-      timer: true,
+      event: true,
     });
     const city = await City.findOne({
       attributes: ["id", "emdName"],
@@ -106,7 +106,7 @@ module.exports.handler = async function social_login(event) {
       },
     });
     await user.addCities(city);
-    const token = jwt.sign(user.dataValues.id, process.env.JWT_SECRET, { expiresIn: "1y" });
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
     const userResidences = await user.getCities({
       attributes: ["sido", "sigungu", "emdName"],
       joinTableAttributes: [],
