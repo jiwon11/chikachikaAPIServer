@@ -36,7 +36,14 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
   try {
     const limit = parseInt(req.query.limit);
     const offset = parseInt(req.query.offset);
-    const order = req.query.order === "createdAt" ? "createdAt" : "popular";
+    const order =
+      req.query.order === "createdAt"
+        ? ["createdAt", "DESC"]
+        : [
+            sequelize.literal(
+              "(((SELECT COUNT(*) FROM Like_Review WHERE Like_Review.likedReviewId = review.id)*3)+ (SELECT COUNT(*) FROM ViewReviews WHERE ViewReviews.viewedReviewId = review.id)) DESC"
+            ),
+          ];
     const reviews = await Review.findAll({
       attributes: {
         include: [
@@ -91,11 +98,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
       ],
       limit: limit,
       offset: offset,
-      order: [
-        [order, "DESC"],
-        ["TreatmentItems", Review_treatment_item, "index", "ASC"],
-        ["review_contents", "index", "ASC"],
-      ],
+      order: [order, ["TreatmentItems", Review_treatment_item, "index", "ASC"], ["review_contents", "index", "ASC"]],
     });
     console.log(reviews.length);
     return res.json(reviews);
