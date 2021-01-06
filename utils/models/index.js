@@ -45,6 +45,7 @@ db.Korea_holiday = require("./korea_holiday")(sequelize, Sequelize);
 db.Clinic_subject = require("./clinic_subject")(sequelize, Sequelize);
 db.Special_treatment = require("./specialTreatment")(sequelize, Sequelize);
 db.ClinicStaticMap = require("./clinicStaticMap")(sequelize, Sequelize);
+db.Residence = require("./residence")(sequelize, Sequelize);
 
 /*사용자와 타이머 관걔형 */
 db.User.hasMany(db.Timer, {
@@ -515,14 +516,14 @@ db.Notification.belongsTo(db.Community_comment, {
 db.User.belongsToMany(db.City, {
   foreignKey: "resident",
   as: "Residences",
-  through: "UsersCities",
+  through: db.Residence,
   onDelete: "CASCADE",
 });
 
 db.City.belongsToMany(db.User, {
   foreignKey: "city",
   as: "Residents",
-  through: "UsersCities",
+  through: db.Residence,
   onDelete: "CASCADE",
 });
 
@@ -539,4 +540,10 @@ db.NewTown.hasMany(db.City, {
 db.City.belongsTo(db.NewTown);
 
 db.ClinicStaticMap.belongsTo(db.Dental_clinic);
+
+db.City.hasMany(db.Community, {
+  foreignKey: "cityId",
+  onDelete: "CASCADE",
+});
+db.Community.belongsTo(db.City);
 module.exports = db;

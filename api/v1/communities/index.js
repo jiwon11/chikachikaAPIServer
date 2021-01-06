@@ -7,7 +7,6 @@ const multerS3 = require("multer-s3");
 const path = require("path");
 const sequelize = require("sequelize");
 const { User, Community, Community_img, Symptom_item, Dental_clinic, Treatment_item, GeneralTag, Community_comment, City, NewTown, Sequelize } = require("../../../utils/models");
-const user = require("../../../utils/models/user");
 
 const router = express.Router();
 
@@ -32,12 +31,26 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
     const type = req.body.type;
     const wantDentistHelp = req.body.type;
     const images = JSON.parse(req.body.images);
+    const user = await User.findOne({
+      where: {
+        id: req.user.id,
+      },
+    });
+    const city = await user.getResidences({
+      attributes: ["id"],
+      through: {
+        where: {
+          now: true,
+        },
+      },
+    });
     console.log("images: ", images);
     const communityPost = await Community.create({
       description: description,
       wantDentistHelp: wantDentistHelp === "true",
       type: type,
       userId: req.user.id,
+      cityId: city[0].id,
     });
     await Promise.all(
       images.map((image) =>
@@ -217,17 +230,13 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
         {
           model: User,
           attributes: ["id", "nickname", "profileImg"],
-          required: true,
-          include: [
-            {
-              model: City,
-              as: "Residences",
-              attributes: {
-                exclude: ["geometry"],
-              },
-              where: cluster,
-            },
-          ],
+        },
+        {
+          model: City,
+          attributes: {
+            exclude: ["geometry"],
+          },
+          where: cluster,
         },
         {
           model: Community_img,

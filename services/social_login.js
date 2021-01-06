@@ -105,7 +105,11 @@ module.exports.handler = async function social_login(event) {
         id: cityId,
       },
     });
-    await user.addCities(city);
+    await user.addResidences(city, {
+      through: {
+        now: true,
+      },
+    });
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
     const userResidences = await user.getCities({
       attributes: ["id", "sido", "sigungu", "emdName"],

@@ -169,7 +169,11 @@ module.exports.addUserResidence = async function addUserResidence(event) {
           id: cityId,
         },
       });
-      await user.addCities(city);
+      await user.addResidences(city, {
+        through: {
+          now: true,
+        },
+      });
       return {
         statusCode: 201,
         body: `{"statusText": "Accepted","message": "${user.nickname}님의 거주지가 ${city.emdName}로 설정되었습니다."}`,
@@ -201,14 +205,18 @@ module.exports.changeUserResidence = async function changeUserResidence(event) {
         id: preCityId,
       },
     });
-    await user.removeCities(preCity);
+    await user.removeResidences(preCity);
     const city = await City.findOne({
       attributes: ["id", "emdName"],
       where: {
         id: cityId,
       },
     });
-    await user.addCities(city);
+    await user.addResidences(city, {
+      through: {
+        now: true,
+      },
+    });
     return {
       statusCode: 201,
       body: `{"statusText": "Accepted","message": "${user.nickname}님의 거주지가 ${preCity.emdName}에서 ${city.emdName}(으)로 수정되었습니다."}`,
@@ -239,7 +247,7 @@ module.exports.deleteUserResidence = async function deleteUserResidence(event) {
         id: cityId,
       },
     });
-    await user.removeCities(city);
+    await user.removeResidences(city);
     return {
       statusCode: 204,
       body: `{"statusText": "Accepted","message": "${user.nickname}님의 거주지가 삭제 되었습니다."}`,
