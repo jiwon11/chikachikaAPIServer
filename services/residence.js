@@ -142,7 +142,7 @@ module.exports.addUserResidence = async function addUserResidence(event) {
       include: [
         {
           model: City,
-          as: "Cities",
+          as: "Residences",
           attributes: ["id", "emdName"],
           through: {
             attributes: [],
@@ -150,13 +150,13 @@ module.exports.addUserResidence = async function addUserResidence(event) {
         },
       ],
     });
-    if (user.Cities.length == 2) {
+    if (user.Residences.length == 2) {
       return {
         statusCode: 403,
         body: `{"statusText": "Upper Set Cities","message": "거주지는 2곳을 초과할 수 없습니다."}`,
       };
     } else {
-      const userResidenced = user.Cities.find((city) => city.id === parseInt(cityId));
+      const userResidenced = user.Residences.find((city) => city.id === parseInt(cityId));
       if (userResidenced) {
         return {
           statusCode: 400,

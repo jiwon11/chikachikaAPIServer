@@ -20,8 +20,8 @@ module.exports.handler = async function signInUser(event) {
       include: [
         {
           model: City,
-          as: "Cities",
-          attributes: ["sido", "sigungu", "emdName"],
+          as: "Residences",
+          attributes: ["id", "sido", "sigungu", "emdName"],
           through: {
             attributes: [],
           },
@@ -36,7 +36,7 @@ module.exports.handler = async function signInUser(event) {
         user.nickname
       }", "userProfileImg":"${user.profileImg}", "userPhoneNumber":"${user.phoneNumber}", "userGender":"${user.gender}", "userBirthdate":"${user.birthdate}", "userProvider":"${
         user.provider
-      }","userResidences": ${JSON.stringify(user.Cities)}}}`;
+      }","userResidences": ${JSON.stringify(user.Residences)}}}`;
       return {
         statusCode: 200,
         body: responseBody,

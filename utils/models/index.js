@@ -514,7 +514,7 @@ db.Notification.belongsTo(db.Community_comment, {
 
 db.User.belongsToMany(db.City, {
   foreignKey: "resident",
-  as: "Cities",
+  as: "Residences",
   through: "UsersCities",
   onDelete: "CASCADE",
 });

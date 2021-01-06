@@ -14,8 +14,8 @@ module.exports.getUserInfo = async function getUserInfo(event) {
       include: [
         {
           model: City,
-          as: "Cities",
-          attributes: ["sido", "sigungu", "emdName"],
+          as: "Residences",
+          attributes: ["id", "sido", "sigungu", "emdName"],
           through: {
             attributes: [],
           },
