@@ -168,18 +168,27 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
     const offset = parseInt(req.query.offset);
     const order = req.query.order === "createdAt" ? "createdAt" : "popular";
     const cityId = req.query.cityId;
-    var userResidence = await City.findOne({
-      where: {
-        id: cityId,
-      },
-    });
-    const cluster = userResidence.newTownId
-      ? {
-          newTownId: userResidence.newTownId,
-        }
-      : {
-          sigungu: userResidence.sigungu,
-        };
+    const region = req.query.region;
+    var cluster;
+    if (region === "residence") {
+      var userResidence = await City.findOne({
+        where: {
+          id: cityId,
+        },
+      });
+      cluster = userResidence.newTownId
+        ? {
+            newTownId: userResidence.newTownId,
+          }
+        : {
+            sigungu: userResidence.sigungu,
+          };
+    } else if (region !== "all") {
+      return res.status(400).json({
+        statusCode: 400,
+        body: { statusText: "Bad Request", message: "유효하지 않는 쿼리입니다." },
+      });
+    }
     console.log(`cluster: ${JSON.stringify(cluster)}`);
     const communityPosts = await Community.findAll({
       where: {
