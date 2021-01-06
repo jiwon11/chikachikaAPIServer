@@ -6,7 +6,7 @@ const path = require("path");
 const sequelize = require("sequelize");
 const ApiError = require("../../../utils/error");
 const { getUserInToken } = require("../middlewares");
-const { Review, User, Review_content, Treatment_item, Dental_clinic, Review_treatment_item, Review_comment } = require("../../../utils/models");
+const { Review, User, Review_content, Treatment_item, Dental_clinic, Review_treatment_item, Review_comment, ReviewBills } = require("../../../utils/models");
 
 const router = express.Router();
 
@@ -218,7 +218,7 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
     const paragraphs = JSON.parse(req.body.paragraphs);
     console.log("paragraphs: ", paragraphs);
     const body = req.body.body;
-    const { starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId, totalCost, treatmentDate } = JSON.parse(body);
+    const { starRate_cost, starRate_treatment, starRate_service, treatments, dentalClinicId, totalCost, treatmentDate } = JSON.parse(body);
     console.log(`treatmentDate : ${treatmentDate}`);
     var parseTreatmentDate;
     if (treatmentDate !== "undefined" && treatmentDate) {
@@ -228,7 +228,7 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
       parseTreatmentDate = new Date();
     }
     const review = await Review.create({
-      certifiedBill: certified_bill,
+      certifiedBill: false,
       starRate_cost: parseFloat(starRate_cost),
       starRate_service: parseFloat(starRate_service),
       starRate_treatment: parseFloat(starRate_treatment),
@@ -272,7 +272,17 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
         })
       )
     );
-    console.log(`콘텐츠 개수 : ${contents.length}`);
+    console.log(`본문 개수 : ${contents.length}`);
+    if (req.body.bills) {
+      const bills = JSON.parse(req.body.bills);
+      await ReviewBills.create({
+        img_url: bills.location, //`${cloudFrontUrl}/${image.key}`
+        img_name: bills.originalname,
+        mime_type: bills.mimetype,
+        img_size: bills.size,
+        reviewId: review.id,
+      });
+    }
     return res.status(201).json({
       statusCode: 201,
       body: { statusText: "Accepted", message: "리뷰 작성이 완료되었습니다!" },
