@@ -212,7 +212,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
           include: [
             {
               model: City,
-              as: "Cities",
+              as: "Residences",
               attributes: {
                 exclude: ["geometry"],
               },

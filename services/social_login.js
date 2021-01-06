@@ -26,8 +26,8 @@ module.exports.socialUserCheck = async function socialUserCheck(event) {
         include: [
           {
             model: City,
-            as: "Cities",
-            attributes: ["sido", "sigungu", "emdName"],
+            as: "Residences",
+            attributes: ["id", "sido", "sigungu", "emdName"],
             through: {
               attributes: [],
             },
@@ -41,7 +41,7 @@ module.exports.socialUserCheck = async function socialUserCheck(event) {
         overlapSocialUser.nickname
       }", "userProfileImg":"${overlapSocialUser.profileImg}", "userPhoneNumber":"${overlapSocialUser.phoneNumber}", "userGender":"${overlapSocialUser.gender}", "userBirthdate":"${
         overlapSocialUser.birthdate
-      }", "userProvider":"${overlapSocialUser.provider}","userResidences": ${JSON.stringify(overlapSocialUser.Cities)}}}`;
+      }", "userProvider":"${overlapSocialUser.provider}","userResidences": ${JSON.stringify(overlapSocialUser.Residences)}}}`;
       return {
         statusCode: 200,
         body: responseBody,
@@ -108,7 +108,7 @@ module.exports.handler = async function social_login(event) {
     await user.addCities(city);
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
     const userResidences = await user.getCities({
-      attributes: ["sido", "sigungu", "emdName"],
+      attributes: ["id", "sido", "sigungu", "emdName"],
       joinTableAttributes: [],
     });
     let responseBody = `{"token": "${token}","statusText": "Accepted","message": "사용자 토큰이 발급되었습니다.", "user":{"userId": "${user.id}", "userNickname":"${
