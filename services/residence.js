@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const { User, City } = require("../utils/models");
+const { User, City, Residence } = require("../utils/models");
 const { sequelize, Sequelize } = require("../utils/models");
 
 module.exports.searchCities = async function searchCities(event) {
@@ -110,11 +110,8 @@ module.exports.getUserResidence = async function getUserResidence(event) {
         id: userId,
       },
     });
-    const userResidence = await user.getCities({
+    const userResidence = await user.getResidences({
       attributes: ["id", "emdName"],
-      through: {
-        attributes: [],
-      },
     });
     return {
       statusCode: 200,
@@ -163,6 +160,25 @@ module.exports.addUserResidence = async function addUserResidence(event) {
           body: `{"statusText": "Unaccepted","message": "이미 설정한 거주지입니다."}`,
         };
       }
+      const preCity = await City.findOne({
+        attributes: ["id", "emdName"],
+        include: [
+          {
+            model: User,
+            as: "Residents",
+            through: {
+              where: {
+                now: true,
+              },
+            },
+          },
+        ],
+      });
+      await user.setResidences(preCity, {
+        through: {
+          now: false,
+        },
+      });
       const city = await City.findOne({
         attributes: ["id", "emdName"],
         where: {
@@ -251,6 +267,46 @@ module.exports.deleteUserResidence = async function deleteUserResidence(event) {
     return {
       statusCode: 204,
       body: `{"statusText": "Accepted","message": "${user.nickname}님의 거주지가 삭제 되었습니다."}`,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
+
+module.exports.userResidenceNow = async function userResidenceNow(event) {
+  try {
+    const token = event.headers.Authorization;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+    const { cityId } = JSON.parse(event.body);
+    const user = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
+    await Residence.update(
+      {
+        now: false,
+      },
+      {
+        where: { now: true, resident: user.id },
+      }
+    );
+    await Residence.update(
+      {
+        now: true,
+      },
+      {
+        where: { city: cityId, resident: user.id },
+      }
+    );
+    return {
+      statusCode: 201,
+      body: `{"statusText": "Accepted","message": "${user.nickname}님의 현재 거주지가 수정되었습니다."}`,
     };
   } catch (error) {
     console.error(error);
