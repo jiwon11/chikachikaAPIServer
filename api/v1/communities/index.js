@@ -179,7 +179,14 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
     const type = req.query.type === "All" ? ["Question", "FreeTalk"] : [req.query.type];
     const limit = parseInt(req.query.limit);
     const offset = parseInt(req.query.offset);
-    const order = req.query.order === "createdAt" ? "createdAt" : "popular";
+    const order =
+      req.query.order === "createdAt"
+        ? ["createdAt", "DESC"]
+        : [
+            sequelize.literal(
+              "(((SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id)*3)+ (SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id)) DESC"
+            ),
+          ];
     const cityId = req.query.cityId;
     const region = req.query.region;
     var cluster;
@@ -224,6 +231,12 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
             "viewerScrapCommunityPost",
           ],
           [sequelize.literal("(SELECT COUNT(*) FROM ViewCommunities WHERE ViewCommunities.viewedCommunityId = community.id)"), "postViewNum"],
+          [
+            sequelize.literal(
+              "((SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id)*3)+(SELECT COUNT(*) FROM ViewCommunities WHERE ViewCommunities.viewedCommunityId = community.id)"
+            ),
+            "popular",
+          ],
         ],
       },
       include: [
@@ -283,10 +296,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
           },
         },
       ],
-      order: [
-        [order, "DESC"],
-        ["community_imgs", "img_index", "ASC"],
-      ],
+      order: [order, ["community_imgs", "img_index", "ASC"]],
       offset: offset,
       limit: limit,
     });
