@@ -15,6 +15,7 @@ db.Review = require("./review")(sequelize, Sequelize);
 db.Review_comment = require("./review_comment")(sequelize, Sequelize);
 db.Review_content = require("./review_content")(sequelize, Sequelize);
 db.Review_treatment_item = require("./review_treatment_item")(sequelize, Sequelize);
+db.ReviewBills = require("./reviewBills")(sequelize, Sequelize);
 db.Appointment = require("./appointment")(sequelize, Sequelize);
 db.Brush_condition = require("./brush_condition")(sequelize, Sequelize);
 db.Clinic_report = require("./clinic_report")(sequelize, Sequelize);
@@ -546,4 +547,6 @@ db.City.hasMany(db.Community, {
   onDelete: "CASCADE",
 });
 db.Community.belongsTo(db.City);
+
+db.ReviewBills.belongsTo(db.Review);
 module.exports = db;
