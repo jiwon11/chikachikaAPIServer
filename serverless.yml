@@ -413,6 +413,32 @@ functions:
               # in our case the HTTP Authorization header
               identitySource: method.request.header.Authorization
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  addScrapClinic:
+    handler: services/scrap.addScrapClinic
+    events:
+      - http:
+          path: scrap/clinic
+          method: post
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  removeScrapClinic:
+    handler: services/scrap.removeScrapClinic
+    events:
+      - http:
+          path: scrap/clinic
+          method: delete
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   detailClinics:
     handler: services/dentalClinic.detailClinics
     events:
