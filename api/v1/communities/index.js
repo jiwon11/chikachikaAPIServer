@@ -290,7 +290,15 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
         {
           model: City,
           as: "CityTags",
-          attributes: ["id", "sido", "sigungu", "adCity", "emdName", "relativeAddress", [Sequelize.literal("CONCAT(CityTags.sido,' ',CityTags.sigungu,' ',CityTags.emdName)"), "fullCityName"]],
+          attributes: [
+            "id",
+            "sido",
+            "sigungu",
+            "adCity",
+            "emdName",
+            "relativeAddress",
+            [Sequelize.literal("CONCAT(CityTags.sido,' ',CityTags.sigungu,' ',CityTags.emdName,'(',CityTags.adCity,')')"), "fullCityName"],
+          ],
           through: {
             attributes: ["index"],
           },
@@ -388,7 +396,7 @@ router.get("/", getUserInToken, async (req, res, next) => {
         {
           model: City,
           as: "CityTags",
-          attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName)"), "fullCityName"], "relativeAddress"],
+          attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')')"), "fullCityName"], "relativeAddress"],
           through: {
             attributes: ["index"],
           },
@@ -642,7 +650,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
         {
           model: City,
           as: "CityTags",
-          attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName)"), "fullCityName"], "relativeAddress"],
+          attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')')"), "fullCityName"], "relativeAddress"],
           through: {
             attributes: ["index"],
           },
