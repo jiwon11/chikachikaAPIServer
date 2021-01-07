@@ -11,3 +11,4 @@ yarn-error.log
 secrets.json
 /dental_clinic_json
 /.serverless
+/services/dbReset.js

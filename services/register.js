@@ -89,7 +89,7 @@ module.exports.handler = async function registerUser(event) {
         now: true,
       },
     });
-    const userResidences = await user.getCities({
+    const userResidences = await user.getResidences({
       attributes: ["id", "sido", "sigungu", "emdName"],
       joinTableAttributes: [],
     });

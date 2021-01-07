@@ -494,6 +494,16 @@ functions:
           path: duplicateNameClinics
           method: get
           cors: true
+  transparentClinics:
+    handler: services/dbReset.transparentClinics
+    package:
+      include:
+        - dental_clinic_json/transparentClinics.json
+    events:
+      - http:
+          path: transparentClinics
+          method: get
+          cors: true        
   specialTreatment:
     handler: services/subject.specialTreatment
     events:
