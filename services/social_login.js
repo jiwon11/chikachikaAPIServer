@@ -115,14 +115,15 @@ module.exports.handler = async function social_login(event) {
       attributes: ["id", "sido", "sigungu", "emdName"],
       joinTableAttributes: [],
     });
-    let responseBody = `{"token": "${token}","statusText": "Accepted","message": "사용자 토큰이 발급되었습니다.", "user":{"userId": "${user.id}", "userNickname":"${
-      user.nickname
-    }", "userProfileImg":"${user.profileImg}", "userPhoneNumber":"${user.phoneNumber}", "userGender":"${user.gender}", "userBirthdate":"${user.birthdate}", "userProvider":"${
-      user.provider
-    }","userResidences": ${JSON.stringify(userResidences)}}}`;
+    let responseBody = {
+      statusText: "Accepted",
+      message: `${user.nickname}님의 회원가입이 완료되었습니다.`,
+      token: jwtToken,
+      user: { userId: user.id, userNickname: user.nickname, userProfileImg: user.profileImg, userResidences: userResidences },
+    };
     return {
       statusCode: 201,
-      body: responseBody,
+      body: JSON.stringify(responseBody),
     };
   } catch (err) {
     console.error(err);
