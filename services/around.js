@@ -109,6 +109,7 @@ module.exports.clinics = async function clinics(event) {
       attributes: [
         "id",
         "name",
+        "originalName",
         "local",
         "address",
         "telNumber",

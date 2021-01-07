@@ -162,8 +162,6 @@ module.exports.handler = async function dbReset(event) {
       statusCode: 200,
       body: JSON.stringify(results),
     };
-    */
-  try {
     const groupingCities = await City.findAll({
       attributes: [
         "id",
@@ -193,6 +191,27 @@ module.exports.handler = async function dbReset(event) {
     return {
       statusCode: 500,
       body: JSON.stringify(groupingCities),
+    };
+    */
+  try {
+    const regex = /\([^)]*\)$/;
+    const clinics = await Dental_clinic.findAll({});
+    for (const clinic of clinics) {
+      await Dental_clinic.update(
+        {
+          originalName: clinic.name.replace(regex, ""),
+        },
+        {
+          where: {
+            id: clinic.id,
+          },
+        }
+      );
+      console.log(clinic.name);
+    }
+    return {
+      statusCode: 200,
+      body: `Done`,
     };
   } catch (err) {
     console.info("Error login", err);

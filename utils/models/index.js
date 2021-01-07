@@ -47,6 +47,7 @@ db.Clinic_subject = require("./clinic_subject")(sequelize, Sequelize);
 db.Special_treatment = require("./specialTreatment")(sequelize, Sequelize);
 db.ClinicStaticMap = require("./clinicStaticMap")(sequelize, Sequelize);
 db.Residence = require("./residence")(sequelize, Sequelize);
+db.DentalClinicProfileImg = require("./dentalClinicProfileImg")(sequelize, Sequelize);
 
 /*사용자와 타이머 관걔형 */
 db.User.hasMany(db.Timer, {
@@ -549,4 +550,10 @@ db.City.hasMany(db.Community, {
 db.Community.belongsTo(db.City);
 
 db.ReviewBills.belongsTo(db.Review);
+
+db.Dental_clinic.hasMany(db.DentalClinicProfileImg, {
+  foreignKey: "dentalClinicId",
+  onDelete: "CASCADE",
+});
+db.DentalClinicProfileImg.belongsTo(db.Dental_clinic);
 module.exports = db;
