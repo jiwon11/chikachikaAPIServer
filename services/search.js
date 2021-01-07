@@ -123,6 +123,7 @@ module.exports.localClinicSearch = async function localClinicSearch(event) {
       attributes: [
         "id",
         "name",
+        "originalName",
         "local",
         "address",
         "telNumber",

@@ -11,6 +11,7 @@ const {
   Review_comment,
   Special_treatment,
   ClinicStaticMap,
+  DentalClinicProfileImg,
 } = require("../utils/models");
 const { sequelize, Sequelize } = require("../utils/models");
 const { QueryTypes } = require("sequelize");
@@ -124,6 +125,7 @@ module.exports.detailClinics = async function detailClinics(event) {
     }
     const clinicInfoHeader = {
       name: clinic.name,
+      originalName: clinic.originalName,
       address: clinic.address,
       telNumber: clinic.telNumber,
       website: clinic.website,
@@ -198,6 +200,36 @@ module.exports.detailClinics = async function detailClinics(event) {
       parkingCost: clinic.parking_cost,
       parkingNotice: clinic.parking_others_notice,
     };
+    const clinicReviewImg = await Review_content.findAll({
+      attributes: ["id", "img_url", "index", "img_before_after", "createdAt"],
+      where: {
+        img_url: {
+          [Sequelize.Op.not]: null,
+        },
+      },
+      include: [
+        {
+          model: Review,
+          attributes: [],
+          where: {
+            dentalClinicId: clinic.id,
+          },
+        },
+      ],
+      order: [
+        ["createdAt", "DESC"],
+        ["index", "ASC"],
+      ],
+      limit: 10,
+    });
+    const clinicProfileImg = await DentalClinicProfileImg.findAll({
+      where: {
+        dentalClinicId: clinic.id,
+      },
+      order: [["createdAt", "DESC"]],
+    });
+    clinicInfoHeader.clinicProfileImg = clinicProfileImg;
+    clinicInfoHeader.clinicReviewImg = clinicReviewImg;
     clinicInfoBody.description = clinic.description ? clinic.description : "";
     clinicInfoBody.treatmentTime = clinicTreatmentTime;
     clinicInfoBody.treatmentSubject = clinic.get("Subjects");

@@ -7,6 +7,9 @@ module.exports = (sequelize, DataTypes) =>
         allowNull: false,
         unique: true,
       },
+      originalName: {
+        type: DataTypes.STRING,
+      },
       local: {
         type: DataTypes.STRING(300),
         allowNull: true,
