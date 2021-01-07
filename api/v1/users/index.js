@@ -184,7 +184,7 @@ router.get("/:userId/communities", getUserInToken, async (req, res, next) => {
         {
           model: City,
           as: "CityTags",
-          attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName)"), "fullCityName"], "relativeAddress"],
+          attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')')"), "fullCityName"], "relativeAddress"],
           through: {
             attributes: ["index"],
           },
@@ -392,7 +392,7 @@ router.get("/likes", getUserInToken, async (req, res, next) => {
           {
             model: City,
             as: "CityTags",
-            attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName)"), "fullCityName"], "relativeAddress"],
+            attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')')"), "fullCityName"], "relativeAddress"],
             through: {
               attributes: ["index"],
             },
@@ -559,7 +559,7 @@ router.get("/scraps", getUserInToken, async (req, res, next) => {
           {
             model: City,
             as: "CityTags",
-            attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName)"), "fullCityName"], "relativeAddress"],
+            attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')')"), "fullCityName"], "relativeAddress"],
             through: {
               attributes: ["index"],
             },
@@ -732,7 +732,7 @@ router.get("/wroteCommentPosts", getUserInToken, async (req, res, next) => {
           {
             model: City,
             as: "CityTags",
-            attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName)"), "fullCityName"], "relativeAddress"],
+            attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')')"), "fullCityName"], "relativeAddress"],
             through: {
               attributes: ["index"],
             },
