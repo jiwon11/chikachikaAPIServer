@@ -369,35 +369,68 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
 
 router.get("/lists", getUserInToken, async (req, res, next) => {
   try {
-    const postId = req.query.postId;
-    const comments = await Community_comment.findAll({
-      where: {
-        communityId: postId,
-      },
-      attributes: ["id", "description", "createdAt", "userId"],
-      include: [
-        {
-          model: User,
-          attributes: ["id", "nickname", "profileImg"],
+    const type = req.query.type;
+    if (type === "community") {
+      const postId = req.query.postId;
+      const communityComments = await Community_comment.findAll({
+        where: {
+          communityId: postId,
         },
-        {
-          model: Community_comment,
-          as: "Replys",
-          attributes: ["id", "description", "createdAt", "userId"],
-          through: {
-            attributes: [],
+        attributes: ["id", "description", "createdAt", "userId"],
+        include: [
+          {
+            model: User,
+            attributes: ["id", "nickname", "profileImg"],
           },
-          include: [
-            {
-              model: User,
-              attributes: ["id", "nickname", "profileImg"],
+          {
+            model: Community_comment,
+            as: "Replys",
+            attributes: ["id", "description", "createdAt", "userId"],
+            through: {
+              attributes: [],
             },
-          ],
+            include: [
+              {
+                model: User,
+                attributes: ["id", "nickname", "profileImg"],
+              },
+            ],
+          },
+        ],
+        order: [["createdAt", "DESC"]],
+      });
+      return res.status(200).json(communityComments);
+    } else if (type === "reviews") {
+      const reviewId = req.query.reviewId;
+      const reviewComments = await Review_comment.findAll({
+        where: {
+          reviewId: reviewId,
         },
-      ],
-      order: [["createdAt", "DESC"]],
-    });
-    return res.status(200).json(comments);
+        attributes: ["id", "description", "createdAt", "updatedAt", "userId"],
+        include: [
+          {
+            model: User,
+            attributes: ["id", "nickname", "profileImg"],
+          },
+          {
+            model: Review_comment,
+            as: "Replys",
+            attributes: ["id", "description", "createdAt", "updatedAt", "userId"],
+            through: {
+              attributes: [],
+            },
+            include: [
+              {
+                model: User,
+                attributes: ["id", "nickname", "profileImg"],
+              },
+            ],
+          },
+        ],
+        order: [["createdAt", "DESC"]],
+      });
+      return res.status(200).json(reviewComments);
+    }
   } catch (error) {
     return res.status(500).json({
       statusCode: 500,
