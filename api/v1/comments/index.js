@@ -141,10 +141,34 @@ router.post("/", getUserInToken, multerBody.none(), async (req, res, next) => {
           description: description,
         });
         await pushNotification("comment", comment, review, userId, "review"); //type, comment, target, userId
-        return res.status(201).json({
-          statusCode: 201,
-          body: { statusText: "Created", message: "댓글이 등록되었습니다." },
+        const reviewComments = await Review_comment.findAll({
+          where: {
+            reviewId: reviewId,
+          },
+          attributes: ["id", "description", "createdAt", "updatedAt", "userId"],
+          include: [
+            {
+              model: User,
+              attributes: ["id", "nickname", "profileImg"],
+            },
+            {
+              model: Review_comment,
+              as: "Replys",
+              attributes: ["id", "description", "createdAt", "updatedAt", "userId"],
+              through: {
+                attributes: [],
+              },
+              include: [
+                {
+                  model: User,
+                  attributes: ["id", "nickname", "profileImg"],
+                },
+              ],
+            },
+          ],
+          order: [["createdAt", "DESC"]],
         });
+        return res.status(200).json(reviewComments);
       } else {
         return res.status(404).json({
           statusCode: 404,
@@ -170,10 +194,34 @@ router.post("/", getUserInToken, multerBody.none(), async (req, res, next) => {
           description: description,
         });
         await pushNotification("comment", comment, post, userId, "community"); //type, comment, target, userId
-        return res.status(201).json({
-          statusCode: 201,
-          body: { statusText: "Created", message: "댓글이 등록되었습니다." },
+        const communityComments = await Community_comment.findAll({
+          where: {
+            communityId: postId,
+          },
+          attributes: ["id", "description", "createdAt", "userId"],
+          include: [
+            {
+              model: User,
+              attributes: ["id", "nickname", "profileImg"],
+            },
+            {
+              model: Community_comment,
+              as: "Replys",
+              attributes: ["id", "description", "createdAt", "userId"],
+              through: {
+                attributes: [],
+              },
+              include: [
+                {
+                  model: User,
+                  attributes: ["id", "nickname", "profileImg"],
+                },
+              ],
+            },
+          ],
+          order: [["createdAt", "DESC"]],
         });
+        return res.status(201).json(communityComments);
       } else {
         return res.status(404).json({
           statusCode: 404,
@@ -200,37 +248,113 @@ router.put("/", getUserInToken, multerBody.none(), async (req, res, next) => {
     const commentId = req.query.commentId;
     const type = req.query.type;
     if (type === "review") {
-      await Review_comment.update(
-        {
-          description: req.body.description,
+      const comment = await Review_comment.findOne({
+        where: {
+          id: commentId,
         },
-        {
-          where: {
-            id: commentId,
+      });
+      if (comment) {
+        await Review_comment.update(
+          {
+            description: req.body.description,
           },
-        }
-      );
+          {
+            where: {
+              id: comment.id,
+            },
+          }
+        );
+        const reviewComments = await Review_comment.findAll({
+          where: {
+            reviewId: comment.reviewId,
+          },
+          attributes: ["id", "description", "createdAt", "updatedAt", "userId"],
+          include: [
+            {
+              model: User,
+              attributes: ["id", "nickname", "profileImg"],
+            },
+            {
+              model: Review_comment,
+              as: "Replys",
+              attributes: ["id", "description", "createdAt", "updatedAt", "userId"],
+              through: {
+                attributes: [],
+              },
+              include: [
+                {
+                  model: User,
+                  attributes: ["id", "nickname", "profileImg"],
+                },
+              ],
+            },
+          ],
+          order: [["createdAt", "DESC"]],
+        });
+        return res.status(200).json(reviewComments);
+      } else {
+        return res.status(404).json({
+          statusCode: 404,
+          body: { statusText: "Not Found", message: "해당 ID를 가진 댓글이 없습니다." },
+        });
+      }
     } else if (type === "community") {
-      await Community_comment.update(
-        {
-          description: req.body.description,
+      const comment = await Community_comment.findOne({
+        where: {
+          id: commentId,
         },
-        {
-          where: {
-            id: commentId,
+      });
+      if (comment) {
+        await Community_comment.update(
+          {
+            description: req.body.description,
           },
-        }
-      );
+          {
+            where: {
+              id: comment.id,
+            },
+          }
+        );
+        const communityComments = await Community_comment.findAll({
+          where: {
+            communityId: comment.communityId,
+          },
+          attributes: ["id", "description", "createdAt", "userId"],
+          include: [
+            {
+              model: User,
+              attributes: ["id", "nickname", "profileImg"],
+            },
+            {
+              model: Community_comment,
+              as: "Replys",
+              attributes: ["id", "description", "createdAt", "userId"],
+              through: {
+                attributes: [],
+              },
+              include: [
+                {
+                  model: User,
+                  attributes: ["id", "nickname", "profileImg"],
+                },
+              ],
+            },
+          ],
+          order: [["createdAt", "DESC"]],
+        });
+        return res.status(200).json(communityComments);
+      } else {
+        return res.status(404).json({
+          statusCode: 404,
+          body: { statusText: "Not Found", message: "해당 ID를 가진 댓글이 없습니다." },
+        });
+      }
     } else {
-      return res.status(400).json({
-        statusCode: 400,
-        body: { statusText: "Bad Request", message: "유효하지 않는 타입입니다." },
+      return res.status(404).json({
+        statusCode: 404,
+        body: { statusText: "Not Found", message: "해당 ID를 가진 댓글이 없습니다." },
       });
     }
-    return res.status(200).json({
-      statusCode: 200,
-      body: { statusText: "OK", message: "댓글(답글)를 수정하였습니다." },
-    });
   } catch (error) {
     return res.status(500).json({
       statusCode: 500,
@@ -244,32 +368,103 @@ router.delete("/", getUserInToken, multerBody.none(), async (req, res, next) => 
     const commentId = req.query.commentId;
     const type = req.query.type;
     if (type === "review") {
-      await Review_comment.destroy({
+      const comment = await Review_comment.findOne({
         where: {
           id: commentId,
         },
       });
-    } else if (type === "community") {
-      await Community_comment.update(
-        {
-          description: req.body.description,
-        },
-        {
+      if (comment) {
+        await Review_comment.destroy({
           where: {
-            id: commentId,
+            id: comment.id,
           },
-        }
-      );
+        });
+        const reviewComments = await Review_comment.findAll({
+          where: {
+            reviewId: comment.reviewId,
+          },
+          attributes: ["id", "description", "createdAt", "updatedAt", "userId"],
+          include: [
+            {
+              model: User,
+              attributes: ["id", "nickname", "profileImg"],
+            },
+            {
+              model: Review_comment,
+              as: "Replys",
+              attributes: ["id", "description", "createdAt", "updatedAt", "userId"],
+              through: {
+                attributes: [],
+              },
+              include: [
+                {
+                  model: User,
+                  attributes: ["id", "nickname", "profileImg"],
+                },
+              ],
+            },
+          ],
+          order: [["createdAt", "DESC"]],
+        });
+        return res.status(200).json(reviewComments);
+      } else {
+        return res.status(404).json({
+          statusCode: 404,
+          body: { statusText: "Not Found", message: "해당 ID를 가진 댓글이 없습니다." },
+        });
+      }
+    } else if (type === "community") {
+      const comment = await Community_comment.findOne({
+        where: {
+          id: commentId,
+        },
+      });
+      if (comment) {
+        await Community_comment.destroy({
+          where: {
+            id: comment.id,
+          },
+        });
+        const communityComments = await Community_comment.findAll({
+          where: {
+            communityId: comment.communityId,
+          },
+          attributes: ["id", "description", "createdAt", "userId"],
+          include: [
+            {
+              model: User,
+              attributes: ["id", "nickname", "profileImg"],
+            },
+            {
+              model: Community_comment,
+              as: "Replys",
+              attributes: ["id", "description", "createdAt", "userId"],
+              through: {
+                attributes: [],
+              },
+              include: [
+                {
+                  model: User,
+                  attributes: ["id", "nickname", "profileImg"],
+                },
+              ],
+            },
+          ],
+          order: [["createdAt", "DESC"]],
+        });
+        return res.status(200).json(communityComments);
+      } else {
+        return res.status(404).json({
+          statusCode: 404,
+          body: { statusText: "Not Found", message: "해당 ID를 가진 댓글이 없습니다." },
+        });
+      }
     } else {
       return res.status(400).json({
         statusCode: 400,
         body: { statusText: "Bad Request", message: "유효하지 않는 타입입니다." },
       });
     }
-    return res.status(204).json({
-      statusCode: 204,
-      body: { statusText: "No Content", message: "댓글(답글)을 삭제하였습니다." },
-    });
   } catch (error) {
     return res.status(500).json({
       statusCode: 500,
@@ -309,10 +504,34 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
         });
         await comment.addReply(reply);
         await pushNotification("reply", reply, comment, userId, "review"); //type, comment, target, userId
-        return res.status(201).json({
-          statusCode: 201,
-          body: { statusText: "Created", message: "답글이 등록되었습니다." },
+        const reviewComments = await Review_comment.findAll({
+          where: {
+            reviewId: comment.reviewId,
+          },
+          attributes: ["id", "description", "createdAt", "updatedAt", "userId"],
+          include: [
+            {
+              model: User,
+              attributes: ["id", "nickname", "profileImg"],
+            },
+            {
+              model: Review_comment,
+              as: "Replys",
+              attributes: ["id", "description", "createdAt", "updatedAt", "userId"],
+              through: {
+                attributes: [],
+              },
+              include: [
+                {
+                  model: User,
+                  attributes: ["id", "nickname", "profileImg"],
+                },
+              ],
+            },
+          ],
+          order: [["createdAt", "DESC"]],
         });
+        return res.status(200).json(reviewComments);
       } else {
         return res.status(404).json({
           statusCode: 404,
@@ -343,10 +562,34 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
         });
         await comment.addReply(reply);
         await pushNotification("reply", reply, comment, userId, "community"); //type, comment, target, userId
-        return res.status(201).json({
-          statusCode: 201,
-          body: { statusText: "Created", message: "답글이 등록되었습니다." },
+        const communityComments = await Community_comment.findAll({
+          where: {
+            communityId: comment.communityId,
+          },
+          attributes: ["id", "description", "createdAt", "userId"],
+          include: [
+            {
+              model: User,
+              attributes: ["id", "nickname", "profileImg"],
+            },
+            {
+              model: Community_comment,
+              as: "Replys",
+              attributes: ["id", "description", "createdAt", "userId"],
+              through: {
+                attributes: [],
+              },
+              include: [
+                {
+                  model: User,
+                  attributes: ["id", "nickname", "profileImg"],
+                },
+              ],
+            },
+          ],
+          order: [["createdAt", "DESC"]],
         });
+        return res.status(200).json(communityComments);
       } else {
         return res.status(404).json({
           statusCode: 404,
