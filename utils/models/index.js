@@ -80,6 +80,20 @@ db.Dental_clinic.belongsToMany(db.User, {
   through: db.Appointment,
   onDelete: "CASCADE",
 });
+db.Brush_condition.belongsTo(db.User);
+/*사용자와 치과 관계형 - 찜*/
+db.User.belongsToMany(db.Dental_clinic, {
+  foreignKey: "userId",
+  as: "ScrapClinics",
+  through: "UserScrapClinics",
+  onDelete: "CASCADE",
+});
+db.Dental_clinic.belongsToMany(db.User, {
+  foreignKey: "dentalClinicId",
+  as: "Scrapers",
+  through: "UserScrapClinics",
+  onDelete: "CASCADE",
+});
 /*예약과 증상항목 관계형*/
 db.Appointment.belongsToMany(db.Symptom_item, {
   foreignKey: "appointmentId",
