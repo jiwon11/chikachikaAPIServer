@@ -442,3 +442,79 @@ module.exports.newTownCity = async function newTownCity(event) {
     };
   }
 };
+module.exports.transparentClinics = async function transparentClinics(event) {
+  try {
+    const transparentClinics = require("../dental_clinic_json/transparentClinics.json");
+    const none = [];
+    const over = [];
+    for (var transparents of transparentClinics) {
+      const clinic = await Dental_clinic.findAll({
+        attributes: ["id"],
+        where: {
+          [Sequelize.Op.or]: [
+            {
+              [Sequelize.Op.and]: [
+                {
+                  name: {
+                    [Sequelize.Op.like]: `%${transparents.clinicName}%`,
+                  },
+                },
+                {
+                  address: {
+                    [Sequelize.Op.like]: `%${transparents.address.split(" ")[1]}%`,
+                  },
+                },
+                {
+                  [Sequelize.Op.or]: [
+                    {
+                      address: {
+                        [Sequelize.Op.like]: `%${transparents.address.split(" ")[2]}%`,
+                      },
+                    },
+                    {
+                      local: {
+                        [Sequelize.Op.like]: `%${transparents.address.split(" ")[2]}%`,
+                      },
+                    },
+                    {
+                      address: {
+                        [Sequelize.Op.like]: `%${transparents.address.split(" ")[3]}%`,
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              telNumber: transparents.colNumber,
+            },
+          ],
+        },
+      });
+      if (clinic.length === 0) {
+        none.push(transparents.clinicName);
+      } else if (clinic.length > 1) {
+        over.push({ name: transparents.clinicName, list: clinic });
+      } else {
+        await Dental_clinic.update(
+          { realNameCampaign: true },
+          {
+            where: {
+              id: clinic[0].id,
+            },
+          }
+        );
+      }
+    }
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ noneSize: none.length, none: none, overSize: over.length, over: over }),
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};

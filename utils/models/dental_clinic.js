@@ -167,6 +167,15 @@ module.exports = (sequelize, DataTypes) =>
         type: DataTypes.STRING,
         allowNull: true,
       },
+      description: {
+        type: DataTypes.STRING(5000),
+        allowNull: true,
+      },
+      realNameCampaign: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
     },
     {
       timestamps: true,
