@@ -78,7 +78,7 @@ router.get("/:userId/reviews", getUserInToken, async (req, res, next) => {
         },
         {
           model: Dental_clinic,
-          attributes: ["id", "name"],
+          attributes: ["id", "name", "originalName"],
         },
         {
           model: Treatment_item,
@@ -305,7 +305,7 @@ router.get("/likes", getUserInToken, async (req, res, next) => {
           },
           {
             model: Dental_clinic,
-            attributes: ["id", "name"],
+            attributes: ["id", "name", "originalName"],
           },
           {
             model: Treatment_item,
@@ -472,7 +472,7 @@ router.get("/scraps", getUserInToken, async (req, res, next) => {
           },
           {
             model: Dental_clinic,
-            attributes: ["id", "name"],
+            attributes: ["id", "name", "originalName"],
           },
           {
             model: Treatment_item,
@@ -633,7 +633,7 @@ router.get("/wroteCommentPosts", getUserInToken, async (req, res, next) => {
           },
           {
             model: Dental_clinic,
-            attributes: ["id", "name"],
+            attributes: ["id", "name", "originalName"],
           },
           {
             model: Treatment_item,

@@ -281,7 +281,7 @@ module.exports.detailClinics = async function detailClinics(event) {
         },
         {
           model: Dental_clinic,
-          attributes: ["id", "name"],
+          attributes: ["id", "name", "originalName"],
         },
         {
           model: Treatment_item,
@@ -299,11 +299,96 @@ module.exports.detailClinics = async function detailClinics(event) {
         ["TreatmentItems", Review_treatment_item, "index", "ASC"],
         ["review_contents", "index", "ASC"],
       ],
+      limit: 10,
     });
     result.reviews = reviews;
     return {
       statusCode: 200,
       body: JSON.stringify(result),
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
+
+module.exports.clinicReviews = async function clinicReview(event) {
+  try {
+    const token = event.headers.Authorization;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+    const { clinicId } = event.queryStringParameters;
+    const limit = parseInt(event.queryStringParameters.limit);
+    const offset = parseInt(event.queryStringParameters.offset);
+    const reviews = await Review.findAll({
+      where: {
+        dentalClinicId: clinicId,
+      },
+      attributes: {
+        include: [
+          [sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.updatedAt,NOW()))`), "createdDiff(second)"],
+          [
+            sequelize.literal(
+              "(SELECT COUNT(*) FROM review_comments WHERE review_comments.reviewId = review.id AND deletedAt IS null) + (SELECT COUNT(*) FROM Review_reply LEFT JOIN review_comments ON (review_comments.id = Review_reply.commentId) WHERE review_comments.reviewId = review.id)"
+            ),
+            "reviewCommentsNum",
+          ],
+          [sequelize.literal("(SELECT COUNT(*) FROM Like_Review WHERE Like_Review.likedReviewId = review.id)"), "reviewLikeNum"],
+          [sequelize.literal(`(SELECT COUNT(*) FROM Like_Review WHERE Like_Review.likedReviewId = review.id AND Like_Review.likerId = "${userId}")`), "viewerLikedReview"],
+          [sequelize.literal(`(SELECT COUNT(*) FROM Scrap WHERE Scrap.scrapedReviewId = review.id AND Scrap.scraperId = "${userId}")`), "viewerScrapedReview"],
+          [sequelize.literal("(SELECT COUNT(*) FROM ViewReviews WHERE ViewReviews.viewedReviewId = review.id)"), "reviewViewNum"],
+          [
+            sequelize.literal(
+              "(SELECT GROUP_CONCAT(description ORDER BY review_contents.index ASC SEPARATOR ' ') FROM review_contents WHERE review_contents.reviewId = review.id AND review_contents.deletedAt IS NULL)"
+            ),
+            "reviewDescriptions",
+          ],
+        ],
+      },
+      include: [
+        {
+          model: User,
+          attributes: ["nickname", "profileImg"],
+        },
+        {
+          model: Review_content,
+          attributes: ["id", "img_url", "index", "img_before_after"],
+          required: false,
+          where: {
+            img_url: {
+              [Sequelize.Op.not]: null,
+            },
+          },
+        },
+        {
+          model: Dental_clinic,
+          attributes: ["id", "name", "originalName"],
+        },
+        {
+          model: Treatment_item,
+          as: "TreatmentItems",
+          attributes: ["id", "name"],
+          order: [["index", "ASC"]],
+          through: {
+            model: Review_treatment_item,
+            attributes: ["cost", "index"],
+          },
+        },
+      ],
+      order: [
+        ["createdAt", "DESC"],
+        ["TreatmentItems", Review_treatment_item, "index", "ASC"],
+        ["review_contents", "index", "ASC"],
+      ],
+      limit: limit,
+      offset: offset,
+    });
+    return {
+      statusCode: 200,
+      body: JSON.stringify(reviews),
     };
   } catch (error) {
     console.error(error);
