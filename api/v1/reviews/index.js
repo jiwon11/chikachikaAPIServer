@@ -83,7 +83,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
         },
         {
           model: Dental_clinic,
-          attributes: ["id", "name"],
+          attributes: ["id", "name", "originalName"],
         },
         {
           model: Treatment_item,
@@ -136,7 +136,7 @@ router.get("/", getUserInToken, async (req, res, next) => {
         },
         {
           model: Dental_clinic,
-          attributes: ["name", "address"],
+          attributes: ["name", "address", "originalName"],
         },
         {
           model: Review_content,
@@ -387,7 +387,7 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
             },
             {
               model: Dental_clinic,
-              attributes: ["name", "address"],
+              attributes: ["name", "address", "originalName"],
             },
             {
               model: Review_content,

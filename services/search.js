@@ -255,7 +255,7 @@ module.exports.reviews = async function reviewSearch(event) {
         },
         {
           model: Dental_clinic,
-          attributes: ["id", "name", "address", "telNumber"],
+          attributes: ["id", "name", "address", "telNumber", "originalName"],
         },
         {
           model: Review_content,
