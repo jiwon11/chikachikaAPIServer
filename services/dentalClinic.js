@@ -130,6 +130,7 @@ module.exports.detailClinics = async function detailClinics(event) {
       telNumber: clinic.telNumber,
       website: clinic.website,
       launchDate: clinic.launchDate,
+      dentalTransparent: clinic.dentalTransparent,
       reviewNum: clinic.get("reviewNum"),
       conclustionNow: clinic.get("conclustionNow"),
       lunchTimeNow: clinic.get("lunchTimeNow"),

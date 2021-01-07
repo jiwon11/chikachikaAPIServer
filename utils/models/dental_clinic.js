@@ -171,7 +171,7 @@ module.exports = (sequelize, DataTypes) =>
         type: DataTypes.STRING(5000),
         allowNull: true,
       },
-      realNameCampaign: {
+      dentalTransparent: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false,
