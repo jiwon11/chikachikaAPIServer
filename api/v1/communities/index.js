@@ -302,7 +302,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
             "relativeAddress",
             [
               Sequelize.literal(
-                "IF(CityTags.emdName == CityTags.adCity, CONCAT(CityTags.sido,' ',CityTags.sigungu,' ',CityTags.emdName),CONCAT(CityTags.sido,' ',CityTags.sigungu,' ',CityTags.emdName,'(',CityTags.adCity,')'))"
+                "IF(CityTags.emdName = CityTags.adCity, CONCAT(CityTags.sido,' ',CityTags.sigungu,' ',CityTags.emdName),CONCAT(CityTags.sido,' ',CityTags.sigungu,' ',CityTags.emdName,'(',CityTags.adCity,')'))"
               ),
               "fullCityName",
             ],
