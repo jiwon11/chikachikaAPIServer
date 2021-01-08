@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const { User, Review, Community, Dental_clinic } = require("../utils/models");
+const { User, Review, Community, Dental_clinic, Sequelize } = require("../utils/models");
 
 module.exports.addScrapReview = async function addScrapReview(event) {
   try {
@@ -10,6 +10,9 @@ module.exports.addScrapReview = async function addScrapReview(event) {
     const review = await Review.findOne({
       where: {
         id: reviewId,
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
       },
     });
     if (review) {
@@ -47,6 +50,9 @@ module.exports.removeScrapReview = async function removeScrapReview(event) {
     const review = await Review.findOne({
       where: {
         id: reviewId,
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
       },
     });
     if (review) {
@@ -84,6 +90,9 @@ module.exports.addScrapCommunities = async function addScrapCommunities(event) {
     const post = await Community.findOne({
       where: {
         id: postId,
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
       },
     });
     if (post) {
@@ -121,6 +130,9 @@ module.exports.removeScrapCommunities = async function removeScrapCommunities(ev
     const post = await Community.findOne({
       where: {
         id: postId,
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
       },
     });
     if (post) {

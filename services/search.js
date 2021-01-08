@@ -367,7 +367,15 @@ module.exports.allTagItems = async function allTagItems(event) {
             },
           ],
         },
-        attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')')"), "fullCityName"], "relativeAddress"],
+        attributes: [
+          "id",
+          "sido",
+          "sigungu",
+          "adCity",
+          "emdName",
+          [Sequelize.literal("IF(emdName = adCity, CONCAT(sido,' ',sigungu,' ',emdName),CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')'))"), "fullCityName"],
+          "relativeAddress",
+        ],
         offset: offset,
         limit: limit,
       });

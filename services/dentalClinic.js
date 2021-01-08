@@ -243,6 +243,9 @@ module.exports.detailClinics = async function detailClinics(event) {
     const reviews = await Review.findAll({
       where: {
         dentalClinicId: clinicId,
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
       },
       attributes: {
         include: [
@@ -327,6 +330,9 @@ module.exports.clinicReviews = async function clinicReview(event) {
     const reviews = await Review.findAll({
       where: {
         dentalClinicId: clinicId,
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
       },
       attributes: {
         include: [

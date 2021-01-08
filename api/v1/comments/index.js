@@ -2,7 +2,7 @@ const express = require("express");
 const { getUserInToken } = require("../middlewares");
 const multer = require("multer");
 //const firebase = require("firebase-admin");
-const { User, Review, Review_comment, Community, Community_comment, NotificationConfig, Notification } = require("../../../utils/models");
+const { User, Review, Review_comment, Community, Community_comment, NotificationConfig, Notification, Sequelize } = require("../../../utils/models");
 const router = express.Router();
 
 const multerBody = multer();
@@ -127,6 +127,9 @@ router.post("/", getUserInToken, multerBody.none(), async (req, res, next) => {
       const review = await Review.findOne({
         where: {
           id: reviewId,
+          userId: {
+            [Sequelize.Op.not]: null,
+          },
         },
         include: [
           {
@@ -180,6 +183,9 @@ router.post("/", getUserInToken, multerBody.none(), async (req, res, next) => {
       const post = await Community.findOne({
         where: {
           id: postId,
+          userId: {
+            [Sequelize.Op.not]: null,
+          },
         },
         include: [
           {

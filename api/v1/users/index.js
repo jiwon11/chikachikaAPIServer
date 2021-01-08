@@ -37,6 +37,11 @@ router.get("/:userId/reviews", getUserInToken, async (req, res, next) => {
     const offset = parseInt(req.query.offset);
     const order = req.query.order === "createdAt" ? "createdAt" : "popular";
     const userWroteReviews = await Review.findAll({
+      where: {
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
+      },
       attributes: {
         include: [
           [sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.updatedAt,NOW()))`), "createdDiff(second)"],
@@ -117,6 +122,9 @@ router.get("/:userId/communities", getUserInToken, async (req, res, next) => {
     const userWrotecommunityPosts = await Community.findAll({
       where: {
         type: type,
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
       },
       attributes: {
         include: [
@@ -184,7 +192,15 @@ router.get("/:userId/communities", getUserInToken, async (req, res, next) => {
         {
           model: City,
           as: "CityTags",
-          attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')')"), "fullCityName"], "relativeAddress"],
+          attributes: [
+            "id",
+            "sido",
+            "sigungu",
+            "adCity",
+            "emdName",
+            [Sequelize.literal("IF(emdName = adCity, CONCAT(sido,' ',sigungu,' ',emdName),CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')'))"), "fullCityName"],
+            "relativeAddress",
+          ],
           through: {
             attributes: ["index"],
           },
@@ -392,7 +408,15 @@ router.get("/likes", getUserInToken, async (req, res, next) => {
           {
             model: City,
             as: "CityTags",
-            attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')')"), "fullCityName"], "relativeAddress"],
+            attributes: [
+              "id",
+              "sido",
+              "sigungu",
+              "adCity",
+              "emdName",
+              [Sequelize.literal("IF(emdName = adCity, CONCAT(sido,' ',sigungu,' ',emdName),CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')'))"), "fullCityName"],
+              "relativeAddress",
+            ],
             through: {
               attributes: ["index"],
             },
@@ -559,7 +583,15 @@ router.get("/scraps", getUserInToken, async (req, res, next) => {
           {
             model: City,
             as: "CityTags",
-            attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')')"), "fullCityName"], "relativeAddress"],
+            attributes: [
+              "id",
+              "sido",
+              "sigungu",
+              "adCity",
+              "emdName",
+              [Sequelize.literal("IF(emdName = adCity, CONCAT(sido,' ',sigungu,' ',emdName),CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')'))"), "fullCityName"],
+              "relativeAddress",
+            ],
             through: {
               attributes: ["index"],
             },
@@ -595,6 +627,11 @@ router.get("/wroteCommentPosts", getUserInToken, async (req, res, next) => {
     const offset = parseInt(req.query.offset);
     if (type === "review") {
       const userWroteCommentReviews = await Review.findAll({
+        where: {
+          userId: {
+            [Sequelize.Op.not]: null,
+          },
+        },
         attributes: {
           include: [
             [sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.updatedAt,NOW()))`), "createdDiff(second)"],
@@ -669,6 +706,11 @@ router.get("/wroteCommentPosts", getUserInToken, async (req, res, next) => {
       return res.status(200).json(userWroteCommentReviews);
     } else if (type === "community") {
       const userWroteCommentPosts = await Community.findAll({
+        where: {
+          userId: {
+            [Sequelize.Op.not]: null,
+          },
+        },
         attributes: {
           include: [
             [sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,community.updatedAt,NOW()))`), "createdDiff(second)"],
@@ -732,7 +774,15 @@ router.get("/wroteCommentPosts", getUserInToken, async (req, res, next) => {
           {
             model: City,
             as: "CityTags",
-            attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')')"), "fullCityName"], "relativeAddress"],
+            attributes: [
+              "id",
+              "sido",
+              "sigungu",
+              "adCity",
+              "emdName",
+              [Sequelize.literal("IF (emdName = adCity, CONCAT(sido,' ',sigungu,' ',emdName),CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')'))"), "fullCityName"],
+              "relativeAddress",
+            ],
             through: {
               attributes: ["index"],
             },

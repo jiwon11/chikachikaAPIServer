@@ -34,3 +34,27 @@ module.exports.getUserInfo = async function getUserInfo(event) {
     };
   }
 };
+
+module.exports.deleteUser = async function deleteUser(event) {
+  try {
+    const token = event.headers.Authorization;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+    await User.destroy({
+      where: {
+        id: userId,
+      },
+      force: true,
+      individualHooks: true,
+    });
+    return {
+      statusCode: 204,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};

@@ -230,6 +230,18 @@ functions:
           path: socialUserCheck
           method: post
           cors: true
+  deleteUser:
+    handler: services/user.deleteUser
+    events:
+      - http:
+          path: withdrawal
+          method: delete
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
   searchCities:
     handler: services/residence.searchCities
     events:
