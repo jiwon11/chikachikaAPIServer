@@ -48,40 +48,6 @@ module.exports.clinics = async function clinics(event) {
       }
     }
     console.log(week);
-    var weekdayTolStartTimeQuery;
-    var weekdayTolEndTimeQuery;
-    var weekdayTolStartTimeNonZero;
-    var weekdayTolEndTimeNonZero;
-    if (week.mon !== null || week.tus !== null || week.wed !== null || week.thu !== null || week.fri !== null) {
-      weekdayTolStartTimeQuery = {
-        [sequelize.Op.gt]: time,
-      };
-      weekdayTolEndTimeQuery = {
-        [sequelize.Op.lt]: time,
-      };
-      weekdayTolStartTimeNonZero = { weekday_TOL_start: { [sequelize.Op.ne]: "00:00:00" } };
-      weekdayTolEndTimeNonZero = { weekday_TOL_end: { [sequelize.Op.ne]: "00:00:00" } };
-    } else {
-      weekdayTolStartTimeQuery = { [sequelize.Op.not]: null };
-      weekdayTolEndTimeQuery = { [sequelize.Op.not]: null };
-    }
-    var satTolStartTimeQuery;
-    var satTolEndTimeQuery;
-    var satTolStartTimeNonZero;
-    var satTolEndTimeNonZero;
-    if (week.sat !== null) {
-      satTolStartTimeQuery = {
-        [sequelize.Op.gt]: time,
-      };
-      satTolEndTimeQuery = {
-        [sequelize.Op.lt]: time,
-      };
-      satTolStartTimeNonZero = { sat_TOL_start: { [sequelize.Op.ne]: "00:00:00" } };
-      satTolEndTimeNonZero = { sat_TOL_end: { [sequelize.Op.ne]: "00:00:00" } };
-    } else {
-      satTolStartTimeQuery = { [sequelize.Op.not]: null };
-      satTolEndTimeQuery = { [sequelize.Op.not]: null };
-    }
     var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
     const today = new Date();
     const nowTime = `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`;
@@ -95,15 +61,19 @@ module.exports.clinics = async function clinics(event) {
     console.log(todayHoliday);
     var TOLTimeAttrStart;
     var TOLTimeAttrEnd;
+    var TOLTimeConfident;
     if (day !== "Sun" && day !== "Sat") {
       TOLTimeAttrStart = "weekday_TOL_start";
       TOLTimeAttrEnd = "weekday_TOL_end";
+      TOLTimeConfident = [sequelize.literal(`IF((weekday_TOL_start = "00:00:00" OR weekday_TOL_end = "00:00:00"), false, true)`), "confidentTOL"];
     } else if (day !== "Sun") {
       TOLTimeAttrStart = "sat_TOL_start";
       TOLTimeAttrEnd = "sat_TOL_end";
+      TOLTimeConfident = [sequelize.literal(`IF((sat_TOL_start = "00:00:00" OR sat_TOL_end = "00:00:00"), false, true)`), "confidentTOL"];
     } else {
       TOLTimeAttrStart = [sequelize.literal(`1 != 1`), "sun_TOL_start"];
       TOLTimeAttrEnd = [sequelize.literal(`1 != 1`), "sun_TOL_end"];
+      TOLTimeConfident = [sequelize.literal(`1 != 1`), "confidentTOL"];
     }
     const clinics = await Dental_clinic.findAll({
       attributes: [
@@ -120,6 +90,10 @@ module.exports.clinics = async function clinics(event) {
         day === "Sun" || todayHoliday.length > 0 ? "holiday_treatment_end_time" : `${day}_Consulation_end_time`,
         TOLTimeAttrStart,
         TOLTimeAttrEnd,
+        TOLTimeConfident,
+        day === "Sun" || todayHoliday.length > 0
+          ? [sequelize.literal(`1 != 1`), "confidentConsulationTime"]
+          : [sequelize.literal(`IF((${day}_Consulation_start_time = "00:00:00" OR ${day}_Consulation_end_time = "00:00:00"), false, true)`), "confidentConsulationTime"],
         [
           sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`),
           "dinstance(km)",
@@ -145,21 +119,6 @@ module.exports.clinics = async function clinics(event) {
           `(6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat))))<=${radius}`
         ),
         parking_allow_num: parking,
-        [sequelize.Op.and]: [weekdayTolStartTimeNonZero, weekdayTolEndTimeNonZero, satTolStartTimeNonZero, satTolEndTimeNonZero],
-        [sequelize.Op.or]: [
-          {
-            weekday_TOL_start: weekdayTolStartTimeQuery,
-          },
-          {
-            weekday_TOL_end: weekdayTolEndTimeQuery,
-          },
-          {
-            sat_TOL_start: satTolStartTimeQuery,
-          },
-          {
-            sat_TOL_end: satTolEndTimeQuery,
-          },
-        ],
         Mon_Consulation_start_time: {
           [sequelize.Op.lte]: week.mon === null ? "24:00:00" : week.mon,
         },
