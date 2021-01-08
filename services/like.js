@@ -11,6 +11,9 @@ module.exports.addLikeReview = async function addLikeReview(event) {
     const review = await Review.findOne({
       where: {
         id: reviewId,
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
       },
     });
     if (review) {
@@ -48,6 +51,9 @@ module.exports.removeLikeReview = async function removeLikeReview(event) {
     const review = await Review.findOne({
       where: {
         id: reviewId,
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
       },
     });
     if (review) {
@@ -85,6 +91,9 @@ module.exports.addLikeCommunity = async function addLikeCommunity(event) {
     const post = await Community.findOne({
       where: {
         id: postId,
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
       },
     });
     if (post) {
@@ -122,6 +131,9 @@ module.exports.removeLikeCommunity = async function removeLikeCommunity(event) {
     const post = await Community.findOne({
       where: {
         id: postId,
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
       },
     });
     if (post) {

@@ -16,12 +16,12 @@ module.exports.searchCities = async function searchCities(event) {
         "emdName",
         "legalCity",
         "relativeAddress",
-        [Sequelize.literal("CONCAT(sido, ' ', sigungu, ' ',emdName,'(',adCity,')')"), "fullCityName"],
+        [Sequelize.literal("IF(emdName = adCity, CONCAT(sido,' ',sigungu,' ',emdName),CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')'))"), "fullCityName"],
         [Sequelize.literal("(SELECT COUNT(*) FROM dental_clinics WHERE dental_clinics.cityId = cities.id)"), "clinicsNum"],
       ],
       where: {
         [Sequelize.Op.or]: [
-          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName"), "(", Sequelize.col("adCity"), ")"), {
+          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
             [Sequelize.Op.like]: `%${query}%`,
           }),
           {
@@ -61,7 +61,7 @@ module.exports.citiesBycurrentLocation = async function citiesBycurrentLocation(
         "legalCity",
         "geometry",
         "relativeAddress",
-        [Sequelize.literal("CONCAT(sido, ' ', sigungu, ' ',emdName,'(',adCity,')')"), "fullCityName"],
+        [Sequelize.literal("IF(emdName = adCity, CONCAT(sido,' ',sigungu,' ',emdName),CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')'))"), "fullCityName"],
         [Sequelize.literal("(SELECT COUNT(*) FROM dental_clinics WHERE dental_clinics.cityId = cities.id)"), "clinicsNum"],
       ],
       where: Sequelize.literal(`MBRContains(geometry,ST_GeomFromText("point(${long} ${lat})"))`),
@@ -76,7 +76,7 @@ module.exports.citiesBycurrentLocation = async function citiesBycurrentLocation(
         "emdName",
         "legalCity",
         "relativeAddress",
-        [Sequelize.literal("CONCAT(sido,' ', sigungu,' ',emdName,'(',adCity,')')"), "fullCityName"],
+        [Sequelize.literal("IF(emdName = adCity, CONCAT(sido,' ',sigungu,' ',emdName),CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')'))"), "fullCityName"],
         [Sequelize.literal("(SELECT COUNT(*) FROM dental_clinics WHERE dental_clinics.cityId = cities.id)"), "clinicsNum"],
       ],
       where: Sequelize.literal(`MBRIntersects(geometry, ST_GeomFromGeoJSON('${JSON.stringify(currentCity.geometry)}',2,0)) AND cities.id != ${currentCity.id}`),

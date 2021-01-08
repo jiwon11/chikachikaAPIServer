@@ -60,5 +60,21 @@ module.exports = (sequelize, DataTypes) =>
       paranoid: true,
       charset: "utf8mb4",
       collate: "utf8mb4_unicode_ci",
+      hooks: {
+        beforeDestroy: async function (instance, options) {
+          const reviews = await instance.getReviews();
+          for (const review of reviews) {
+            review.userId = null;
+            await review.save();
+          }
+          console.log("after destroy: user's Reviews destroyed");
+          const communituies = await instance.getCommunities();
+          for (const community of communituies) {
+            community.userId = null;
+            await community.save();
+          }
+          console.log("after destroy: user's Cummunity destroyed");
+        },
+      },
     }
   );

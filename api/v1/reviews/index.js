@@ -6,7 +6,7 @@ const path = require("path");
 const sequelize = require("sequelize");
 const ApiError = require("../../../utils/error");
 const { getUserInToken } = require("../middlewares");
-const { Review, User, Review_content, Treatment_item, Dental_clinic, Review_treatment_item, Review_comment, ReviewBills } = require("../../../utils/models");
+const { Review, User, Review_content, Treatment_item, Dental_clinic, Review_treatment_item, Review_comment, ReviewBills, Sequelize } = require("../../../utils/models");
 
 const router = express.Router();
 
@@ -45,6 +45,11 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
             ),
           ];
     const reviews = await Review.findAll({
+      where: {
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
+      },
       attributes: {
         include: [
           [sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.updatedAt,NOW()))`), "createdDiff(second)"],
@@ -125,6 +130,9 @@ router.get("/", getUserInToken, async (req, res, next) => {
     const review = await Review.findOne({
       where: {
         id: reviewId,
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
       },
       attributes: {
         include: [[sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.updatedAt,NOW()))`), "createdDiff(second)"]],
@@ -305,6 +313,9 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
     const review = await Review.findOne({
       where: {
         id: reviewId,
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
       },
     });
     if (review) {
@@ -376,6 +387,9 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
         const updateReview = await Review.findOne({
           where: {
             id: review.id,
+            userId: {
+              [Sequelize.Op.not]: null,
+            },
           },
           attributes: {
             include: [[sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.updatedAt,NOW()))`), "createdDiff(second)"]],
@@ -479,6 +493,9 @@ router.delete("/", getUserInToken, async (req, res, next) => {
     const review = await Review.findOne({
       where: {
         id: reviewId,
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
       },
     });
     if (review.userId === req.user.id) {

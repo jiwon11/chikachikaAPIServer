@@ -122,8 +122,8 @@ db.Treatment_item.belongsToMany(db.Appointment, {
 });
 /*사용자와 리뷰 관계형 */
 db.User.hasMany(db.Review, {
-  foreignKey: "userId",
   onDelete: "CASCADE",
+  foreignKey: "userId",
 });
 db.Review.belongsTo(db.User);
 /*치과와 리뷰 관계형 */

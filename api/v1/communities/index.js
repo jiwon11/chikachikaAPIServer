@@ -213,6 +213,9 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
     const communityPosts = await Community.findAll({
       where: {
         type: type,
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
       },
       attributes: {
         include: [
@@ -297,7 +300,12 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
             "adCity",
             "emdName",
             "relativeAddress",
-            [Sequelize.literal("CONCAT(CityTags.sido,' ',CityTags.sigungu,' ',CityTags.emdName,'(',CityTags.adCity,')')"), "fullCityName"],
+            [
+              Sequelize.literal(
+                "IF(CityTags.emdName == CityTags.adCity, CONCAT(CityTags.sido,' ',CityTags.sigungu,' ',CityTags.emdName),CONCAT(CityTags.sido,' ',CityTags.sigungu,' ',CityTags.emdName,'(',CityTags.adCity,')'))"
+              ),
+              "fullCityName",
+            ],
           ],
           through: {
             attributes: ["index"],
@@ -333,6 +341,9 @@ router.get("/", getUserInToken, async (req, res, next) => {
     const communityPost = await Community.findOne({
       where: {
         id: communityPostId,
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
       },
       attributes: {
         include: [
@@ -396,7 +407,15 @@ router.get("/", getUserInToken, async (req, res, next) => {
         {
           model: City,
           as: "CityTags",
-          attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')')"), "fullCityName"], "relativeAddress"],
+          attributes: [
+            "id",
+            "sido",
+            "sigungu",
+            "adCity",
+            "emdName",
+            [Sequelize.literal("IF(emdName = adCity, CONCAT(sido,' ',sigungu,' ',emdName),CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')'))"), "fullCityName"],
+            "relativeAddress",
+          ],
           through: {
             attributes: ["index"],
           },
@@ -586,6 +605,9 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
     const updateCommunityPost = await Community.findOne({
       where: {
         id: communityPost.id,
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
       },
       attributes: {
         include: [
@@ -650,7 +672,15 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
         {
           model: City,
           as: "CityTags",
-          attributes: ["id", "sido", "sigungu", "adCity", "emdName", [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')')"), "fullCityName"], "relativeAddress"],
+          attributes: [
+            "id",
+            "sido",
+            "sigungu",
+            "adCity",
+            "emdName",
+            [Sequelize.literal("(emdName = adCity, CONCAT(sido,' ',sigungu,' ',emdName),CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')'))"), "fullCityName"],
+            "relativeAddress",
+          ],
           through: {
             attributes: ["index"],
           },
@@ -677,6 +707,9 @@ router.delete("/", getUserInToken, async (req, res, next) => {
     const communityPost = await Community.findOne({
       where: {
         id: postId,
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
       },
     });
     if (communityPost) {
