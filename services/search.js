@@ -77,7 +77,9 @@ module.exports.dentalClinics = async function dentalClinics(event) {
 
 module.exports.localClinicSearch = async function localClinicSearch(event) {
   try {
-    const { lat, long, query } = event.queryStringParameters;
+    const { lat, long, query, sort, days, time, wantParking } = event.queryStringParameters;
+    const limit = parseInt(event.queryStringParameters.limit);
+    const offset = parseInt(event.queryStringParameters.offset);
     if (!query) {
       return {
         statusCode: 400,
@@ -96,6 +98,83 @@ module.exports.localClinicSearch = async function localClinicSearch(event) {
         body: `{"statusText": "Bad Request","message": "한국 내 위도 범위를 입력하세요."}`,
       };
     }
+    var order;
+    if (sort === "d") {
+      order = [
+        sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`),
+        "ASC",
+      ];
+    }
+    var parking;
+    if (wantParking === "y") {
+      parking = {
+        [sequelize.Op.and]: {
+          [sequelize.Op.gt]: 0,
+          [sequelize.Op.ne]: null,
+        },
+      };
+    } else {
+      parking = {
+        [sequelize.Op.and]: {
+          [sequelize.Op.gte]: 0,
+        },
+      };
+    }
+    var week = {
+      mon: null,
+      tus: null,
+      wed: null,
+      thu: null,
+      fri: null,
+      sat: null,
+    };
+    if (time !== "") {
+      if (days !== "") {
+        days.split(",").forEach((day) => {
+          week[day] = time;
+        });
+      } else {
+        const today = new Date();
+        const weekDay = ["sun", "mon", "tus", "wed", "thu", "fri", "sat"];
+        const day = weekDay[today.getDay()];
+        week[day] = time;
+      }
+    }
+    console.log(week);
+    var weekdayTolStartTimeQuery;
+    var weekdayTolEndTimeQuery;
+    var weekdayTolStartTimeNonZero;
+    var weekdayTolEndTimeNonZero;
+    if (week.mon !== null || week.tus !== null || week.wed !== null || week.thu !== null || week.fri !== null) {
+      weekdayTolStartTimeQuery = {
+        [sequelize.Op.gt]: time,
+      };
+      weekdayTolEndTimeQuery = {
+        [sequelize.Op.lt]: time,
+      };
+      weekdayTolStartTimeNonZero = { weekday_TOL_start: { [sequelize.Op.ne]: "00:00:00" } };
+      weekdayTolEndTimeNonZero = { weekday_TOL_end: { [sequelize.Op.ne]: "00:00:00" } };
+    } else {
+      weekdayTolStartTimeQuery = { [sequelize.Op.not]: null };
+      weekdayTolEndTimeQuery = { [sequelize.Op.not]: null };
+    }
+    var satTolStartTimeQuery;
+    var satTolEndTimeQuery;
+    var satTolStartTimeNonZero;
+    var satTolEndTimeNonZero;
+    if (week.sat !== null) {
+      satTolStartTimeQuery = {
+        [sequelize.Op.gt]: time,
+      };
+      satTolEndTimeQuery = {
+        [sequelize.Op.lt]: time,
+      };
+      satTolStartTimeNonZero = { sat_TOL_start: { [sequelize.Op.ne]: "00:00:00" } };
+      satTolEndTimeNonZero = { sat_TOL_end: { [sequelize.Op.ne]: "00:00:00" } };
+    } else {
+      satTolStartTimeQuery = { [sequelize.Op.not]: null };
+      satTolEndTimeQuery = { [sequelize.Op.not]: null };
+    }
     var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
     const today = new Date();
     const nowTime = `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`;
@@ -109,6 +188,16 @@ module.exports.localClinicSearch = async function localClinicSearch(event) {
     console.log(todayHoliday);
     var TOLTimeAttrStart;
     var TOLTimeAttrEnd;
+    if (day !== "Sun" && day !== "Sat") {
+      TOLTimeAttrStart = "weekday_TOL_start";
+      TOLTimeAttrEnd = "weekday_TOL_end";
+    } else if (day !== "Sun") {
+      TOLTimeAttrStart = "sat_TOL_start";
+      TOLTimeAttrEnd = "sat_TOL_end";
+    } else {
+      TOLTimeAttrStart = [sequelize.literal(`1 != 1`), "sun_TOL_start"];
+      TOLTimeAttrEnd = [sequelize.literal(`1 != 1`), "sun_TOL_end"];
+    }
     if (day !== "Sun" && day !== "Sat") {
       TOLTimeAttrStart = "weekday_TOL_start";
       TOLTimeAttrEnd = "weekday_TOL_end";
@@ -159,25 +248,88 @@ module.exports.localClinicSearch = async function localClinicSearch(event) {
           day === "Sun" || todayHoliday.length > 0
             ? sequelize.literal(`deletedAt IS NULL`)
             : sequelize.literal(`${day}_Consulation_start_time != "00:00:00" AND ${day}_Consulation_end_time != "00:00:00"`),
-        [sequelize.Op.or]: [
+        parking_allow_num: parking,
+        [sequelize.Op.and]: [
+          weekdayTolStartTimeNonZero,
+          weekdayTolEndTimeNonZero,
+          satTolStartTimeNonZero,
+          satTolEndTimeNonZero,
           {
-            name: {
-              [sequelize.Op.like]: `%${query}%`,
-            },
+            [sequelize.Op.or]: [
+              {
+                originalName: {
+                  [sequelize.Op.like]: `%${query}%`,
+                },
+              },
+              {
+                local: {
+                  [sequelize.Op.like]: `%${query}%`,
+                },
+              },
+            ],
           },
           {
-            local: {
-              [sequelize.Op.like]: `%${query}%`,
-            },
+            [sequelize.Op.or]: [
+              {
+                weekday_TOL_start: weekdayTolStartTimeQuery,
+              },
+              {
+                weekday_TOL_end: weekdayTolEndTimeQuery,
+              },
+              {
+                sat_TOL_start: satTolStartTimeQuery,
+              },
+              {
+                sat_TOL_end: satTolEndTimeQuery,
+              },
+            ],
           },
         ],
+        Mon_Consulation_start_time: {
+          [sequelize.Op.lte]: week.mon === null ? "24:00:00" : week.mon,
+        },
+        Mon_Consulation_end_time: {
+          [sequelize.Op.gte]: week.mon === null ? "00:00:00" : week.mon,
+        },
+        Tus_Consulation_start_time: {
+          [sequelize.Op.lte]: week.tus === null ? "24:00:00" : week.tus,
+        },
+        Tus_Consulation_end_time: {
+          [sequelize.Op.gte]: week.tus === null ? "00:00:00" : week.tus,
+        },
+        Wed_Consulation_start_time: {
+          [sequelize.Op.lte]: week.wed === null ? "24:00:00" : week.wed,
+        },
+        Wed_Consulation_end_time: {
+          [sequelize.Op.gte]: week.wed === null ? "00:00:00" : week.wed,
+        },
+        Thu_Consulation_start_time: {
+          [sequelize.Op.lte]: week.thu === null ? "24:00:00" : week.thu,
+        },
+        Thu_Consulation_end_time: {
+          [sequelize.Op.gte]: week.thu === null ? "00:00:00" : week.thu,
+        },
+        Fri_Consulation_start_time: {
+          [sequelize.Op.lte]: week.fri === null ? "24:00:00" : week.fri,
+        },
+        Fri_Consulation_end_time: {
+          [sequelize.Op.gte]: week.fri === null ? "00:00:00" : week.fri,
+        },
+        sat_Consulation_start_time: {
+          [sequelize.Op.lte]: week.sat === null ? "24:00:00" : week.sat,
+        },
+        Sat_Consulation_end_time: {
+          [sequelize.Op.gte]: week.sat === null ? "00:00:00" : week.sat,
+        },
       },
       order: [
         day === "Sun" || todayHoliday.length > 0
           ? [sequelize.literal(`holiday_treatment_start_time <= "${nowTime}" AND holiday_treatment_end_time >= "${nowTime}"`), "DESC"]
           : [sequelize.literal(`${day}_Consulation_start_time <= "${nowTime}" AND ${day}_Consulation_end_time >= "${nowTime}"`), "DESC"],
-        [sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`), "ASC"],
+        order,
       ],
+      limit: limit,
+      offset: offset,
     });
     console.log(clinics.length);
     let response = {
