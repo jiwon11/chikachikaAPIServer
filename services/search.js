@@ -75,11 +75,9 @@ module.exports.dentalClinics = async function dentalClinics(event) {
   }
 };
 
-module.exports.localClinicSearch = async function localClinicSearch(event) {
+module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
   try {
     const { lat, long, query, sort, days, time, wantParking } = event.queryStringParameters;
-    const limit = parseInt(event.queryStringParameters.limit);
-    const offset = parseInt(event.queryStringParameters.offset);
     if (!query) {
       return {
         statusCode: 400,
@@ -284,8 +282,6 @@ module.exports.localClinicSearch = async function localClinicSearch(event) {
           ? [sequelize.literal(`holiday_treatment_start_time <= "${nowTime}" AND holiday_treatment_end_time >= "${nowTime}"`), "DESC"]
           : [sequelize.literal(`${day}_Consulation_start_time <= "${nowTime}" AND ${day}_Consulation_end_time >= "${nowTime}"`), "DESC"],
       ],
-      limit: limit,
-      offset: offset,
     });
     console.log(clinics.length);
     let response = {
