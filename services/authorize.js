@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { User } = require("../utils/models");
 
 function generateAuthResponse(principalId, effect, methodArn) {
   const policyDocument = generatePolicyDocument(effect, methodArn);
@@ -26,7 +27,7 @@ function generatePolicyDocument(effect, methodArn) {
   return policyDocument;
 }
 
-module.exports.verifyToken = (event, context, callback) => {
+module.exports.verifyToken = async (event, context, callback) => {
   const token = event.authorizationToken;
   const methodArn = event.methodArn;
 
@@ -34,8 +35,12 @@ module.exports.verifyToken = (event, context, callback) => {
 
   // verifies token
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  console.log(decoded);
-  if (decoded) {
+  const user = await User.findOne({
+    where: {
+      id: decoded.id,
+    },
+  });
+  if (decoded && user) {
     return callback(null, generateAuthResponse(decoded.id, "Allow", methodArn));
   } else {
     return callback(null, generateAuthResponse(decoded.id, "Deny", methodArn));
