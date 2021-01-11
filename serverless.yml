@@ -38,6 +38,7 @@ provider:
     NCP_serviceID: ${param:NCP_serviceID}
     AWS_Access_Key_ID: ${param:AWS_Access_Key_ID}
     AWS_Secret_Access_Key: ${param:AWS_Secret_Access_Key}
+    TZ: ${param:TZ}
   memorySize: 1024 # optional, in MB, default: 1024
   timeout: 6 # optional, in seconds, default: 6
   versionFunctions: false # optional, default: true
