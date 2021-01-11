@@ -1,5 +1,4 @@
 const jwt = require("jsonwebtoken");
-const { User } = require("../utils/models");
 
 function generateAuthResponse(principalId, effect, methodArn) {
   const policyDocument = generatePolicyDocument(effect, methodArn);
@@ -35,12 +34,7 @@ module.exports.verifyToken = async (event, context, callback) => {
 
   // verifies token
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  const user = await User.findOne({
-    where: {
-      id: decoded.id,
-    },
-  });
-  if (decoded && user) {
+  if (decoded) {
     return callback(null, generateAuthResponse(decoded.id, "Allow", methodArn));
   } else {
     return callback(null, generateAuthResponse(decoded.id, "Deny", methodArn));
