@@ -134,6 +134,19 @@ functions:
           path: clinics
           method: get
           cors: true
+          caching:
+            enabled: true
+            ttlInSeconds: 3600 # overrides the global setting for ttlInSeconds
+            cacheKeyParameters:
+              - name: request.querystring.lat
+              - name: request.querystring.long
+              - name: request.querystring.query
+              - name: request.querystring.sort
+              - name: request.querystring.days
+              - name: request.querystring.time
+              - name: request.querystring.wantParking
+              - name: request.querystring.limit
+              - name: request.querystring.offset
           authorizer:
               name: verify-token
               # this tells the lambda where to take the information from,
@@ -147,6 +160,16 @@ functions:
           path: around/clinics
           method: get
           cors: true
+          caching:
+            enabled: true
+            ttlInSeconds: 3600 # overrides the global setting for ttlInSeconds
+            cacheKeyParameters:
+              - name: request.querystring.lat
+              - name: request.querystring.long
+              - name: request.querystring.wantParking
+              - name: request.querystring.sort
+              - name: request.querystring.days
+              - name: request.querystring.time
           authorizer:
               name: verify-token
               # this tells the lambda where to take the information from,
@@ -173,6 +196,11 @@ functions:
           path: search/clinics
           method: get
           cors: true
+          caching:
+            enabled: true
+            ttlInSeconds: 3600 # overrides the global setting for ttlInSeconds
+            cacheKeyParameters:
+              - name: request.querystring.q
           authorizer:
               name: verify-token
               # this tells the lambda where to take the information from,
@@ -253,6 +281,13 @@ functions:
           path: search/cities
           method: get
           cors: true
+          caching:
+            enabled: true
+            ttlInSeconds: 3600 # overrides the global setting for ttlInSeconds
+            cacheKeyParameters:
+              - name: request.querystring.query
+              - name: request.querystring.limit
+              - name: request.querystring.offset
   citiesBycurrentLocation:
     handler: services/residence.citiesBycurrentLocation
     events:
@@ -260,6 +295,12 @@ functions:
           path: search/cities/currentLocation
           method: get
           cors: true
+          caching:
+            enabled: true
+            ttlInSeconds: 3600 # overrides the global setting for ttlInSeconds
+            cacheKeyParameters:
+              - name: request.querystring.lat
+              - name: request.querystring.long
   addUserResidence:
     handler: services/residence.addUserResidence
     events:
@@ -462,6 +503,11 @@ functions:
           path: clinic/detail
           method: get
           cors: true
+          caching:
+            enabled: true
+            ttlInSeconds: 3600 # overrides the global setting for ttlInSeconds
+            cacheKeyParameters:
+              - name: request.querystring.clinicId
           authorizer:
               name: verify-token
               # this tells the lambda where to take the information from,
