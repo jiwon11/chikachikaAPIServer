@@ -7,7 +7,10 @@ custom:
   apigwBinary:
     types:           #list of mime-types 
        - 'multipart/form-data'
-
+  apiGatewayCaching:
+    enabled: true
+    clusterSize: '0.5' # defaults to '0.5'
+    ttlInSeconds: 300 # defaults to the maximum allowed: 3600
 dashboard:
   lambda:
     enabled: false
@@ -491,6 +494,24 @@ functions:
               # in our case the HTTP Authorization header
               identitySource: method.request.header.Authorization
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  keywordClinicAutoComplete:
+    handler: services/search.keywordClinicAutoComplete
+    events:
+      - http:
+          path: clinic/keyword
+          method: get
+          cors: true
+          caching:
+            enabled: true
+            ttlInSeconds: 3600 # overrides the global setting for ttlInSeconds
+            cacheKeyParameters:
+              - name: request.querystring.query
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   importDentalClinic:
     handler: services/dbReset.importDentalClinic
     package:
@@ -570,7 +591,22 @@ functions:
           path: newTownCity
           method: post
           cors: true
+  dentalClinicLocalUpdate:
+    handler: services/dbReset.dentalClinicLocalUpdate
+    events:
+      - http:
+          path: dentalClinicLocalUpdate
+          method: post
+          cors: true
+  sidoSigungu:
+    handler: services/dbReset.sidoSigungu
+    events:
+      - http:
+          path: sidoSigungu
+          method: post
+          cors: true
 plugins:
   - serverless-offline
   - serverless-apigw-binary
   - serverless-plugin-cloudwatch-dashboard
+  - serverless-api-gateway-caching

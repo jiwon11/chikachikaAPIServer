@@ -32,6 +32,7 @@
     "request": "^2.88.2",
     "sequelize": "^6.3.5",
     "sequelize-cli": "^6.2.0",
+    "serverless-api-gateway-caching": "^1.6.0",
     "serverless-offline": "^6.8.0",
     "serverless-plugin-cloudwatch-dashboard": "^1.2.0",
     "xml-js": "^1.6.11"
