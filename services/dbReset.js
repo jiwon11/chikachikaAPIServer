@@ -1,5 +1,5 @@
 const { sequelize, Sequelize } = require("../utils/models");
-const { Dental_clinic, Korea_holiday, City, NewTown } = require("../utils/models");
+const { Dental_clinic, Korea_holiday, City, NewTown, Sido, Sigungu } = require("../utils/models");
 const { QueryTypes } = require("sequelize");
 
 const request = require("request");
@@ -509,6 +509,58 @@ module.exports.transparentClinics = async function transparentClinics(event) {
     return {
       statusCode: 200,
       body: JSON.stringify({ noneSize: none.length, none: none, overSize: over.length, over: over }),
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
+
+module.exports.dentalClinicLocalUpdate = async function dentalClinicLocalUpdate(event) {
+  try {
+    const clinics = await Dental_clinic.findAll();
+    for (const clinic of clinics) {
+      const city = await City.findOne({
+        where: {
+          id: clinic.cityId,
+        },
+      });
+      await clinic.update({
+        local: `${city.sido} ${city.sigungu} ${city.emdName}`,
+      });
+      console.log(clinic.name);
+    }
+    return {
+      statusCode: 200,
+      body: `{"message": "OK"}`,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
+
+module.exports.sidoSigungu = async function sidoSigungu(event) {
+  try {
+    const sigungus = await City.findAll({
+      attributes: ["sido", "sigungu"],
+      group: ["sigungu"],
+    });
+    for (const sigungu of sigungus) {
+      await Sigungu.create({
+        name: sigungu.sigungu,
+        fullName: `${sigungu.sido} ${sigungu.sigungu}`,
+      });
+    }
+    return {
+      statusCode: 200,
+      body: JSON.stringify(sigungus),
     };
   } catch (error) {
     console.error(error);

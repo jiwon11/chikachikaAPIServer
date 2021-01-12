@@ -48,6 +48,8 @@ db.Special_treatment = require("./specialTreatment")(sequelize, Sequelize);
 db.ClinicStaticMap = require("./clinicStaticMap")(sequelize, Sequelize);
 db.Residence = require("./residence")(sequelize, Sequelize);
 db.DentalClinicProfileImg = require("./dentalClinicProfileImg")(sequelize, Sequelize);
+db.Sido = require("./sido")(sequelize, Sequelize);
+db.Sigungu = require("./sigungu")(sequelize, Sequelize);
 
 /*사용자와 타이머 관걔형 */
 db.User.hasMany(db.Timer, {

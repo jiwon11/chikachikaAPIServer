@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const { Symptom_item, Dental_clinic, Treatment_item, Review, User, Review_content, Search_record, GeneralTag, Korea_holiday, City, Sequelize } = require("../utils/models");
+const { Symptom_item, Dental_clinic, Treatment_item, Review, User, Review_content, Search_record, GeneralTag, Korea_holiday, City, Sequelize, Sido, Sigungu } = require("../utils/models");
 
 module.exports.treatmentItems = async function treatmentItems(event) {
   try {
@@ -285,7 +285,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
               },
               {
                 local: {
-                  [Sequelize.Op.like]: `%${query}%`,
+                  [Sequelize.Op.like]: `${query}%`,
                 },
               },
             ],
@@ -580,6 +580,59 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
       );
     }
   } catch (error) {
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
+
+module.exports.keywordClinicAutoComplete = async function keywordClinicAutoComplete(event) {
+  try {
+    const { query } = event.queryStringParameters;
+    const sido = await Sido.findAll({
+      attributes: ["id", "name", "fullName"],
+      where: {
+        fullName: {
+          [Sequelize.Op.like]: `%${query}%`,
+        },
+      },
+    });
+    const sigungu = await Sigungu.findAll({
+      attributes: ["id", "name", "fullName"],
+      where: {
+        fullName: {
+          [Sequelize.Op.like]: `%${query}%`,
+        },
+      },
+    });
+    const emd = await City.findAll({
+      attributes: ["id", ["emdName", "name"], [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName)"), "fullName"]],
+      where: Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
+        [Sequelize.Op.like]: `%${query}%`,
+      }),
+    });
+    const cities = sido.concat(sigungu, emd);
+    cities.forEach((city) => city.setDataValue("category", "city"));
+    const clinics = await Dental_clinic.findAll({
+      attributes: ["id", ["originalName", "name"]],
+      where: {
+        name: {
+          [Sequelize.Op.like]: `%${query}%`,
+        },
+      },
+    });
+    clinics.forEach((clinic) => clinic.setDataValue("category", "clinic"));
+    const mergeResults = cities.concat(clinics);
+    var sortReuslts = mergeResults.sort(function async(a, b) {
+      return b.name - a.name;
+    });
+    return {
+      statusCode: 200,
+      body: JSON.stringify(sortReuslts),
+    };
+  } catch (error) {
+    console.error(error);
     return {
       statusCode: 500,
       body: `{"statusText": "Server error","message": "${error.message}"}`,
