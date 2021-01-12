@@ -490,7 +490,7 @@ module.exports.allTagItems = async function allTagItems(event) {
       offset: offset,
       limit: limit,
     });
-    generaltags.forEach((generaltag) => generaltag.setDataValue("category", "generaltag"));
+    generaltags.forEach((generaltag) => generaltag.setDataValue("category", "general"));
     var cities;
     if (purpose === "autoComplete") {
       cities = await City.findAll({
