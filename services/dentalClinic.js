@@ -1,18 +1,4 @@
-const {
-  Dental_clinic,
-  City,
-  Korea_holiday,
-  Dental_subject,
-  Review,
-  User,
-  Review_content,
-  Treatment_item,
-  Review_treatment_item,
-  Review_comment,
-  Special_treatment,
-  ClinicStaticMap,
-  DentalClinicProfileImg,
-} = require("../utils/models");
+const db = require("../utils/models");
 const { sequelize, Sequelize } = require("../utils/models");
 const { QueryTypes } = require("sequelize");
 const axios = require("axios");
@@ -37,13 +23,13 @@ module.exports.detailClinics = async function detailClinics(event) {
     const today = new Date();
     const nowTime = `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`;
     const day = weekDay[today.getDay()];
-    const todayHoliday = await Korea_holiday.findAll({
+    const todayHoliday = await db.Korea_holiday.findAll({
       where: {
         date: today,
       },
     });
     var result = {};
-    const clinic = await Dental_clinic.findOne({
+    const clinic = await db.Dental_clinic.findOne({
       where: {
         id: clinicId,
       },
@@ -71,13 +57,13 @@ module.exports.detailClinics = async function detailClinics(event) {
       },
       include: [
         {
-          model: Dental_subject,
+          model: db.Dental_subject,
           as: "Subjects",
           attributes: ["name"],
           through: { attributes: ["SpecialistDentist_NUM", "choiceTreatmentDentist_NUM"] },
         },
         {
-          model: Special_treatment,
+          model: db.Special_treatment,
           as: "SpecialTreatments",
           attributes: ["name"],
           through: { attributes: [] },
@@ -85,7 +71,7 @@ module.exports.detailClinics = async function detailClinics(event) {
       ],
     });
     const requestUrl = `https://naveropenapi.apigw.ntruss.com/map-static/v2/raster?w=300&h=300&center=${clinic.geographLong},${clinic.geographLat}&markers=type:d|size:mid|pos:${clinic.geographLong}%20${clinic.geographLat}&level=16&format=jpg`;
-    const [clinicMap, created] = await ClinicStaticMap.findOrCreate({
+    const [clinicMap, created] = await db.ClinicStaticMap.findOrCreate({
       where: {
         requestUrl: requestUrl,
         dentalClinicId: clinic.id,
@@ -114,7 +100,7 @@ module.exports.detailClinics = async function detailClinics(event) {
       };
       var uploadS3 = await s3.upload(param).promise();
       clinicStaticMap = uploadS3.Location;
-      await ClinicStaticMap.update(
+      await db.ClinicStaticMap.update(
         {
           imgUrl: uploadS3.Location,
         },
@@ -201,7 +187,7 @@ module.exports.detailClinics = async function detailClinics(event) {
       parkingCost: clinic.parking_cost,
       parkingNotice: clinic.parking_others_notice,
     };
-    const clinicReviewImg = await Review_content.findAll({
+    const clinicReviewImg = await db.Review_content.findAll({
       attributes: ["id", "img_url", "index", "img_before_after", "createdAt"],
       where: {
         img_url: {
@@ -210,7 +196,7 @@ module.exports.detailClinics = async function detailClinics(event) {
       },
       include: [
         {
-          model: Review,
+          model: db.Review,
           attributes: [],
           where: {
             dentalClinicId: clinic.id,
@@ -223,7 +209,7 @@ module.exports.detailClinics = async function detailClinics(event) {
       ],
       limit: 10,
     });
-    const clinicProfileImg = await DentalClinicProfileImg.findAll({
+    const clinicProfileImg = await db.DentalClinicProfileImg.findAll({
       where: {
         dentalClinicId: clinic.id,
       },
@@ -240,71 +226,7 @@ module.exports.detailClinics = async function detailClinics(event) {
     clinicInfoBody.location = clinicLocation;
     result.clinicInfoHeader = clinicInfoHeader;
     result.clinicInfoBody = clinicInfoBody;
-    const reviews = await Review.findAll({
-      where: {
-        dentalClinicId: clinicId,
-        userId: {
-          [Sequelize.Op.not]: null,
-        },
-      },
-      attributes: {
-        include: [
-          [sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.updatedAt,NOW()))`), "createdDiff(second)"],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM review_comments WHERE review_comments.reviewId = review.id AND deletedAt IS null) + (SELECT COUNT(*) FROM Review_reply LEFT JOIN review_comments ON (review_comments.id = Review_reply.commentId) WHERE review_comments.reviewId = review.id)"
-            ),
-            "reviewCommentsNum",
-          ],
-          [sequelize.literal("(SELECT COUNT(*) FROM Like_Review WHERE Like_Review.likedReviewId = review.id)"), "reviewLikeNum"],
-          [sequelize.literal(`(SELECT COUNT(*) FROM Like_Review WHERE Like_Review.likedReviewId = review.id AND Like_Review.likerId = "${userId}")`), "viewerLikedReview"],
-          [sequelize.literal(`(SELECT COUNT(*) FROM Scrap WHERE Scrap.scrapedReviewId = review.id AND Scrap.scraperId = "${userId}")`), "viewerScrapedReview"],
-          [sequelize.literal("(SELECT COUNT(*) FROM ViewReviews WHERE ViewReviews.viewedReviewId = review.id)"), "reviewViewNum"],
-          [
-            sequelize.literal(
-              "(SELECT GROUP_CONCAT(description ORDER BY review_contents.index ASC SEPARATOR ' ') FROM review_contents WHERE review_contents.reviewId = review.id AND review_contents.deletedAt IS NULL)"
-            ),
-            "reviewDescriptions",
-          ],
-        ],
-      },
-      include: [
-        {
-          model: User,
-          attributes: ["nickname", "profileImg"],
-        },
-        {
-          model: Review_content,
-          attributes: ["id", "img_url", "index", "img_before_after"],
-          required: false,
-          where: {
-            img_url: {
-              [Sequelize.Op.not]: null,
-            },
-          },
-        },
-        {
-          model: Dental_clinic,
-          attributes: ["id", "name", "originalName"],
-        },
-        {
-          model: Treatment_item,
-          as: "TreatmentItems",
-          attributes: ["id", "name"],
-          order: [["index", "ASC"]],
-          through: {
-            model: Review_treatment_item,
-            attributes: ["cost", "index"],
-          },
-        },
-      ],
-      order: [
-        ["createdAt", "DESC"],
-        ["TreatmentItems", Review_treatment_item, "index", "ASC"],
-        ["review_contents", "index", "ASC"],
-      ],
-      limit: 10,
-    });
+    const reviews = await db.Review.getClinicReviewsAll(db, clinicId, userId, 10, 0);
     result.reviews = reviews;
     return {
       statusCode: 200,
@@ -327,72 +249,7 @@ module.exports.clinicReviews = async function clinicReview(event) {
     const { clinicId } = event.queryStringParameters;
     const limit = parseInt(event.queryStringParameters.limit);
     const offset = parseInt(event.queryStringParameters.offset);
-    const reviews = await Review.findAll({
-      where: {
-        dentalClinicId: clinicId,
-        userId: {
-          [Sequelize.Op.not]: null,
-        },
-      },
-      attributes: {
-        include: [
-          [sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.updatedAt,NOW()))`), "createdDiff(second)"],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM review_comments WHERE review_comments.reviewId = review.id AND deletedAt IS null) + (SELECT COUNT(*) FROM Review_reply LEFT JOIN review_comments ON (review_comments.id = Review_reply.commentId) WHERE review_comments.reviewId = review.id)"
-            ),
-            "reviewCommentsNum",
-          ],
-          [sequelize.literal("(SELECT COUNT(*) FROM Like_Review WHERE Like_Review.likedReviewId = review.id)"), "reviewLikeNum"],
-          [sequelize.literal(`(SELECT COUNT(*) FROM Like_Review WHERE Like_Review.likedReviewId = review.id AND Like_Review.likerId = "${userId}")`), "viewerLikedReview"],
-          [sequelize.literal(`(SELECT COUNT(*) FROM Scrap WHERE Scrap.scrapedReviewId = review.id AND Scrap.scraperId = "${userId}")`), "viewerScrapedReview"],
-          [sequelize.literal("(SELECT COUNT(*) FROM ViewReviews WHERE ViewReviews.viewedReviewId = review.id)"), "reviewViewNum"],
-          [
-            sequelize.literal(
-              "(SELECT GROUP_CONCAT(description ORDER BY review_contents.index ASC SEPARATOR ' ') FROM review_contents WHERE review_contents.reviewId = review.id AND review_contents.deletedAt IS NULL)"
-            ),
-            "reviewDescriptions",
-          ],
-        ],
-      },
-      include: [
-        {
-          model: User,
-          attributes: ["nickname", "profileImg"],
-        },
-        {
-          model: Review_content,
-          attributes: ["id", "img_url", "index", "img_before_after"],
-          required: false,
-          where: {
-            img_url: {
-              [Sequelize.Op.not]: null,
-            },
-          },
-        },
-        {
-          model: Dental_clinic,
-          attributes: ["id", "name", "originalName"],
-        },
-        {
-          model: Treatment_item,
-          as: "TreatmentItems",
-          attributes: ["id", "name"],
-          order: [["index", "ASC"]],
-          through: {
-            model: Review_treatment_item,
-            attributes: ["cost", "index"],
-          },
-        },
-      ],
-      order: [
-        ["createdAt", "DESC"],
-        ["TreatmentItems", Review_treatment_item, "index", "ASC"],
-        ["review_contents", "index", "ASC"],
-      ],
-      limit: limit,
-      offset: offset,
-    });
+    const reviews = await db.Review.getClinicReviewsAll(db, clinicId, userId, limit, offset);
     return {
       statusCode: 200,
       body: JSON.stringify(reviews),

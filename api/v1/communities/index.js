@@ -1,12 +1,10 @@
 const express = require("express");
-const ApiError = require("../../../utils/error");
 const { getUserInToken } = require("../middlewares");
 const AWS = require("aws-sdk");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
 const path = require("path");
-const sequelize = require("sequelize");
-const { User, Community, Community_img, Symptom_item, Dental_clinic, Treatment_item, GeneralTag, Community_comment, City, NewTown, Sequelize } = require("../../../utils/models");
+const db = require("../../../utils/models");
 
 const router = express.Router();
 
@@ -31,7 +29,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
     const type = req.body.type;
     const wantDentistHelp = req.body.type;
     const images = JSON.parse(req.body.images);
-    const user = await User.findOne({
+    const user = await db.User.findOne({
       where: {
         id: req.user.id,
       },
@@ -45,7 +43,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
       },
     });
     console.log("images: ", images);
-    const communityPost = await Community.create({
+    const communityPost = await db.Community.create({
       description: description,
       wantDentistHelp: wantDentistHelp === "true",
       type: type,
@@ -54,7 +52,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
     });
     await Promise.all(
       images.map((image) =>
-        Community_img.create({
+        db.Community_img.create({
           img_originalname: image.originalname,
           img_mimetype: image.mimetype,
           img_filename: image.key,
@@ -83,7 +81,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
     }
     for (const hashtag of hashtags) {
       console.log(hashtag);
-      let clinic = await Dental_clinic.findOne({
+      let clinic = await db.Dental_clinic.findOne({
         where: {
           name: hashtag,
         },
@@ -95,7 +93,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
           },
         });
       } else {
-        let treatment = await Treatment_item.findOne({
+        let treatment = await db.Treatment_item.findOne({
           where: {
             name: hashtag,
           },
@@ -107,7 +105,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
             },
           });
         } else {
-          let symptom = await Symptom_item.findOne({
+          let symptom = await db.Symptom_item.findOne({
             where: {
               name: hashtag,
             },
@@ -119,7 +117,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
               },
             });
           } else {
-            let city = await City.findOne({
+            let city = await db.City.findOne({
               where: {
                 [Sequelize.Op.or]: [
                   Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), {
@@ -135,7 +133,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
                 },
               });
             } else {
-              let generalTag = await GeneralTag.findOne({
+              let generalTag = await db.GeneralTag.findOne({
                 where: {
                   name: hashtag,
                 },
@@ -147,7 +145,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
                   },
                 });
               } else {
-                let newGeneralTag = await GeneralTag.create({
+                let newGeneralTag = await db.GeneralTag.create({
                   name: hashtag,
                 });
                 await communityPost.addGeneralTag(newGeneralTag, {
@@ -179,24 +177,18 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
     const type = req.query.type === "All" ? ["Question", "FreeTalk"] : [req.query.type];
     const limit = parseInt(req.query.limit);
     const offset = parseInt(req.query.offset);
-    const order =
-      req.query.order === "createdAt"
-        ? ["createdAt", "DESC"]
-        : [
-            sequelize.literal(
-              "(((SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id)*3)+ (SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id)) DESC"
-            ),
-          ];
+    const order = req.query.order;
     const cityId = req.query.cityId;
     const region = req.query.region;
-    var cluster;
+    const userId = req.user.id;
+    var clusterQuery;
     if (region === "residence") {
-      var userResidence = await City.findOne({
+      var userResidence = await db.City.findOne({
         where: {
           id: cityId,
         },
       });
-      cluster = userResidence.newTownId
+      clusterQuery = userResidence.newTownId
         ? {
             newTownId: userResidence.newTownId,
           }
@@ -209,113 +201,8 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
         body: { statusText: "Bad Request", message: "유효하지 않는 쿼리입니다." },
       });
     }
-    console.log(`cluster: ${JSON.stringify(cluster)}`);
-    const communityPosts = await Community.findAll({
-      where: {
-        type: type,
-        userId: {
-          [Sequelize.Op.not]: null,
-        },
-      },
-      attributes: {
-        include: [
-          [sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,community.updatedAt,NOW()))`), "createdDiff(second)"],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = community.id AND deletedAt IS null) + (SELECT COUNT(*) FROM Community_reply LEFT JOIN community_comments ON (community_comments.id = Community_reply.commentId) WHERE community_comments.communityId = community.id)"
-            ),
-            "postCommentsNum",
-          ],
-          //[sequelize.literal("(SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = community.id AND deletedAt IS null)"), "postCommentsCount"],
-          [sequelize.literal("(SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id)"), "postLikeNum"],
-          [sequelize.literal(`(SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id AND Like_Community.likerId = "${req.user.id}")`), "viewerLikeCommunityPost"],
-          [
-            sequelize.literal(`(SELECT COUNT(*) FROM Scrap_Community WHERE Scrap_Community.scrapedCommunityId = community.id AND Scrap_Community.scraperId = "${req.user.id}")`),
-            "viewerScrapCommunityPost",
-          ],
-          [sequelize.literal("(SELECT COUNT(*) FROM ViewCommunities WHERE ViewCommunities.viewedCommunityId = community.id)"), "postViewNum"],
-          [
-            sequelize.literal(
-              "((SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id)*3)+(SELECT COUNT(*) FROM ViewCommunities WHERE ViewCommunities.viewedCommunityId = community.id)"
-            ),
-            "popular",
-          ],
-        ],
-      },
-      include: [
-        {
-          model: User,
-          attributes: ["id", "nickname", "profileImg"],
-        },
-        {
-          model: City,
-          attributes: {
-            exclude: ["geometry"],
-          },
-          where: cluster,
-        },
-        {
-          model: Community_img,
-          attributes: ["id", "img_originalname", "img_mimetype", "img_filename", "img_url", "img_size", "img_index"],
-        },
-        {
-          model: Dental_clinic,
-          as: "Clinics",
-          attributes: ["id", "name"],
-          through: {
-            attributes: ["index"],
-          },
-        },
-        {
-          model: Treatment_item,
-          as: "TreatmentItems",
-          attributes: ["id", "name"],
-          through: {
-            attributes: ["index"],
-          },
-        },
-        {
-          model: Symptom_item,
-          as: "SymptomItems",
-          attributes: ["id", "name"],
-          through: {
-            attributes: ["index"],
-          },
-        },
-        {
-          model: GeneralTag,
-          as: "GeneralTags",
-          attributes: ["id", "name"],
-          through: {
-            attributes: ["index"],
-          },
-        },
-        {
-          model: City,
-          as: "CityTags",
-          attributes: [
-            "id",
-            "sido",
-            "sigungu",
-            "adCity",
-            "emdName",
-            "relativeAddress",
-            [
-              Sequelize.literal(
-                "IF(CityTags.emdName = CityTags.adCity, CONCAT(CityTags.sido,' ',CityTags.sigungu,' ',CityTags.emdName),CONCAT(CityTags.sido,' ',CityTags.sigungu,' ',CityTags.emdName,'(',CityTags.adCity,')'))"
-              ),
-              "fullCityName",
-            ],
-          ],
-          through: {
-            attributes: ["index"],
-          },
-        },
-      ],
-      order: [order, ["community_imgs", "img_index", "ASC"]],
-      offset: offset,
-      limit: limit,
-    });
+    console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
+    const communityPosts = await Community.getAll(db, userId, type, clusterQuery, order, offset, limit);
     return res.json(communityPosts);
   } catch (error) {
     console.log(error);
@@ -329,6 +216,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
 router.get("/", getUserInToken, async (req, res, next) => {
   try {
     const communityPostId = req.query.postId;
+    const userId = req.user.id;
     if (!communityPostId) {
       return res.status(400).json({
         statusCode: 400,
@@ -338,93 +226,9 @@ router.get("/", getUserInToken, async (req, res, next) => {
         },
       });
     }
-    const communityPost = await Community.findOne({
-      where: {
-        id: communityPostId,
-        userId: {
-          [Sequelize.Op.not]: null,
-        },
-      },
-      attributes: {
-        include: [
-          [sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,community.updatedAt,NOW()))`), "createdDiff(second)"],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = community.id AND deletedAt IS null) + (SELECT COUNT(*) FROM Community_reply LEFT JOIN community_comments ON (community_comments.id = Community_reply.commentId) WHERE community_comments.communityId = community.id)"
-            ),
-            "postCommentsNum",
-          ],
-          //[sequelize.literal("(SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = community.id AND deletedAt IS null)"), "postCommentsCount"],
-          [sequelize.literal("(SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id)"), "postLikeNum"],
-          [sequelize.literal(`(SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id AND Like_Community.likerId = "${req.user.id}")`), "viewerLikeCommunityPost"],
-          [
-            sequelize.literal(`(SELECT COUNT(*) FROM Scrap_Community WHERE Scrap_Community.scrapedCommunityId = community.id AND Scrap_Community.scraperId = "${req.user.id}")`),
-            "viewerScrapCommunityPost",
-          ],
-          [sequelize.literal("(SELECT COUNT(*) FROM ViewCommunities WHERE ViewCommunities.viewedCommunityId = community.id)"), "postViewNum"],
-        ],
-      },
-      include: [
-        {
-          model: User,
-          attributes: ["nickname", "profileImg"],
-        },
-        {
-          model: Community_img,
-        },
-        {
-          model: Dental_clinic,
-          as: "Clinics",
-          attributes: ["id", "name"],
-          through: {
-            attributes: ["index"],
-          },
-        },
-        {
-          model: Treatment_item,
-          as: "TreatmentItems",
-          attributes: ["id", "name"],
-          through: {
-            attributes: ["index"],
-          },
-        },
-        {
-          model: Symptom_item,
-          as: "SymptomItems",
-          attributes: ["id", "name"],
-          through: {
-            attributes: ["index"],
-          },
-        },
-        {
-          model: GeneralTag,
-          as: "GeneralTags",
-          attributes: ["id", "name"],
-          through: {
-            attributes: ["index"],
-          },
-        },
-        {
-          model: City,
-          as: "CityTags",
-          attributes: [
-            "id",
-            "sido",
-            "sigungu",
-            "adCity",
-            "emdName",
-            [Sequelize.literal("IF(emdName = adCity, CONCAT(sido,' ',sigungu,' ',emdName),CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')'))"), "fullCityName"],
-            "relativeAddress",
-          ],
-          through: {
-            attributes: ["index"],
-          },
-        },
-      ],
-      order: [["community_imgs", "img_index", "ASC"]],
-    });
+    const communityPost = await db.Community.getOne(db, userId, communityPostId);
     if (communityPost) {
-      const viewer = await User.findOne({
+      const viewer = await db.User.findOne({
         where: {
           id: req.user.id,
         },
@@ -453,6 +257,7 @@ router.get("/", getUserInToken, async (req, res, next) => {
 router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next) => {
   try {
     const postId = req.query.postId;
+    const userId = req.user.id;
     if (!postId) {
       return res.status(400).json({
         statusCode: 400,
@@ -465,7 +270,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
     const wantDentistHelp = req.body.type;
     const images = JSON.parse(req.body.images);
     console.log("images: ", images);
-    const communityPost = await Community.findOne({
+    const communityPost = await db.Community.findOne({
       where: {
         id: postId,
         userId: req.user.id,
@@ -500,7 +305,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
     });
     await Promise.all(
       images.map((image) =>
-        Community_img.create({
+        db.Community_img.create({
           img_originalname: image.originalname,
           img_mimetype: image.mimetype,
           img_filename: image.key,
@@ -528,7 +333,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
       });
     }
     for (const hashtag of hashtags) {
-      let clinic = await Dental_clinic.findOne({
+      let clinic = await db.Dental_clinic.findOne({
         where: {
           name: hashtag,
         },
@@ -540,7 +345,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
           },
         });
       } else {
-        let treatment = await Treatment_item.findOne({
+        let treatment = await db.Treatment_item.findOne({
           where: {
             name: hashtag,
           },
@@ -552,7 +357,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
             },
           });
         } else {
-          let symptom = await Symptom_item.findOne({
+          let symptom = await db.Symptom_item.findOne({
             where: {
               name: hashtag,
             },
@@ -564,7 +369,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
               },
             });
           } else {
-            let city = await City.findOne({
+            let city = await db.City.findOne({
               where: {
                 [Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")")]: { [Sequelize.Op.like]: `${hashtag}` },
               },
@@ -576,7 +381,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
                 },
               });
             } else {
-              let generalTag = await GeneralTag.findOne({
+              let generalTag = await db.GeneralTag.findOne({
                 where: {
                   name: hashtag,
                 },
@@ -588,7 +393,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
                   },
                 });
               } else {
-                let newGeneralTag = await GeneralTag.create({
+                let newGeneralTag = await db.GeneralTag.create({
                   name: hashtag,
                 });
                 await communityPost.addGeneralTag(newGeneralTag, {
@@ -602,92 +407,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
         }
       }
     }
-    const updateCommunityPost = await Community.findOne({
-      where: {
-        id: communityPost.id,
-        userId: {
-          [Sequelize.Op.not]: null,
-        },
-      },
-      attributes: {
-        include: [
-          [sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,community.updatedAt,NOW()))`), "createdDiff(second)"],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = community.id AND deletedAt IS null) + (SELECT COUNT(*) FROM Community_reply LEFT JOIN community_comments ON (community_comments.id = Community_reply.commentId) WHERE community_comments.communityId = community.id)"
-            ),
-            "postCommentsNum",
-          ],
-          //[sequelize.literal("(SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = community.id AND deletedAt IS null)"), "postCommentsCount"],
-          [sequelize.literal("(SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id)"), "postLikeNum"],
-          [sequelize.literal(`(SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id AND Like_Community.likerId = "${req.user.id}")`), "viewerLikeCommunityPost"],
-          [
-            sequelize.literal(`(SELECT COUNT(*) FROM Scrap_Community WHERE Scrap_Community.scrapedCommunityId = community.id AND Scrap_Community.scraperId = "${req.user.id}")`),
-            "viewerScrapCommunityPost",
-          ],
-          [sequelize.literal("(SELECT COUNT(*) FROM ViewCommunities WHERE ViewCommunities.viewedCommunityId = community.id)"), "postViewNum"],
-        ],
-      },
-      include: [
-        {
-          model: User,
-          attributes: ["nickname", "profileImg"],
-        },
-        {
-          model: Community_img,
-          attributes: ["id", "img_originalname", "img_mimetype", "img_filename", "img_url", "img_size", "img_index"],
-        },
-        {
-          model: Dental_clinic,
-          as: "Clinics",
-          attributes: ["id", "name"],
-          through: {
-            attributes: ["index"],
-          },
-        },
-        {
-          model: Treatment_item,
-          as: "TreatmentItems",
-          attributes: ["id", "name"],
-          through: {
-            attributes: ["index"],
-          },
-        },
-        {
-          model: Symptom_item,
-          as: "SymptomItems",
-          attributes: ["id", "name"],
-          through: {
-            attributes: ["index"],
-          },
-        },
-        {
-          model: GeneralTag,
-          as: "GeneralTags",
-          attributes: ["id", "name"],
-          through: {
-            attributes: ["index"],
-          },
-        },
-        {
-          model: City,
-          as: "CityTags",
-          attributes: [
-            "id",
-            "sido",
-            "sigungu",
-            "adCity",
-            "emdName",
-            [Sequelize.literal("(emdName = adCity, CONCAT(sido,' ',sigungu,' ',emdName),CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')'))"), "fullCityName"],
-            "relativeAddress",
-          ],
-          through: {
-            attributes: ["index"],
-          },
-        },
-      ],
-      order: [["community_imgs", "img_index", "ASC"]],
-    });
+    const updateCommunityPost = db.Community.getOne(db, userId, communityPost.id);
     return res.status(200).json({
       statusCode: 200,
       body: { statusText: "Accepted", message: "수다방 글을 수정하였습니다.", updateCommunityPost: updateCommunityPost },
@@ -704,7 +424,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
 router.delete("/", getUserInToken, async (req, res, next) => {
   try {
     const postId = req.query.postId;
-    const communityPost = await Community.findOne({
+    const communityPost = await db.Community.findOne({
       where: {
         id: postId,
         userId: {

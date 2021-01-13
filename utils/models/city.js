@@ -1,5 +1,6 @@
-module.exports = (sequelize, DataTypes) =>
-  sequelize.define("cities", {
+const cityQueryClass = require("../Class/city");
+module.exports = (sequelize, DataTypes) => {
+  const city = sequelize.define("cities", {
     sido: {
       type: DataTypes.CHAR,
       allowNull: false,
@@ -33,3 +34,8 @@ module.exports = (sequelize, DataTypes) =>
       allowNull: true,
     },
   });
+
+  city.searchAll = cityQueryClass.searchAll;
+  city.current = cityQueryClass.current;
+  return city;
+};

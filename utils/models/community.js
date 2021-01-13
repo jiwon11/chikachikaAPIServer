@@ -1,5 +1,6 @@
-module.exports = (sequelize, DataTypes) =>
-  sequelize.define(
+const communityQueryClass = require("../Class/community");
+module.exports = (sequelize, DataTypes) => {
+  const community = sequelize.define(
     "community",
     {
       type: {
@@ -22,3 +23,7 @@ module.exports = (sequelize, DataTypes) =>
       collate: "utf8mb4_unicode_ci",
     }
   );
+  community.getOne = communityQueryClass.getOne;
+  community.getAll = communityQueryClass.getAll;
+  return community;
+};
