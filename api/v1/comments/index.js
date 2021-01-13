@@ -625,7 +625,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
         where: {
           communityId: postId,
         },
-        attributes: ["id", "description", "createdAt", "userId"],
+        attributes: ["id", "description", "createdAt", "userId", [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,community_comment.updatedAt,NOW()))`), "createdDiff(second)"]],
         include: [
           {
             model: User,
@@ -634,7 +634,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
           {
             model: Community_comment,
             as: "Replys",
-            attributes: ["id", "description", "createdAt", "userId"],
+            attributes: ["id", "description", "createdAt", "userId", [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,Replys.updatedAt,NOW()))`), "createdDiff(second)"]],
             through: {
               attributes: [],
             },
@@ -652,10 +652,11 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
     } else if (type === "reviews") {
       const reviewId = req.query.reviewId;
       const reviewComments = await Review_comment.findAll({
+        logging: true,
         where: {
           reviewId: reviewId,
         },
-        attributes: ["id", "description", "createdAt", "updatedAt", "userId"],
+        attributes: ["id", "description", "createdAt", "updatedAt", "userId", [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review_comment.updatedAt,NOW()))`), "createdDiff(second)"]],
         include: [
           {
             model: User,
@@ -664,7 +665,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
           {
             model: Review_comment,
             as: "Replys",
-            attributes: ["id", "description", "createdAt", "updatedAt", "userId"],
+            attributes: ["id", "description", "createdAt", "updatedAt", "userId", [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,Replys.updatedAt,NOW()))`), "createdDiff(second)"]],
             through: {
               attributes: [],
             },

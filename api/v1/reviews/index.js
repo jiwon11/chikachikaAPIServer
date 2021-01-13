@@ -135,7 +135,15 @@ router.get("/", getUserInToken, async (req, res, next) => {
         },
       },
       attributes: {
-        include: [[sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.updatedAt,NOW()))`), "createdDiff(second)"]],
+        include: [
+          [sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.updatedAt,NOW()))`), "createdDiff(second)"],
+          [
+            sequelize.literal(
+              "(SELECT COUNT(*) FROM review_comments WHERE review_comments.reviewId = review.id AND deletedAt IS null) + (SELECT COUNT(*) FROM Review_reply LEFT JOIN review_comments ON (review_comments.id = Review_reply.commentId) WHERE review_comments.reviewId = review.id)"
+            ),
+            "reviewCommentsNum",
+          ],
+        ],
       },
       include: [
         {
