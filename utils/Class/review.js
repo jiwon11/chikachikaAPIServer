@@ -8,7 +8,7 @@ module.exports.getOne = async function (db, reviewId) {
       },
     },
     attributes: {
-      include: [[sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.updatedAt,NOW()))`), "createdDiff(second)"]],
+      include: [[Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.updatedAt,NOW()))`), "createdDiff(second)"]],
     },
     include: [
       {
