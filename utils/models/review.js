@@ -1,5 +1,6 @@
-module.exports = (sequelize, DataTypes) =>
-  sequelize.define(
+const reviewQueryClass = require("../Class/review");
+module.exports = (sequelize, DataTypes) => {
+  const review = sequelize.define(
     "review",
     {
       starRate_cost: {
@@ -38,3 +39,8 @@ module.exports = (sequelize, DataTypes) =>
       collate: "utf8mb4_unicode_ci",
     }
   );
+  review.getOne = reviewQueryClass.getOne;
+  review.getAll = reviewQueryClass.getAll;
+  review.getClinicReviewsAll = reviewQueryClass.getClinicReviewsAll;
+  return review;
+};
