@@ -572,4 +572,5 @@ db.Dental_clinic.hasMany(db.DentalClinicProfileImg, {
   onDelete: "CASCADE",
 });
 db.DentalClinicProfileImg.belongsTo(db.Dental_clinic);
+
 module.exports = db;

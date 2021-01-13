@@ -6,7 +6,7 @@ const path = require("path");
 const sequelize = require("sequelize");
 const ApiError = require("../../../utils/error");
 const { getUserInToken } = require("../middlewares");
-const { Review, User, Review_content, Treatment_item, Dental_clinic, Review_treatment_item, Review_comment, ReviewBills, Sequelize } = require("../../../utils/models");
+const db = require("../../../utils/models");
 
 const router = express.Router();
 
@@ -36,75 +36,9 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
   try {
     const limit = parseInt(req.query.limit);
     const offset = parseInt(req.query.offset);
-    const order =
-      req.query.order === "createdAt"
-        ? ["createdAt", "DESC"]
-        : [
-            sequelize.literal(
-              "(((SELECT COUNT(*) FROM Like_Review WHERE Like_Review.likedReviewId = review.id)*3)+ (SELECT COUNT(*) FROM ViewReviews WHERE ViewReviews.viewedReviewId = review.id)) DESC"
-            ),
-          ];
-    const reviews = await Review.findAll({
-      where: {
-        userId: {
-          [Sequelize.Op.not]: null,
-        },
-      },
-      attributes: {
-        include: [
-          [sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.updatedAt,NOW()))`), "createdDiff(second)"],
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM review_comments WHERE review_comments.reviewId = review.id AND deletedAt IS null) + (SELECT COUNT(*) FROM Review_reply LEFT JOIN review_comments ON (review_comments.id = Review_reply.commentId) WHERE review_comments.reviewId = review.id)"
-            ),
-            "reviewCommentsNum",
-          ],
-          [sequelize.literal("(SELECT COUNT(*) FROM Like_Review WHERE Like_Review.likedReviewId = review.id)"), "reviewLikeNum"],
-          [sequelize.literal(`(SELECT COUNT(*) FROM Like_Review WHERE Like_Review.likedReviewId = review.id AND Like_Review.likerId = "${req.user.id}")`), "viewerLikedReview"],
-          [sequelize.literal(`(SELECT COUNT(*) FROM Scrap WHERE Scrap.scrapedReviewId = review.id AND Scrap.scraperId = "${req.user.id}")`), "viewerScrapedReview"],
-          [sequelize.literal("(SELECT COUNT(*) FROM ViewReviews WHERE ViewReviews.viewedReviewId = review.id)"), "reviewViewNum"],
-          [
-            sequelize.literal(
-              "(SELECT GROUP_CONCAT(description ORDER BY review_contents.index ASC SEPARATOR ' ') FROM review_contents WHERE review_contents.reviewId = review.id AND review_contents.deletedAt IS NULL)"
-            ),
-            "reviewDescriptions",
-          ],
-        ],
-      },
-      include: [
-        {
-          model: User,
-          attributes: ["nickname", "profileImg"],
-        },
-        {
-          model: Review_content,
-          attributes: ["id", "img_url", "index", "img_before_after"],
-          required: false,
-          where: {
-            img_url: {
-              [sequelize.Op.not]: null,
-            },
-          },
-        },
-        {
-          model: Dental_clinic,
-          attributes: ["id", "name", "originalName"],
-        },
-        {
-          model: Treatment_item,
-          as: "TreatmentItems",
-          attributes: ["id", "name"],
-          order: [["index", "ASC"]],
-          through: {
-            model: Review_treatment_item,
-            attributes: ["cost", "index"],
-          },
-        },
-      ],
-      limit: limit,
-      offset: offset,
-      order: [order, ["TreatmentItems", Review_treatment_item, "index", "ASC"], ["review_contents", "index", "ASC"]],
-    });
+    const userId = req.user.id;
+    const order = req.query.order;
+    const reviews = await db.Review.getAll(db, userId, order, limit, offset);
     console.log(reviews.length);
     return res.json(reviews);
   } catch (error) {
@@ -127,56 +61,20 @@ router.get("/", getUserInToken, async (req, res, next) => {
         },
       });
     }
-    const review = await Review.findOne({
-      where: {
-        id: reviewId,
-        userId: {
-          [Sequelize.Op.not]: null,
-        },
-      },
-      attributes: {
-        include: [[sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.updatedAt,NOW()))`), "createdDiff(second)"]],
-      },
-      include: [
-        {
-          model: User,
-          attributes: ["nickname", "profileImg"],
-        },
-        {
-          model: Dental_clinic,
-          attributes: ["name", "address", "originalName"],
-        },
-        {
-          model: Review_content,
-        },
-        {
-          model: Treatment_item,
-          as: "TreatmentItems",
-          attributes: ["id", "name"],
-          through: {
-            model: Review_treatment_item,
-            attributes: ["cost", "index"],
-          },
-        },
-      ],
-      order: [
-        ["review_contents", "index", "ASC"],
-        ["TreatmentItems", Review_treatment_item, "index", "ASC"],
-      ],
-    });
+    const review = await db.Review.getOne(db, reviewId);
     if (review) {
       const reviewComments = await review.getReview_comments({
         include: [
           {
-            model: User,
+            model: db.User,
             attributes: ["id", "nickname", "profileImg"],
           },
           {
-            model: Review_comment,
+            model: db.Review_comment,
             as: "Replys",
             include: [
               {
-                model: User,
+                model: db.User,
                 attributes: ["id", "nickname", "profileImg"],
               },
             ],
@@ -185,7 +83,7 @@ router.get("/", getUserInToken, async (req, res, next) => {
       });
       const reviewLikeNum = await review.countLikers();
       const reviewViewerNum = await review.countViewers();
-      const viewer = await User.findOne({
+      const viewer = await db.User.findOne({
         where: {
           id: req.user.id,
         },
@@ -235,7 +133,7 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
     } else {
       parseTreatmentDate = new Date();
     }
-    const review = await Review.create({
+    const review = await db.Review.create({
       certifiedBill: false,
       starRate_cost: parseFloat(starRate_cost),
       starRate_service: parseFloat(starRate_service),
@@ -246,7 +144,7 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
       dentalClinicId: dentalClinicId,
     });
     for (const treatment of treatments) {
-      const treatmentItem = await Treatment_item.findOne({
+      const treatmentItem = await db.Treatment_item.findOne({
         where: {
           id: treatment.id,
         },
@@ -268,7 +166,7 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
     }
     const contents = await Promise.all(
       paragraphs.map((paragraph) =>
-        Review_content.create({
+        db.Review_content.create({
           img_url: paragraph.location, //`${cloudFrontUrl}/${image.key}`
           img_name: paragraph.originalname,
           mime_type: paragraph.mimetype,
@@ -283,7 +181,7 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
     console.log(`본문 개수 : ${contents.length}`);
     if (req.body.bills) {
       const bills = JSON.parse(req.body.bills);
-      await ReviewBills.create({
+      await db.ReviewBills.create({
         img_url: bills.location, //`${cloudFrontUrl}/${image.key}`
         img_name: bills.originalname,
         mime_type: bills.mimetype,
@@ -310,7 +208,7 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
     const paragraphs = JSON.parse(req.body.paragraphs);
     const body = req.body.body;
     const { starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId, totalCost, treatmentDate } = JSON.parse(body);
-    const review = await Review.findOne({
+    const review = await db.Review.findOne({
       where: {
         id: reviewId,
         userId: {
@@ -326,12 +224,12 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
         } else {
           parseTreatmentDate = new Date();
         }
-        await Review_content.destroy({
+        await db.Review_content.destroy({
           where: {
             reviewId: review.id,
           },
         });
-        await Review_treatment_item.destroy({
+        await db.Review_treatment_item.destroy({
           where: {
             reviewId: review.id,
           },
@@ -348,7 +246,7 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
           dentalClinicId: dentalClinicId,
         });
         for (const treatment of treatments) {
-          const treatmentItem = await Treatment_item.findOne({
+          const treatmentItem = await db.Treatment_item.findOne({
             where: {
               id: treatment.id,
             },
@@ -371,7 +269,7 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
         console.log(`치료 항목 개수 : ${treatments.length}`);
         const contents = await Promise.all(
           paragraphs.map((paragraph) =>
-            Review_content.create({
+            db.Review_content.create({
               img_url: paragraph.location, //`${cloudFrontUrl}/${image.key}`
               img_name: paragraph.originalname,
               mime_type: paragraph.mimetype,
@@ -384,43 +282,7 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
           )
         );
         console.log(`콘텐츠 개수 : ${contents.length}`);
-        const updateReview = await Review.findOne({
-          where: {
-            id: review.id,
-            userId: {
-              [Sequelize.Op.not]: null,
-            },
-          },
-          attributes: {
-            include: [[sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.updatedAt,NOW()))`), "createdDiff(second)"]],
-          },
-          include: [
-            {
-              model: User,
-              attributes: ["nickname", "profileImg"],
-            },
-            {
-              model: Dental_clinic,
-              attributes: ["name", "address", "originalName"],
-            },
-            {
-              model: Review_content,
-            },
-            {
-              model: Treatment_item,
-              as: "TreatmentItems",
-              attributes: ["id", "name"],
-              through: {
-                model: Review_treatment_item,
-                attributes: ["cost", "index"],
-              },
-            },
-          ],
-          order: [
-            ["review_contents", "index", "ASC"],
-            ["TreatmentItems", Review_treatment_item, "index", "ASC"],
-          ],
-        });
+        const updateReview = await Review.getOne(db, reviewId);
         if (updateReview) {
           const reviewComments = await updateReview.getReview_comments({
             include: [
@@ -490,7 +352,7 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
 router.delete("/", getUserInToken, async (req, res, next) => {
   try {
     const reviewId = req.query.reviewId;
-    const review = await Review.findOne({
+    const review = await db.Review.findOne({
       where: {
         id: reviewId,
         userId: {
@@ -502,12 +364,12 @@ router.delete("/", getUserInToken, async (req, res, next) => {
       await review.destroy({
         force: true,
       });
-      await Review_content.destroy({
+      await db.Review_content.destroy({
         where: {
           reviewId: review.id,
         },
       });
-      await Review_treatment_item.destroy({
+      await db.Review_treatment_item.destroy({
         where: {
           reviewId: review.id,
         },

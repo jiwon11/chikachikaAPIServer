@@ -1,5 +1,7 @@
-module.exports = (sequelize, DataTypes) =>
-  sequelize.define(
+const clinicQueryClass = require("../Class/clinics");
+const Sequelize = require("sequelize");
+module.exports = (sequelize, DataTypes) => {
+  const dentalClinic = sequelize.define(
     "dental_clinic",
     {
       name: {
@@ -184,3 +186,6 @@ module.exports = (sequelize, DataTypes) =>
       collate: "utf8mb4_unicode_ci",
     }
   );
+  dentalClinic.searchAll = clinicQueryClass.SearchAll;
+  return dentalClinic;
+};
