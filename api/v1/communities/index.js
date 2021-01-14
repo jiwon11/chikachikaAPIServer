@@ -298,7 +298,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
     await communityPost.removeTreatmentItems();
     await communityPost.removeSymptomItems();
     await communityPost.removeGeneralTags();
-    await Community_img.destroy({
+    await db.Community_img.destroy({
       where: {
         communityId: communityPost.id,
       },
