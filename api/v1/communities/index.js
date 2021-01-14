@@ -202,7 +202,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
       });
     }
     console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
-    const communityPosts = await Community.getAll(db, userId, type, clusterQuery, order, offset, limit);
+    const communityPosts = await db.Community.getAll(db, userId, type, clusterQuery, order, offset, limit);
     return res.json(communityPosts);
   } catch (error) {
     console.log(error);

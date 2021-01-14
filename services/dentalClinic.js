@@ -1,11 +1,8 @@
 const db = require("../utils/models");
 const { sequelize, Sequelize } = require("../utils/models");
-const { QueryTypes } = require("sequelize");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
-var iconv = require("iconv-lite");
 const AWS = require("aws-sdk");
-const fs = require("fs");
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_Access_Key_ID,

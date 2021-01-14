@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const { Symptom_item, Dental_clinic, Treatment_item, Review, User, Review_content, Search_record, GeneralTag, Korea_holiday, City, Sequelize, Sido, Sigungu } = require("../utils/models");
+const { Symptom_item, Dental_clinic, Treatment_item, User, Review_content, Search_record, GeneralTag, Korea_holiday, City, Sequelize, Sido, Sigungu } = require("../utils/models");
 
 module.exports.treatmentItems = async function treatmentItems(event) {
   try {
