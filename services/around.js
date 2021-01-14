@@ -1,5 +1,4 @@
-const sequelize = require("sequelize");
-const { Dental_clinic, Review, Korea_holiday } = require("../utils/models");
+const { Dental_clinic, Korea_holiday } = require("../utils/models");
 
 module.exports.clinics = async function clinics(event) {
   try {

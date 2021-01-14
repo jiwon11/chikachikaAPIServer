@@ -1,6 +1,5 @@
 const jwt = require("jsonwebtoken");
 const { User, City, Residence } = require("../utils/models");
-const { sequelize, Sequelize } = require("../utils/models");
 
 module.exports.searchCities = async function searchCities(event) {
   try {

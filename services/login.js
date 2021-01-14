@@ -1,6 +1,5 @@
 const { verifyPhoneNumberFunc } = require("../utils/verify");
 const { User, NotificationConfig, City } = require("../utils/models");
-const ApiError = require("../utils/error");
 const jwt = require("jsonwebtoken");
 
 /**

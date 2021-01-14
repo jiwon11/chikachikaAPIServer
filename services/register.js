@@ -1,9 +1,6 @@
 const { phone, verifyPhoneNumberFunc } = require("../utils/verify");
-const { Sequelize } = require("sequelize");
-const ApiError = require("../utils/error");
 const { User, Phone_verify, NotificationConfig, City } = require("../utils/models");
 const jwt = require("jsonwebtoken");
-const { Base64 } = require("js-base64");
 
 /**
  ### 사용자가 입력한 핸드폰 번호로 인증번호를 보내는 함수
