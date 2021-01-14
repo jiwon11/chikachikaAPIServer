@@ -5,6 +5,7 @@ const multer = require("multer");
 const multerS3 = require("multer-s3");
 const path = require("path");
 const db = require("../../../utils/models");
+const Sequelize = require("sequelize");
 
 const router = express.Router();
 
@@ -371,7 +372,11 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
           } else {
             let city = await db.City.findOne({
               where: {
-                [Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")")]: { [Sequelize.Op.like]: `${hashtag}` },
+                [Sequelize.Op.or]: [
+                  Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), {
+                    [Sequelize.Op.like]: `%${hashtag}%`,
+                  }),
+                ],
               },
             });
             if (city) {
@@ -407,7 +412,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
         }
       }
     }
-    const updateCommunityPost = db.Community.getOne(db, userId, communityPost.id);
+    const updateCommunityPost = await db.Community.getOne(db, userId, communityPost.id);
     return res.status(200).json({
       statusCode: 200,
       body: { statusText: "Accepted", message: "수다방 글을 수정하였습니다.", updateCommunityPost: updateCommunityPost },
