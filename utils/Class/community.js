@@ -86,7 +86,7 @@ module.exports.getOne = async function (db, userId, communityPostId) {
 module.exports.getAll = async function (db, userId, type, clusterQuery, order, offset, limit) {
   var orderQuery;
   if (order === "createdAt") {
-    orderQuery = [("createdAt", "DESC")];
+    orderQuery = ["createdAt", "DESC"];
   } else {
     orderQuery = [
       Sequelize.literal(
