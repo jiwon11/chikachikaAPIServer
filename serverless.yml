@@ -147,6 +147,7 @@ functions:
               - name: request.querystring.wantParking
               - name: request.querystring.limit
               - name: request.querystring.offset
+              - name: request.querystring.holiday
           authorizer:
               name: verify-token
               # this tells the lambda where to take the information from,
@@ -170,6 +171,7 @@ functions:
               - name: request.querystring.sort
               - name: request.querystring.days
               - name: request.querystring.time
+              - name: request.querystring.holiday
           authorizer:
               name: verify-token
               # this tells the lambda where to take the information from,
@@ -196,11 +198,6 @@ functions:
           path: search/clinics
           method: get
           cors: true
-          caching:
-            enabled: true
-            ttlInSeconds: 3600 # overrides the global setting for ttlInSeconds
-            cacheKeyParameters:
-              - name: request.querystring.q
           authorizer:
               name: verify-token
               # this tells the lambda where to take the information from,
