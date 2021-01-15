@@ -215,6 +215,7 @@ router.put("/", getUserInToken, multerBody.none(), async (req, res, next) => {
     const commentId = req.query.commentId;
     const type = req.query.type;
     if (type === "review") {
+      const reviewId = req.query.reviewId;
       const comment = await db.Review_comment.findOne({
         where: {
           id: commentId,
@@ -240,6 +241,7 @@ router.put("/", getUserInToken, multerBody.none(), async (req, res, next) => {
         });
       }
     } else if (type === "community") {
+      const postId = req.query.postId;
       const comment = await db.Community_comment.findOne({
         where: {
           id: commentId,
@@ -342,7 +344,7 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
     const userId = req.user.id;
     const commentId = req.query.commentId;
     const description = req.body.description;
-    const targetUser = req.body.targetUser;
+    const targetUserNickname = req.body.targetUserNickname;
     const type = req.query.type;
     if (type === "review") {
       const reviewId = req.query.reviewId;
@@ -367,9 +369,14 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
           userId: userId,
           description: description,
         });
+        const targetUser = await db.User.findOne({
+          where: {
+            nickname: targetUserNickname,
+          },
+        });
         await comment.addReply(reply, {
           through: {
-            targetUser: targetUser,
+            targetUserId: targetUser.id,
           },
         });
         //await pushNotification("reply", reply, comment, userId, "review"); //type, comment, target, userId
@@ -404,9 +411,14 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
           userId: userId,
           description: description,
         });
+        const targetUser = await db.User.findOne({
+          where: {
+            nickname: targetUserNickname,
+          },
+        });
         await comment.addReply(reply, {
           through: {
-            targetUser: targetUser,
+            targetUserId: targetUser.id,
           },
         });
         //await pushNotification("reply", reply, comment, userId, "community"); //type, comment, target, userId
