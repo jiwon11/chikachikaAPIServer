@@ -79,7 +79,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
     const token = event.headers.Authorization;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id;
-    const { lat, long, query, sort, days, time, wantParking } = event.queryStringParameters;
+    const { lat, long, query, sort, days, time, wantParking, holiday } = event.queryStringParameters;
     const limit = parseInt(event.queryStringParameters.limit);
     const offset = parseInt(event.queryStringParameters.offset);
     if (!query) {
@@ -148,7 +148,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
     });
     console.log(day, nowTime);
     console.log(todayHoliday);
-    const clinics = await Dental_clinic.searchAll("keyword", query, nowTime, day, week, todayHoliday, lat, long, limit, offset, sort, wantParking);
+    const clinics = await Dental_clinic.searchAll("keyword", query, nowTime, day, week, todayHoliday, lat, long, limit, offset, sort, wantParking, holiday);
     let response = {
       statusCode: 200,
       body: JSON.stringify(clinics),
