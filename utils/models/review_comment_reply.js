@@ -2,7 +2,7 @@ module.exports = (sequelize, DataTypes) =>
   sequelize.define(
     "Review_reply",
     {
-      targetUser: {
+      targetUserId: {
         type: DataTypes.STRING,
       },
     },

@@ -2,7 +2,7 @@ module.exports = (sequelize, DataTypes) =>
   sequelize.define(
     "Community_reply",
     {
-      targetUser: {
+      targetUserId: {
         type: DataTypes.STRING,
       },
     },

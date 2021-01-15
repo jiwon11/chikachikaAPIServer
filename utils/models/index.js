@@ -192,6 +192,9 @@ db.Review_comment.belongsTo(db.Review_comment, {
   through: db.Review_comment_reply,
   onDelete: "CASCADE",
 });
+db.Review_comment_reply.belongsTo(db.User, {
+  foreignKey: "targetUserId",
+});
 /*리뷰 콘텐츠와 리뷰 관계형 -좋아요*/
 db.User.belongsToMany(db.Review, {
   foreignKey: "likerId",
@@ -351,6 +354,9 @@ db.Community_comment.belongsTo(db.Community_comment, {
   as: "Comments",
   through: db.Community_comment_reply,
   onDelete: "CASCADE",
+});
+db.Community_comment_reply.belongsTo(db.User, {
+  foreignKey: "targetUserId",
 });
 /* 진료 항목과 커뮤니티글 관계형*/
 db.Community.belongsToMany(db.Treatment_item, {

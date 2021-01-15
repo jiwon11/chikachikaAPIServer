@@ -22,7 +22,7 @@ module.exports.getAll = async function (db, type, targetId) {
             "updatedAt",
             "userId",
             [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,Replys.updatedAt,NOW()))`), "createdDiff(second)"],
-            [Sequelize.literal("`Replys->Review_reply`.`targetUser`"), "targetUser"],
+            [Sequelize.literal("(SELECT nickname FROM users where users.id=`Replys->Review_reply`.`targetUserId`)"), "targetUserNickname"],
           ],
           through: {
             attributes: [],
@@ -57,7 +57,7 @@ module.exports.getAll = async function (db, type, targetId) {
             "createdAt",
             "userId",
             [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,Replys.updatedAt,NOW()))`), "createdDiff(second)"],
-            [Sequelize.literal("`Replys->Community_reply`.`targetUser`"), "targetUser"],
+            [Sequelize.literal("(SELECT nickname FROM users where users.id=`Replys->Community_reply`.`targetUserId`)"), "targetUserNickname"],
           ],
           through: {
             attributes: [],
