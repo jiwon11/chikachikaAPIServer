@@ -431,7 +431,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
       const postId = req.query.postId;
       const communityComments = await db.Community_comment.getAll(db, "community", postId);
       return res.status(200).json(communityComments);
-    } else if (type === "reviews") {
+    } else if (type === "review") {
       const reviewId = req.query.reviewId;
       const reviewComments = await db.Review_comment.getAll(db, "review", reviewId);
       return res.status(200).json(reviewComments);
