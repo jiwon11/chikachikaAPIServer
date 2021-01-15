@@ -2,7 +2,8 @@ const express = require("express");
 const { getUserInToken } = require("../middlewares");
 const multer = require("multer");
 //const firebase = require("firebase-admin");
-const { User, Review, Review_comment, Community, Community_comment, NotificationConfig, Notification, Sequelize } = require("../../../utils/models");
+const db = require("../../../utils/models");
+const Sequelize = require("sequelize");
 const router = express.Router();
 
 const multerBody = multer();
@@ -19,7 +20,7 @@ if (!firebase.apps.length) {
 }
 */
 const pushNotification = async (type, commentOrReply, target, userId, targetType) => {
-  const userNotifyConfig = await NotificationConfig.findOne({
+  const userNotifyConfig = await db.NotificationConfig.findOne({
     where: {
       userId: target.userId,
     },
@@ -53,7 +54,7 @@ const pushNotification = async (type, commentOrReply, target, userId, targetType
         */
     }
     if (targetType === "review") {
-      await Notification.create({
+      await db.Notification.create({
         type: "Comment",
         message: `리뷰에 새로운 댓글이 달렸습니다.`,
         userId: target.user.id,
@@ -62,7 +63,7 @@ const pushNotification = async (type, commentOrReply, target, userId, targetType
         reviewId: target.id,
       });
     } else {
-      await Notification.create({
+      await db.Notification.create({
         type: "Comment",
         message: `게시글에 새로운 댓글이 달렸습니다.`,
         userId: target.user.id,
@@ -73,14 +74,26 @@ const pushNotification = async (type, commentOrReply, target, userId, targetType
     }
   } else if (type === "reply") {
     if (userNotifyConfig.comment === true) {
-      var message = {
-        notification: {
-          title: "답글 알림",
-          body: `댓글에 새로운 답글이 달렸습니다.`,
-        },
-        data: { targetType: `${targetType}`, targetId: `${target.reviewId}`, commentId: `${target.id}`, type: "reply" },
-        token: target.user.fcmToken,
-      };
+      var message;
+      if (target.reviewId) {
+        message = {
+          notification: {
+            title: "답글 알림",
+            body: `댓글에 새로운 답글이 달렸습니다.`,
+          },
+          data: { targetType: `${targetType}`, targetId: `${target.reviewId}`, commentId: `${target.id}`, type: "reply" },
+          token: target.user.fcmToken,
+        };
+      } else {
+        message = {
+          notification: {
+            title: "답글 알림",
+            body: `답글에 새로운 답글이 달렸습니다.`,
+          },
+          data: { targetType: `${targetType}`, targetId: `${target.reviewId}`, commentId: `${target.id}`, type: "reply" },
+          token: target.user.fcmToken,
+        };
+      }
       /*
       commentFcm
         .messaging()
@@ -95,7 +108,7 @@ const pushNotification = async (type, commentOrReply, target, userId, targetType
         */
     }
     if (targetType === "review") {
-      await Notification.create({
+      await db.Notification.create({
         type: "Reply",
         message: `댓글에 새로운 답글이 달렸습니다.`,
         notificatedUserId: target.user.id,
@@ -105,7 +118,7 @@ const pushNotification = async (type, commentOrReply, target, userId, targetType
       });
     }
   } else {
-    await Notification.create({
+    await db.Notification.create({
       type: "Reply",
       message: `댓글에 새로운 답글이 달렸습니다.`,
       notificatedUserId: target.user.id,
@@ -124,7 +137,7 @@ router.post("/", getUserInToken, multerBody.none(), async (req, res, next) => {
     const type = req.query.type;
     if (type === "review") {
       const reviewId = req.query.reviewId;
-      const review = await Review.findOne({
+      const review = await db.Review.findOne({
         where: {
           id: reviewId,
           userId: {
@@ -138,39 +151,13 @@ router.post("/", getUserInToken, multerBody.none(), async (req, res, next) => {
         ],
       });
       if (review) {
-        const comment = await Review_comment.create({
+        const comment = await db.Review_comment.create({
           userId: userId,
           reviewId: review.id,
           description: description,
         });
-        await pushNotification("comment", comment, review, userId, "review"); //type, comment, target, userId
-        const reviewComments = await Review_comment.findAll({
-          where: {
-            reviewId: reviewId,
-          },
-          attributes: ["id", "description", "createdAt", "updatedAt", "userId"],
-          include: [
-            {
-              model: User,
-              attributes: ["id", "nickname", "profileImg"],
-            },
-            {
-              model: Review_comment,
-              as: "Replys",
-              attributes: ["id", "description", "createdAt", "updatedAt", "userId"],
-              through: {
-                attributes: [],
-              },
-              include: [
-                {
-                  model: User,
-                  attributes: ["id", "nickname", "profileImg"],
-                },
-              ],
-            },
-          ],
-          order: [["createdAt", "DESC"]],
-        });
+        //await pushNotification("comment", comment, review, userId, "review"); //type, comment, target, userId
+        const reviewComments = await db.Review_comment.getAll(db, "review", reviewId);
         return res.status(200).json(reviewComments);
       } else {
         return res.status(404).json({
@@ -180,7 +167,7 @@ router.post("/", getUserInToken, multerBody.none(), async (req, res, next) => {
       }
     } else if (type === "community") {
       const postId = req.query.postId;
-      const post = await Community.findOne({
+      const post = await db.Community.findOne({
         where: {
           id: postId,
           userId: {
@@ -194,39 +181,13 @@ router.post("/", getUserInToken, multerBody.none(), async (req, res, next) => {
         ],
       });
       if (post) {
-        const comment = await Community_comment.create({
+        const comment = await db.Community_comment.create({
           userId: userId,
           communityId: postId,
           description: description,
         });
-        await pushNotification("comment", comment, post, userId, "community"); //type, comment, target, userId
-        const communityComments = await Community_comment.findAll({
-          where: {
-            communityId: postId,
-          },
-          attributes: ["id", "description", "createdAt", "userId"],
-          include: [
-            {
-              model: User,
-              attributes: ["id", "nickname", "profileImg"],
-            },
-            {
-              model: Community_comment,
-              as: "Replys",
-              attributes: ["id", "description", "createdAt", "userId"],
-              through: {
-                attributes: [],
-              },
-              include: [
-                {
-                  model: User,
-                  attributes: ["id", "nickname", "profileImg"],
-                },
-              ],
-            },
-          ],
-          order: [["createdAt", "DESC"]],
-        });
+        //await pushNotification("comment", comment, post, userId, "community"); //type, comment, target, userId
+        const communityComments = await db.Community_comment.getAll(db, "community", postId);
         return res.status(201).json(communityComments);
       } else {
         return res.status(404).json({
@@ -254,13 +215,13 @@ router.put("/", getUserInToken, multerBody.none(), async (req, res, next) => {
     const commentId = req.query.commentId;
     const type = req.query.type;
     if (type === "review") {
-      const comment = await Review_comment.findOne({
+      const comment = await db.Review_comment.findOne({
         where: {
           id: commentId,
         },
       });
       if (comment) {
-        await Review_comment.update(
+        await db.Review_comment.update(
           {
             description: req.body.description,
           },
@@ -270,33 +231,7 @@ router.put("/", getUserInToken, multerBody.none(), async (req, res, next) => {
             },
           }
         );
-        const reviewComments = await Review_comment.findAll({
-          where: {
-            reviewId: comment.reviewId,
-          },
-          attributes: ["id", "description", "createdAt", "updatedAt", "userId"],
-          include: [
-            {
-              model: User,
-              attributes: ["id", "nickname", "profileImg"],
-            },
-            {
-              model: Review_comment,
-              as: "Replys",
-              attributes: ["id", "description", "createdAt", "updatedAt", "userId"],
-              through: {
-                attributes: [],
-              },
-              include: [
-                {
-                  model: User,
-                  attributes: ["id", "nickname", "profileImg"],
-                },
-              ],
-            },
-          ],
-          order: [["createdAt", "DESC"]],
-        });
+        const reviewComments = await db.Review_comment.getAll(db, "review", reviewId);
         return res.status(200).json(reviewComments);
       } else {
         return res.status(404).json({
@@ -305,13 +240,13 @@ router.put("/", getUserInToken, multerBody.none(), async (req, res, next) => {
         });
       }
     } else if (type === "community") {
-      const comment = await Community_comment.findOne({
+      const comment = await db.Community_comment.findOne({
         where: {
           id: commentId,
         },
       });
       if (comment) {
-        await Community_comment.update(
+        await db.Community_comment.update(
           {
             description: req.body.description,
           },
@@ -321,33 +256,7 @@ router.put("/", getUserInToken, multerBody.none(), async (req, res, next) => {
             },
           }
         );
-        const communityComments = await Community_comment.findAll({
-          where: {
-            communityId: comment.communityId,
-          },
-          attributes: ["id", "description", "createdAt", "userId"],
-          include: [
-            {
-              model: User,
-              attributes: ["id", "nickname", "profileImg"],
-            },
-            {
-              model: Community_comment,
-              as: "Replys",
-              attributes: ["id", "description", "createdAt", "userId"],
-              through: {
-                attributes: [],
-              },
-              include: [
-                {
-                  model: User,
-                  attributes: ["id", "nickname", "profileImg"],
-                },
-              ],
-            },
-          ],
-          order: [["createdAt", "DESC"]],
-        });
+        const communityComments = await db.Community_comment.getAll(db, "community", postId);
         return res.status(200).json(communityComments);
       } else {
         return res.status(404).json({
@@ -374,7 +283,7 @@ router.delete("/", getUserInToken, multerBody.none(), async (req, res, next) => 
     const commentId = req.query.commentId;
     const type = req.query.type;
     if (type === "review") {
-      const comment = await Review_comment.findOne({
+      const comment = await db.Review_comment.findOne({
         where: {
           id: commentId,
         },
@@ -385,33 +294,7 @@ router.delete("/", getUserInToken, multerBody.none(), async (req, res, next) => 
             id: comment.id,
           },
         });
-        const reviewComments = await Review_comment.findAll({
-          where: {
-            reviewId: comment.reviewId,
-          },
-          attributes: ["id", "description", "createdAt", "updatedAt", "userId"],
-          include: [
-            {
-              model: User,
-              attributes: ["id", "nickname", "profileImg"],
-            },
-            {
-              model: Review_comment,
-              as: "Replys",
-              attributes: ["id", "description", "createdAt", "updatedAt", "userId"],
-              through: {
-                attributes: [],
-              },
-              include: [
-                {
-                  model: User,
-                  attributes: ["id", "nickname", "profileImg"],
-                },
-              ],
-            },
-          ],
-          order: [["createdAt", "DESC"]],
-        });
+        const reviewComments = await db.Review_comment.getAll(db, "review", reviewId);
         return res.status(200).json(reviewComments);
       } else {
         return res.status(404).json({
@@ -420,44 +303,18 @@ router.delete("/", getUserInToken, multerBody.none(), async (req, res, next) => 
         });
       }
     } else if (type === "community") {
-      const comment = await Community_comment.findOne({
+      const comment = await db.Community_comment.findOne({
         where: {
           id: commentId,
         },
       });
       if (comment) {
-        await Community_comment.destroy({
+        await db.Community_comment.destroy({
           where: {
             id: comment.id,
           },
         });
-        const communityComments = await Community_comment.findAll({
-          where: {
-            communityId: comment.communityId,
-          },
-          attributes: ["id", "description", "createdAt", "userId"],
-          include: [
-            {
-              model: User,
-              attributes: ["id", "nickname", "profileImg"],
-            },
-            {
-              model: Community_comment,
-              as: "Replys",
-              attributes: ["id", "description", "createdAt", "userId"],
-              through: {
-                attributes: [],
-              },
-              include: [
-                {
-                  model: User,
-                  attributes: ["id", "nickname", "profileImg"],
-                },
-              ],
-            },
-          ],
-          order: [["createdAt", "DESC"]],
-        });
+        const communityComments = await db.Community_comment.getAll(db, "community", postId);
         return res.status(200).json(communityComments);
       } else {
         return res.status(404).json({
@@ -487,56 +344,31 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
     const description = req.body.description;
     const type = req.query.type;
     if (type === "review") {
-      const comment = await Review_comment.findOne({
+      const reviewId = req.query.reviewId;
+      const comment = await db.Review_comment.findOne({
         where: {
           id: commentId,
         },
         include: [
-          { model: User },
+          { model: db.User },
           {
-            model: Review,
+            model: db.Review,
             include: [
               {
-                model: User,
+                model: db.User,
               },
             ],
           },
         ],
       });
       if (comment) {
-        const reply = await Review_comment.create({
+        const reply = await db.Review_comment.create({
           userId: userId,
           description: description,
         });
         await comment.addReply(reply);
-        await pushNotification("reply", reply, comment, userId, "review"); //type, comment, target, userId
-        const reviewComments = await Review_comment.findAll({
-          where: {
-            reviewId: comment.reviewId,
-          },
-          attributes: ["id", "description", "createdAt", "updatedAt", "userId"],
-          include: [
-            {
-              model: User,
-              attributes: ["id", "nickname", "profileImg"],
-            },
-            {
-              model: Review_comment,
-              as: "Replys",
-              attributes: ["id", "description", "createdAt", "updatedAt", "userId"],
-              through: {
-                attributes: [],
-              },
-              include: [
-                {
-                  model: User,
-                  attributes: ["id", "nickname", "profileImg"],
-                },
-              ],
-            },
-          ],
-          order: [["createdAt", "DESC"]],
-        });
+        //await pushNotification("reply", reply, comment, userId, "review"); //type, comment, target, userId
+        const reviewComments = await db.Review_comment.getAll(db, "review", reviewId);
         return res.status(200).json(reviewComments);
       } else {
         return res.status(404).json({
@@ -545,56 +377,31 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
         });
       }
     } else if (type === "community") {
-      const comment = await Community_comment.findOne({
+      const postId = req.query.postId;
+      const comment = await db.Community_comment.findOne({
         where: {
           id: commentId,
         },
         include: [
-          { model: User },
+          { model: db.User },
           {
-            model: Community,
+            model: db.Community,
             include: [
               {
-                model: User,
+                model: db.User,
               },
             ],
           },
         ],
       });
       if (comment) {
-        const reply = await Community_comment.create({
+        const reply = await db.Community_comment.create({
           userId: userId,
           description: description,
         });
         await comment.addReply(reply);
-        await pushNotification("reply", reply, comment, userId, "community"); //type, comment, target, userId
-        const communityComments = await Community_comment.findAll({
-          where: {
-            communityId: comment.communityId,
-          },
-          attributes: ["id", "description", "createdAt", "userId"],
-          include: [
-            {
-              model: User,
-              attributes: ["id", "nickname", "profileImg"],
-            },
-            {
-              model: Community_comment,
-              as: "Replys",
-              attributes: ["id", "description", "createdAt", "userId"],
-              through: {
-                attributes: [],
-              },
-              include: [
-                {
-                  model: User,
-                  attributes: ["id", "nickname", "profileImg"],
-                },
-              ],
-            },
-          ],
-          order: [["createdAt", "DESC"]],
-        });
+        //await pushNotification("reply", reply, comment, userId, "community"); //type, comment, target, userId
+        const communityComments = await db.Community_comment.getAll(db, "community", postId);
         return res.status(200).json(communityComments);
       } else {
         return res.status(404).json({
@@ -609,6 +416,7 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
       });
     }
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       statusCode: 500,
       body: { statusText: "Server Error", message: error.message },
@@ -621,67 +429,15 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
     const type = req.query.type;
     if (type === "community") {
       const postId = req.query.postId;
-      const communityComments = await Community_comment.findAll({
-        where: {
-          communityId: postId,
-        },
-        attributes: ["id", "description", "createdAt", "userId", [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,community_comment.updatedAt,NOW()))`), "createdDiff(second)"]],
-        include: [
-          {
-            model: User,
-            attributes: ["id", "nickname", "profileImg"],
-          },
-          {
-            model: Community_comment,
-            as: "Replys",
-            attributes: ["id", "description", "createdAt", "userId", [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,Replys.updatedAt,NOW()))`), "createdDiff(second)"]],
-            through: {
-              attributes: [],
-            },
-            include: [
-              {
-                model: User,
-                attributes: ["id", "nickname", "profileImg"],
-              },
-            ],
-          },
-        ],
-        order: [["createdAt", "DESC"]],
-      });
+      const communityComments = await db.Community_comment.getAll(db, "community", postId);
       return res.status(200).json(communityComments);
-    } else if (type === "reviews") {
+    } else if (type === "review") {
       const reviewId = req.query.reviewId;
-      const reviewComments = await Review_comment.findAll({
-        logging: true,
-        where: {
-          reviewId: reviewId,
-        },
-        attributes: ["id", "description", "createdAt", "updatedAt", "userId", [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review_comment.updatedAt,NOW()))`), "createdDiff(second)"]],
-        include: [
-          {
-            model: User,
-            attributes: ["id", "nickname", "profileImg"],
-          },
-          {
-            model: Review_comment,
-            as: "Replys",
-            attributes: ["id", "description", "createdAt", "updatedAt", "userId", [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,Replys.updatedAt,NOW()))`), "createdDiff(second)"]],
-            through: {
-              attributes: [],
-            },
-            include: [
-              {
-                model: User,
-                attributes: ["id", "nickname", "profileImg"],
-              },
-            ],
-          },
-        ],
-        order: [["createdAt", "DESC"]],
-      });
+      const reviewComments = await db.Review_comment.getAll(db, "review", reviewId);
       return res.status(200).json(reviewComments);
     }
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       statusCode: 500,
       body: { statusText: "Server Error", message: error.message },

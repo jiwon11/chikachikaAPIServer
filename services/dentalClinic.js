@@ -106,6 +106,7 @@ module.exports.detailClinics = async function detailClinics(event) {
         }
       );
     }
+    const userScrapClinics = await clinic.hasScrapers([userId]);
     const clinicInfoHeader = {
       name: clinic.name,
       originalName: clinic.originalName,
@@ -123,6 +124,7 @@ module.exports.detailClinics = async function detailClinics(event) {
         treatment: clinic.get("reviewTreatmentAVGStarRate"),
         service: clinic.get("reviewServiceAVGStarRate"),
       },
+      userScrapClinics: userScrapClinics,
     };
     const clinicInfoBody = {};
     const clinicTreatmentTime = {
