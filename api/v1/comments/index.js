@@ -342,6 +342,7 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
     const userId = req.user.id;
     const commentId = req.query.commentId;
     const description = req.body.description;
+    const targetUser = req.body.targetUser;
     const type = req.query.type;
     if (type === "review") {
       const reviewId = req.query.reviewId;
@@ -366,7 +367,11 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
           userId: userId,
           description: description,
         });
-        await comment.addReply(reply);
+        await comment.addReply(reply, {
+          through: {
+            targetUser: targetUser,
+          },
+        });
         //await pushNotification("reply", reply, comment, userId, "review"); //type, comment, target, userId
         const reviewComments = await db.Review_comment.getAll(db, "review", reviewId);
         return res.status(200).json(reviewComments);
@@ -399,7 +404,11 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
           userId: userId,
           description: description,
         });
-        await comment.addReply(reply);
+        await comment.addReply(reply, {
+          through: {
+            targetUser: targetUser,
+          },
+        });
         //await pushNotification("reply", reply, comment, userId, "community"); //type, comment, target, userId
         const communityComments = await db.Community_comment.getAll(db, "community", postId);
         return res.status(200).json(communityComments);
