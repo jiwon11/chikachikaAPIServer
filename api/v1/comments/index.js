@@ -146,7 +146,7 @@ router.post("/", getUserInToken, multerBody.none(), async (req, res, next) => {
         },
         include: [
           {
-            model: User,
+            model: db.User,
           },
         ],
       });
@@ -176,7 +176,7 @@ router.post("/", getUserInToken, multerBody.none(), async (req, res, next) => {
         },
         include: [
           {
-            model: User,
+            model: db.User,
           },
         ],
       });
