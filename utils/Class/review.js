@@ -1,6 +1,6 @@
 const Sequelize = require("sequelize");
-module.exports.getOne = async function (db, reviewId) {
-  return await this.findOne({
+module.exports.getOne = async function (db, reviewId, userId) {
+  const review = await this.findOne({
     where: {
       id: reviewId,
       userId: {
@@ -45,6 +45,51 @@ module.exports.getOne = async function (db, reviewId) {
       ["TreatmentItems", db.Review_treatment_item, "index", "ASC"],
     ],
   });
+  if (review) {
+    const reviewComments = await review.getReview_comments({
+      attributes: ["id", "description", "createdAt", "updatedAt", "userId", [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review_comment.updatedAt,NOW()))`), "createdDiff(second)"]],
+      include: [
+        {
+          model: db.User,
+          attributes: ["id", "nickname", "profileImg"],
+        },
+        {
+          model: db.Review_comment,
+          as: "Replys",
+          attributes: ["id", "description", "createdAt", "updatedAt", "userId", [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review_comment.updatedAt,NOW()))`), "createdDiff(second)"]],
+          include: [
+            {
+              model: db.User,
+              attributes: ["id", "nickname", "profileImg"],
+            },
+          ],
+        },
+      ],
+    });
+    const reviewLikeNum = await review.countLikers();
+    const reviewViewerNum = await review.countViewers();
+    const viewer = await db.User.findOne({
+      where: {
+        id: userId,
+      },
+    });
+    if (viewer.id !== review.userId) {
+      await review.addViewer(viewer);
+    }
+    const viewerLikeReview = await review.hasLikers(viewer);
+    const viewerScrapReview = await review.hasScrapers(viewer);
+    const result = {
+      reviewBody: review,
+      reviewViewerNum: reviewViewerNum,
+      reviewComments: reviewComments,
+      reviewLikeNum: reviewLikeNum,
+      viewerLikeReview: viewerLikeReview,
+      viewerScrapReview: viewerScrapReview,
+    };
+    return result;
+  } else {
+    return null;
+  }
 };
 
 module.exports.getAll = async function (db, userId, order, limit, offset) {

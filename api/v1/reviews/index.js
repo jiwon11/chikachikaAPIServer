@@ -52,6 +52,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
 router.get("/", getUserInToken, async (req, res, next) => {
   try {
     const reviewId = req.query.reviewId;
+    const userId = req.user.id;
     if (!reviewId) {
       return res.status(404).json({
         statusCode: 404,
@@ -61,46 +62,9 @@ router.get("/", getUserInToken, async (req, res, next) => {
         },
       });
     }
-    const review = await db.Review.getOne(db, reviewId);
-    if (review) {
-      const reviewComments = await review.getReview_comments({
-        include: [
-          {
-            model: db.User,
-            attributes: ["id", "nickname", "profileImg"],
-          },
-          {
-            model: db.Review_comment,
-            as: "Replys",
-            include: [
-              {
-                model: db.User,
-                attributes: ["id", "nickname", "profileImg"],
-              },
-            ],
-          },
-        ],
-      });
-      const reviewLikeNum = await review.countLikers();
-      const reviewViewerNum = await review.countViewers();
-      const viewer = await db.User.findOne({
-        where: {
-          id: req.user.id,
-        },
-      });
-      if (viewer.id !== review.userId) {
-        await review.addViewer(viewer);
-      }
-      const viewerLikeReview = await review.hasLikers(viewer);
-      const viewerScrapReview = await review.hasScrapers(viewer);
-      return res.status(200).json({
-        reviewBody: review,
-        reviewViewerNum: reviewViewerNum,
-        reviewComments: reviewComments,
-        reviewLikeNum: reviewLikeNum,
-        viewerLikeReview: viewerLikeReview,
-        viewerScrapReview: viewerScrapReview,
-      });
+    const review = await db.Review.getOne(db, reviewId, userId);
+    if (review !== null) {
+      return res.status(200).json(review);
     } else {
       return res.status(404).json({
         statusCode: 404,
@@ -205,6 +169,7 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
 router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) => {
   try {
     const reviewId = req.query.reviewId;
+    const userId = req.user.id;
     const paragraphs = JSON.parse(req.body.paragraphs);
     const body = req.body.body;
     const { starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId, totalCost, treatmentDate } = JSON.parse(body);
@@ -282,50 +247,17 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
           )
         );
         console.log(`콘텐츠 개수 : ${contents.length}`);
-        const updateReview = await Review.getOne(db, reviewId);
-        if (updateReview) {
-          const reviewComments = await updateReview.getReview_comments({
-            include: [
-              {
-                model: User,
-                attributes: ["id", "nickname", "profileImg"],
-              },
-              {
-                model: Review_comment,
-                as: "Replys",
-                include: [
-                  {
-                    model: User,
-                    attributes: ["id", "nickname", "profileImg"],
-                  },
-                ],
-              },
-            ],
-          });
-          const reviewLikeNum = await updateReview.countLikers();
-          const reviewViewerNum = await updateReview.countViewers();
-          const viewer = await User.findOne({
-            where: {
-              id: req.user.id,
-            },
-          });
-          if (viewer.id !== updateReview.userId) {
-            await updateReview.addViewer(updateReview);
-          }
-          const viewerLikeReview = await updateReview.hasLikers(viewer);
-          const viewerScrapReview = await review.hasScrapers(viewer);
-          const updateReviewResult = {
-            reviewBody: updateReview,
-            reviewViewerNum: reviewViewerNum,
-            reviewComments: reviewComments,
-            reviewLikeNum: reviewLikeNum,
-            viewerLikeReview: viewerLikeReview,
-            viewerScrapReview: viewerScrapReview,
-          };
+        const updateReview = await db.Review.getOne(db, reviewId, userId);
+        if (review !== null) {
           return res.status(200).json({
             statusCode: 200,
             message: "리뷰글을 수정하였습니다.",
-            updateReview: updateReviewResult,
+            updateReview: updateReview,
+          });
+        } else {
+          return res.status(404).json({
+            statusCode: 404,
+            body: { statusText: "Not Found", message: "리뷰를 찾을 수 없습니다." },
           });
         }
       } else {

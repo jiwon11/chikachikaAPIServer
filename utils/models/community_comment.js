@@ -1,5 +1,7 @@
-module.exports = (sequelize, DataTypes) =>
-  sequelize.define(
+const commentQueryClass = require("../Class/comment");
+
+module.exports = (sequelize, DataTypes) => {
+  const community_comment = sequelize.define(
     "community_comment",
     {
       description: {
@@ -14,3 +16,6 @@ module.exports = (sequelize, DataTypes) =>
       collate: "utf8mb4_unicode_ci",
     }
   );
+  community_comment.getAll = commentQueryClass.getAll;
+  return community_comment;
+};
