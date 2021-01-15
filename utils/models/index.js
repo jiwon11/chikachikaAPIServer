@@ -13,6 +13,7 @@ db.Dental_clinic = require("./dental_clinic")(sequelize, Sequelize);
 db.Dentist = require("./dentist")(sequelize, Sequelize);
 db.Review = require("./review")(sequelize, Sequelize);
 db.Review_comment = require("./review_comment")(sequelize, Sequelize);
+db.Review_comment_reply = require("./review_comment_reply")(sequelize, Sequelize);
 db.Review_content = require("./review_content")(sequelize, Sequelize);
 db.Review_treatment_item = require("./review_treatment_item")(sequelize, Sequelize);
 db.ReviewBills = require("./reviewBills")(sequelize, Sequelize);
@@ -20,6 +21,7 @@ db.Appointment = require("./appointment")(sequelize, Sequelize);
 db.Brush_condition = require("./brush_condition")(sequelize, Sequelize);
 db.Clinic_report = require("./clinic_report")(sequelize, Sequelize);
 db.Community_comment = require("./community_comment")(sequelize, Sequelize);
+db.Community_comment_reply = require("./community_comment_reply")(sequelize, Sequelize);
 db.Community_img = require("./community_img")(sequelize, Sequelize);
 db.Community = require("./community")(sequelize, Sequelize);
 db.Dental_subject = require("./dental_subject")(sequelize, Sequelize);
@@ -181,13 +183,13 @@ db.Review_comment.belongsTo(db.Review);
 db.Review_comment.belongsToMany(db.Review_comment, {
   foreignKey: "commentId",
   as: "Replys",
-  through: "Review_reply",
+  through: db.Review_comment_reply,
   onDelete: "CASCADE",
 });
 db.Review_comment.belongsTo(db.Review_comment, {
   foreignKey: "replyId",
   as: "Comments",
-  through: "Review_reply",
+  through: db.Review_comment_reply,
   onDelete: "CASCADE",
 });
 /*리뷰 콘텐츠와 리뷰 관계형 -좋아요*/
@@ -341,13 +343,13 @@ db.Community_comment.belongsTo(db.User);
 db.Community_comment.belongsToMany(db.Community_comment, {
   foreignKey: "commentId",
   as: "Replys",
-  through: "Community_reply",
+  through: db.Community_comment_reply,
   onDelete: "CASCADE",
 });
 db.Community_comment.belongsTo(db.Community_comment, {
   foreignKey: "replyId",
   as: "Comments",
-  through: "Community_reply",
+  through: db.Community_comment_reply,
   onDelete: "CASCADE",
 });
 /* 진료 항목과 커뮤니티글 관계형*/

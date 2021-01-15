@@ -22,7 +22,7 @@ module.exports.getAll = async function (db, type, targetId) {
             "updatedAt",
             "userId",
             [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,Replys.updatedAt,NOW()))`), "createdDiff(second)"],
-            [Sequelize.literal("user.nickname"), "targetUser"],
+            [Sequelize.literal("`Replys->Review_reply`.`targetUser`"), "targetUser"],
           ],
           through: {
             attributes: [],
@@ -31,28 +31,6 @@ module.exports.getAll = async function (db, type, targetId) {
             {
               model: db.User,
               attributes: ["id", "nickname", "profileImg"],
-            },
-            {
-              model: db.Review_comment,
-              as: "Replys",
-              attributes: [
-                "id",
-                "description",
-                "createdAt",
-                "updatedAt",
-                "userId",
-                [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,Replys.updatedAt,NOW()))`), "createdDiff(second)"],
-                [Sequelize.literal("`Replys->user`.`nickname`"), "targetUser"],
-              ],
-              through: {
-                attributes: [],
-              },
-              include: [
-                {
-                  model: db.User,
-                  attributes: ["id", "nickname", "profileImg"],
-                },
-              ],
             },
           ],
         },
@@ -79,7 +57,7 @@ module.exports.getAll = async function (db, type, targetId) {
             "createdAt",
             "userId",
             [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,Replys.updatedAt,NOW()))`), "createdDiff(second)"],
-            [Sequelize.literal("user.nickname"), "targetUser"],
+            [Sequelize.literal("`Replys->Community_reply`.`targetUser`"), "targetUser"],
           ],
           through: {
             attributes: [],
@@ -88,27 +66,6 @@ module.exports.getAll = async function (db, type, targetId) {
             {
               model: db.User,
               attributes: ["id", "nickname", "profileImg"],
-            },
-            {
-              model: db.Community_comment,
-              as: "Replys",
-              attributes: [
-                "id",
-                "description",
-                "createdAt",
-                "userId",
-                [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,Replys.updatedAt,NOW()))`), "createdDiff(second)"],
-                [Sequelize.literal("`Replys->user`.`nickname`"), "targetUser"],
-              ],
-              through: {
-                attributes: [],
-              },
-              include: [
-                {
-                  model: db.User,
-                  attributes: ["id", "nickname", "profileImg"],
-                },
-              ],
             },
           ],
         },
