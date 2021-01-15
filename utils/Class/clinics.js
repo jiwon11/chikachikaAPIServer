@@ -39,14 +39,10 @@ module.exports.SearchAll = async function (type, query, nowTime, day, week, toda
     };
   } else {
     holidayTreatmentQuery = {
-      [Sequelize.Op.or]: [
-        {
-          [Sequelize.Op.is]: null,
-        },
-        {
-          [Sequelize.Op.not]: null,
-        },
-      ],
+      [Sequelize.Op.or]: {
+        [Sequelize.Op.is]: null,
+        [Sequelize.Op.not]: null,
+      },
     };
   }
   var TOLTimeAttrStart;
