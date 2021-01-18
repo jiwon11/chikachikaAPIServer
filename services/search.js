@@ -410,18 +410,20 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
     const sido = await Sido.findAll({
       attributes: ["id", "name", "fullName"],
       where: {
-        name: {
+        fullName: {
           [Sequelize.Op.like]: `%${query}%`,
         },
       },
+      order: [["fullName", "ASC"]],
     });
     const sigungu = await Sigungu.findAll({
       attributes: ["id", "name", "fullName"],
       where: {
-        name: {
+        fullName: {
           [Sequelize.Op.like]: `%${query}%`,
         },
       },
+      order: [["fullName", "ASC"]],
     });
     const emd = await City.findAll({
       attributes: ["id", ["emdName", "name"], [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName)"), "fullName"]],
@@ -430,6 +432,7 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
           [Sequelize.Op.like]: `%${query}%`,
         },
       },
+      order: [[Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName)"), "ASC"]],
     });
     const cities = sido.concat(sigungu, emd);
     cities.forEach((city) => city.setDataValue("category", "city"));
@@ -440,12 +443,10 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
           [Sequelize.Op.like]: `%${query}%`,
         },
       },
+      order: [["originalName", "ASC"]],
     });
     clinics.forEach((clinic) => clinic.setDataValue("category", "clinic"));
     const mergeResults = cities.concat(clinics);
-    mergeResults.sort(function (a, b) {
-      return a.dataValues.name < b.dataValues.name ? -1 : a.dataValues.name > b.dataValues.name ? 1 : 0;
-    });
     return {
       statusCode: 200,
       body: JSON.stringify(mergeResults),
