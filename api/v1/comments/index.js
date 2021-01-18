@@ -291,7 +291,7 @@ router.delete("/", getUserInToken, multerBody.none(), async (req, res, next) => 
         },
       });
       if (comment) {
-        await Review_comment.destroy({
+        await db.Review_comment.destroy({
           where: {
             id: comment.id,
           },
