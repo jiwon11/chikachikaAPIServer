@@ -1,8 +1,14 @@
 const Sequelize = require("sequelize");
+const { QueryTypes } = require("sequelize");
 
 module.exports.getAll = async function (db, type, targetId) {
+  var comments;
+  var commentsNum;
   if (type === "review") {
-    return await this.findAll({
+    [commentsNum, metadata] = await db.sequelize.query(
+      `SELECT ((SELECT COUNT(*) FROM review_comments WHERE review_comments.reviewId = ${targetId} AND review_comments.deletedAt IS null) + (SELECT COUNT(*) FROM Review_reply LEFT JOIN review_comments AS replys ON replys.id = Review_reply.replyId LEFT JOIN review_comments AS comments ON comments.id = Review_reply.commentId where comments.reviewId = ${targetId} AND replys.deletedAt IS NULL AND comments.deletedAt IS NULL)) AS commentsNum`
+    );
+    comments = await this.findAll({
       where: {
         reviewId: targetId,
       },
@@ -38,7 +44,10 @@ module.exports.getAll = async function (db, type, targetId) {
       order: [["createdAt", "DESC"]],
     });
   } else {
-    return await this.findAll({
+    [commentsNum, metadata] = await db.sequelize.literal(
+      `SELECT ((SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = ${targetId} AND deletedAt IS null) + (SELECT COUNT(*) FROM Community_reply LEFT JOIN community_comments AS replys ON replys.id = Community_reply.replyId LEFT JOIN community_comments AS comments ON comments.id = Community_reply.commentId where comments.communityId=${targetId}  AND replys.deletedAt IS NULL AND comments.deletedAt IS NULL)) AS commentsNum`
+    );
+    comments = await this.findAll({
       where: {
         communityId: targetId,
       },
@@ -73,4 +82,5 @@ module.exports.getAll = async function (db, type, targetId) {
       order: [["createdAt", "DESC"]],
     });
   }
+  return { commentsNum: commentsNum[0], comments: comments };
 };
