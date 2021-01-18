@@ -58,7 +58,7 @@ module.exports.dentalClinics = async function dentalClinics(event) {
           [Sequelize.Op.like]: `${query}%`,
         },
       },
-      attributes: ["id", "name", "local", "address"],
+      attributes: ["id", "name", "local", "address", "originalName"],
     });
     let response = {
       statusCode: 200,
