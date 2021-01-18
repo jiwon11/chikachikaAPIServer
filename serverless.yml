@@ -508,11 +508,6 @@ functions:
           path: clinic/detail
           method: get
           cors: true
-          caching:
-            enabled: true
-            ttlInSeconds: 3600 # overrides the global setting for ttlInSeconds
-            cacheKeyParameters:
-              - name: request.querystring.clinicId
           authorizer:
               name: verify-token
               # this tells the lambda where to take the information from,
