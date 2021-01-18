@@ -139,7 +139,7 @@ functions:
           cors: true
           caching:
             enabled: true
-            ttlInSeconds: 3600 # overrides the global setting for ttlInSeconds
+            ttlInSeconds: 300 # overrides the global setting for ttlInSeconds
             cacheKeyParameters:
               - name: request.querystring.lat
               - name: request.querystring.long
@@ -166,7 +166,7 @@ functions:
           cors: true
           caching:
             enabled: true
-            ttlInSeconds: 3600 # overrides the global setting for ttlInSeconds
+            ttlInSeconds: 300 # overrides the global setting for ttlInSeconds
             cacheKeyParameters:
               - name: request.querystring.lat
               - name: request.querystring.long
@@ -203,7 +203,7 @@ functions:
           cors: true
           caching:
             enabled: true
-            ttlInSeconds: 3600 # overrides the global setting for ttlInSeconds
+            ttlInSeconds: 300 # overrides the global setting for ttlInSeconds
             cacheKeyParameters:
               - name: request.querystring.q
           authorizer:
@@ -288,7 +288,7 @@ functions:
           cors: true
           caching:
             enabled: true
-            ttlInSeconds: 3600 # overrides the global setting for ttlInSeconds
+            ttlInSeconds: 300 # overrides the global setting for ttlInSeconds
             cacheKeyParameters:
               - name: request.querystring.query
               - name: request.querystring.limit
@@ -302,7 +302,7 @@ functions:
           cors: true
           caching:
             enabled: true
-            ttlInSeconds: 3600 # overrides the global setting for ttlInSeconds
+            ttlInSeconds: 300 # overrides the global setting for ttlInSeconds
             cacheKeyParameters:
               - name: request.querystring.lat
               - name: request.querystring.long
@@ -549,7 +549,7 @@ functions:
           cors: true
           caching:
             enabled: true
-            ttlInSeconds: 3600 # overrides the global setting for ttlInSeconds
+            ttlInSeconds: 300 # overrides the global setting for ttlInSeconds
             cacheKeyParameters:
               - name: request.querystring.query
           authorizer:
