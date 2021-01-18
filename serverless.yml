@@ -85,6 +85,14 @@ functions:
           path: search/allTagItems/{purpose}
           method: get
           cors: true
+          caching:
+            enabled: true
+            ttlInSeconds: 300 # overrides the global setting for ttlInSeconds
+            cacheKeyParameters:
+              - name: request.path.purpose
+              - name: request.querystring.q
+              - name: request.querystring.offset
+              - name: request.querystring.limit
           authorizer:
               name: verify-token
               # this tells the lambda where to take the information from,
