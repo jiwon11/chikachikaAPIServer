@@ -285,6 +285,7 @@ router.delete("/", getUserInToken, multerBody.none(), async (req, res, next) => 
     const commentId = req.query.commentId;
     const type = req.query.type;
     if (type === "review") {
+      const reviewId = req.query.reviewId;
       const comment = await db.Review_comment.findOne({
         where: {
           id: commentId,
@@ -305,6 +306,7 @@ router.delete("/", getUserInToken, multerBody.none(), async (req, res, next) => 
         });
       }
     } else if (type === "community") {
+      const postId = req.query.postId;
       const comment = await db.Community_comment.findOne({
         where: {
           id: commentId,
