@@ -67,7 +67,7 @@ module.exports.detailClinics = async function detailClinics(event) {
         },
       ],
     });
-    const requestUrl = `https://naveropenapi.apigw.ntruss.com/map-static/v2/raster?w=300&h=300&center=${clinic.geographLong},${clinic.geographLat}&markers=type:d|size:mid|pos:${clinic.geographLong}%20${clinic.geographLat}&level=16&format=jpg`;
+    const requestUrl = `https://naveropenapi.apigw.ntruss.com/map-static/v2/raster?w=343&h=201&scale=2&center=${clinic.geographLong},${clinic.geographLat}&level=15&format=jpg&markers=type:e|size:mid|icon:https://chikachika-clinic-static-map.s3.ap-northeast-2.amazonaws.com/customMarker/markers_v1_x64.png|pos:${clinic.geographLong}%20${clinic.geographLat}`;
     const [clinicMap, created] = await db.ClinicStaticMap.findOrCreate({
       where: {
         requestUrl: requestUrl,
