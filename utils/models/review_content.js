@@ -30,6 +30,12 @@ module.exports = (sequelize, DataTypes) =>
         type: DataTypes.STRING,
         allowNull: true,
       },
+      img_width: {
+        type: DataTypes.INTEGER(11),
+      },
+      img_height: {
+        type: DataTypes.INTEGER(11),
+      },
     },
     {
       timestamps: true,
