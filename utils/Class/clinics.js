@@ -1,5 +1,9 @@
 const Sequelize = require("sequelize");
 const db = require("../models");
+const accuracyPointQuery = Sequelize.literal(
+  `(IF(CD_Num > 0 OR SD_Num > 0 OR RE_Num > 0 OR IN_Num > 0, 1, 0))+(IF(Mon_Consulation_start_time > "00:00:00", 1, 0))+ (IF(Sat_Consulation_start_time > "00:00:00", 1, 0)) + (IF(parking_allow_num>0, 1, 0))+(IF(holiday_treatment_start_time IS NOT NULL, 1, 0))+(IF(description IS NOT NULL, 1, 0))+(IF(dentalTransparent IS TRUE, 1, 0))+(IF((SELECT COUNT(*) FROM Clinic_subjects where dentalClinicId = dental_clinic.id)>0,1,0))+(IF((SELECT COUNT(*) FROM Clinic_special_treatment where dentalClinicId = dental_clinic.id)>0,1,0))+(IF((SELECT COUNT(*) FROM dentalClinicProfileImgs where dentalClinicId = dental_clinic.id AND dentalClinicProfileImgs.deletedAt IS NOT NULL)>0,1,0))`
+);
+
 module.exports.SearchAll = async function (type, query, nowTime, day, week, todayHoliday, lat, long, limit, offset, sort, wantParking, holidayTreatment) {
   var orderQuery;
   if (sort === "distance") {
@@ -18,8 +22,18 @@ module.exports.SearchAll = async function (type, query, nowTime, day, week, toda
       ["name", "ASC"],
     ];
   }
+  var parkingQuery;
+  var TOLTimeAttrStart;
+  var TOLTimeAttrEnd;
+  var TOLTimeConfident;
+  var confidentConsulationTime;
+  var conclustionNow;
+  var startTime;
+  var endTime;
+  var weekend_non_consulation_notice;
+  var lunchTimeNow;
+  var holidayTreatmentQuery;
   if (type !== "residence") {
-    var parkingQuery;
     if (wantParking === "y") {
       parkingQuery = {
         [Sequelize.Op.and]: {
@@ -34,7 +48,6 @@ module.exports.SearchAll = async function (type, query, nowTime, day, week, toda
         },
       };
     }
-    var holidayTreatmentQuery;
     if (holidayTreatment === "true") {
       holidayTreatmentQuery = {
         [Sequelize.Op.not]: null,
@@ -47,9 +60,6 @@ module.exports.SearchAll = async function (type, query, nowTime, day, week, toda
         },
       };
     }
-    var TOLTimeAttrStart;
-    var TOLTimeAttrEnd;
-    var TOLTimeConfident;
     if (day !== "Sun" && day !== "Sat") {
       TOLTimeAttrStart = "weekday_TOL_start";
       TOLTimeAttrEnd = "weekday_TOL_end";
@@ -73,11 +83,7 @@ module.exports.SearchAll = async function (type, query, nowTime, day, week, toda
       TOLTimeAttrStart = [Sequelize.literal(`"00:00:00"`), "sun_TOL_start"];
       TOLTimeAttrEnd = [Sequelize.literal(`"00:00:00"`), "sun_TOL_end"];
     }
-    var confidentConsulationTime;
-    var conclustionNow;
-    var startTime;
-    var endTime;
-    var weekend_non_consulation_notice;
+
     if (day === "Sun" || todayHoliday.length > 0) {
       confidentConsulationTime = [Sequelize.literal(`IF((holiday_treatment_start_time IS NULL), false, true)`), "confidentConsulationTime"];
       conclustionNow = [Sequelize.literal(`holiday_treatment_start_time <= "${nowTime}" AND holiday_treatment_end_time >= "${nowTime}"`), "conclustionNow"];
@@ -91,7 +97,6 @@ module.exports.SearchAll = async function (type, query, nowTime, day, week, toda
       endTime = `${day}_Consulation_end_time`;
       weekend_non_consulation_notice = "weekend_non_consulation_notice";
     }
-    var lunchTimeNow;
     if (day !== "Sat" && day !== "Sun" && todayHoliday.length === 0) {
       lunchTimeNow = [Sequelize.literal(`weekday_TOL_start <= "${nowTime}" AND weekday_TOL_end >= "${nowTime}"`), "lunchTimeNow"];
     } else if (day !== "Sun" && todayHoliday.length === 0) {
@@ -179,12 +184,7 @@ module.exports.SearchAll = async function (type, query, nowTime, day, week, toda
         ),
         "reviewAVGStarRate",
       ],
-      [
-        Sequelize.literal(
-          `(IF(CD_Num > 0 OR SD_Num > 0 OR RE_Num > 0 OR IN_Num > 0, 1, 0))+(IF(Mon_Consulation_start_time > "00:00:00", 1, 0))+ (IF(Sat_Consulation_start_time > "00:00:00", 1, 0)) + (IF(parking_allow_num>0, 1, 0))+(IF(holiday_treatment_start_time IS NOT NULL, 1, 0))+(IF(description IS NOT NULL, 1, 0))+(IF(dentalTransparent IS TRUE, 1, 0))+(IF((SELECT COUNT(*) FROM Clinic_subjects where dentalClinicId = dental_clinic.id)>0,1,0))+(IF((SELECT COUNT(*) FROM Clinic_special_treatment where dentalClinicId = dental_clinic.id)>0,1,0))+(IF((SELECT COUNT(*) FROM dentalClinicProfileImgs where dentalClinicId = dental_clinic.id AND dentalClinicProfileImgs.deletedAt IS NOT NULL)>0,1,0))`
-        ),
-        "accuracyPoint",
-      ],
+      [accuracyPointQuery, "accuracyPoint"],
     ];
   } else if (type === "keyword") {
     whereQuery = {
@@ -275,12 +275,7 @@ module.exports.SearchAll = async function (type, query, nowTime, day, week, toda
         ),
         "reviewAVGStarRate",
       ],
-      [
-        Sequelize.literal(
-          `(IF(CD_Num > 0 OR SD_Num > 0 OR RE_Num > 0 OR IN_Num > 0, 1, 0))+(IF(Mon_Consulation_start_time > "00:00:00", 1, 0))+ (IF(Sat_Consulation_start_time > "00:00:00", 1, 0)) + (IF(parking_allow_num>0, 1, 0))+(IF(holiday_treatment_start_time IS NOT NULL, 1, 0))+(IF(description IS NOT NULL, 1, 0))+(IF(dentalTransparent IS TRUE, 1, 0))+(IF((SELECT COUNT(*) FROM Clinic_subjects where dentalClinicId = dental_clinic.id)>0,1,0))+(IF((SELECT COUNT(*) FROM Clinic_special_treatment where dentalClinicId = dental_clinic.id)>0,1,0))+(IF((SELECT COUNT(*) FROM dentalClinicProfileImgs where dentalClinicId = dental_clinic.id AND dentalClinicProfileImgs.deletedAt IS NOT NULL)>0,1,0))`
-        ),
-        "accuracyPoint",
-      ],
+      [accuracyPointQuery, "accuracyPoint"],
     ];
   } else if (type === "residence") {
     whereQuery = {
@@ -317,12 +312,7 @@ module.exports.SearchAll = async function (type, query, nowTime, day, week, toda
         ),
         "reviewAVGStarRate",
       ],
-      [
-        Sequelize.literal(
-          `(IF(CD_Num > 0 OR SD_Num > 0 OR RE_Num > 0 OR IN_Num > 0, 1, 0))+(IF(Mon_Consulation_start_time > "00:00:00", 1, 0))+ (IF(Sat_Consulation_start_time > "00:00:00", 1, 0)) + (IF(parking_allow_num>0, 1, 0))+(IF(holiday_treatment_start_time IS NOT NULL, 1, 0))+(IF(description IS NOT NULL, 1, 0))+(IF(dentalTransparent IS TRUE, 1, 0))+(IF((SELECT COUNT(*) FROM Clinic_subjects where dentalClinicId = dental_clinic.id)>0,1,0))+(IF((SELECT COUNT(*) FROM Clinic_special_treatment where dentalClinicId = dental_clinic.id)>0,1,0))+(IF((SELECT COUNT(*) FROM dentalClinicProfileImgs where dentalClinicId = dental_clinic.id AND dentalClinicProfileImgs.deletedAt IS NOT NULL)>0,1,0))`
-        ),
-        "accuracyPoint",
-      ],
+      [accuracyPointQuery, "accuracyPoint"],
     ];
   }
   return await this.findAll({
