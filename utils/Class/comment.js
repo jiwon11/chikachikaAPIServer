@@ -44,7 +44,7 @@ module.exports.getAll = async function (db, type, targetId) {
       order: [["createdAt", "DESC"]],
     });
   } else {
-    [commentsNum, metadata] = await db.sequelize.literal(
+    [commentsNum, metadata] = await db.sequelize.query(
       `SELECT ((SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = ${targetId} AND deletedAt IS null) + (SELECT COUNT(*) FROM Community_reply LEFT JOIN community_comments AS replys ON replys.id = Community_reply.replyId LEFT JOIN community_comments AS comments ON comments.id = Community_reply.commentId where comments.communityId=${targetId}  AND replys.deletedAt IS NULL AND comments.deletedAt IS NULL)) AS commentsNum`
     );
     comments = await this.findAll({

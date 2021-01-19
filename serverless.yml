@@ -566,6 +566,22 @@ functions:
               # in our case the HTTP Authorization header
               identitySource: method.request.header.Authorization
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  redienceClinics:
+    handler: services/around.redienceClinics
+    events:
+      - http:
+          path: residence/clinics
+          method: get
+          cors: true
+          caching:
+            enabled: true
+            ttlInSeconds: 300 # overrides the global setting for ttlInSeconds
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   importDentalClinic:
     handler: services/dbReset.importDentalClinic
     package:
