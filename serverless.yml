@@ -298,7 +298,7 @@ functions:
             enabled: true
             ttlInSeconds: 300 # overrides the global setting for ttlInSeconds
             cacheKeyParameters:
-              - name: request.querystring.query
+              - name: request.querystring.q
               - name: request.querystring.limit
               - name: request.querystring.offset
   citiesBycurrentLocation:
