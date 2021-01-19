@@ -137,7 +137,7 @@ module.exports.getAll = async function (db, userId, type, clusterQuery, order, o
       },
       {
         model: db.Community_img,
-        attributes: ["id", "img_originalname", "img_mimetype", "img_filename", "img_url", "img_size", "img_index"],
+        attributes: ["id", "img_originalname", "img_mimetype", "img_filename", "img_url", "img_size", "img_index", "img_width", "img_height"],
       },
       {
         model: db.Dental_clinic,
