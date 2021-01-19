@@ -138,6 +138,8 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
           index: paragraphs.indexOf(paragraph) + 1,
           description: paragraph.description,
           img_before_after: paragraph.imgBeforeAfter,
+          img_width: paragraph.width,
+          img_height: paragraph.height,
           reviewId: review.id,
         })
       )

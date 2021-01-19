@@ -25,6 +25,12 @@ module.exports = (sequelize, DataTypes) =>
       img_index: {
         type: DataTypes.INTEGER,
       },
+      img_width: {
+        type: DataTypes.INTEGER(11),
+      },
+      img_height: {
+        type: DataTypes.INTEGER(11),
+      },
     },
     {
       timestamps: true,
