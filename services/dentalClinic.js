@@ -67,7 +67,7 @@ module.exports.detailClinics = async function detailClinics(event) {
         },
       ],
     });
-    const requestUrl = `https://naveropenapi.apigw.ntruss.com/map-static/v2/raster?w=343&h=201&scale=2&center=${clinic.geographLong},${clinic.geographLat}&level=15&format=jpg&markers=type:e|size:mid|icon:https://chikachika-clinic-static-map.s3.ap-northeast-2.amazonaws.com/customMarker/markers_v1_x64.png|pos:${clinic.geographLong}%20${clinic.geographLat}`;
+    const requestUrl = `https://naveropenapi.apigw.ntruss.com/map-static/v2/raster?w=343&h=201&center=${clinic.geographLong},${clinic.geographLat}&level=15&scale=2&markers=type:e|icon:https://chikachika-clinic-static-map.s3.ap-northeast-2.amazonaws.com/customMarker/V1_x64_w.png|pos:${clinic.geographLong}%20${clinic.geographLat}`;
     const [clinicMap, created] = await db.ClinicStaticMap.findOrCreate({
       where: {
         requestUrl: requestUrl,
@@ -90,10 +90,10 @@ module.exports.detailClinics = async function detailClinics(event) {
       console.timeEnd("stasticMap API 호출");
       var param = {
         Bucket: "chikachika-clinic-static-map",
-        Key: `${clinic.name}-static-map.jpg`,
+        Key: `${clinic.name}-static-map.png`,
         ACL: "public-read",
         Body: Buffer.from(staticMapResponse.data),
-        ContentType: "image/jpg",
+        ContentType: "image/png",
       };
       var uploadS3 = await s3.upload(param).promise();
       clinicStaticMap = uploadS3.Location;
