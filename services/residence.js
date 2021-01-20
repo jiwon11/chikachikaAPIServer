@@ -210,14 +210,16 @@ module.exports.deleteUserResidence = async function deleteUserResidence(event) {
           },
         },
       });
-      await Residence.update(
-        {
-          now: true,
-        },
-        {
-          where: { city: leftResidence[0].id, resident: user.id },
-        }
-      );
+      if (leftResidence.length > 0) {
+        await Residence.update(
+          {
+            now: true,
+          },
+          {
+            where: { city: leftResidence[0].id, resident: user.id },
+          }
+        );
+      }
     }
     await user.removeResidences(city);
     return {
