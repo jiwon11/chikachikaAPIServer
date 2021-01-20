@@ -1,7 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const moment = require("moment");
-const Sequelize = require("Sequelize");
+const Sequelize = require("sequelize");
 const db = require("../../../utils/models");
 const { getUserInToken } = require("../middlewares");
 const reviewQueryClass = require("../../../Utils/Class/review");
