@@ -4,8 +4,8 @@ const moment = require("moment");
 const Sequelize = require("sequelize");
 const db = require("../../../utils/models");
 const { getUserInToken } = require("../middlewares");
-const reviewQueryClass = require("../../../Utils/Class/review");
-const communityQueryClass = require("../../../Utils/Class/community");
+const reviewQueryClass = require("../../../utils/Class/review");
+const communityQueryClass = require("../../../utils/Class/community");
 const router = express.Router();
 
 const userProfileUpload = multer();
