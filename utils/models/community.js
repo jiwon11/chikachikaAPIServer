@@ -25,5 +25,6 @@ module.exports = (sequelize, DataTypes) => {
   );
   community.getOne = communityQueryClass.getOne;
   community.getAll = communityQueryClass.getAll;
+  community.getUserCommunityPostAll = communityQueryClass.getUserCommunityPostAll;
   return community;
 };

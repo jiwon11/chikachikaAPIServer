@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
-const { User, City, Residence } = require("../utils/models");
-
+const { User, City, Residence, sequelize } = require("../utils/models");
+const Sequelize = require("sequelize");
 module.exports.searchCities = async function searchCities(event) {
   try {
     const query = event.queryStringParameters.q;
@@ -56,6 +56,7 @@ module.exports.getUserResidence = async function getUserResidence(event) {
     });
     const userResidence = await user.getResidences({
       attributes: ["id", "emdName"],
+      order: sequelize.literal("`UsersCities`.`createdAt` DESC"),
     });
     return {
       statusCode: 200,
@@ -104,25 +105,6 @@ module.exports.addUserResidence = async function addUserResidence(event) {
           body: `{"statusText": "Unaccepted","message": "이미 설정한 거주지입니다."}`,
         };
       }
-      const preCity = await City.findOne({
-        attributes: ["id", "emdName"],
-        include: [
-          {
-            model: User,
-            as: "Residents",
-            through: {
-              where: {
-                now: true,
-              },
-            },
-          },
-        ],
-      });
-      await user.setResidences(preCity, {
-        through: {
-          now: false,
-        },
-      });
       const city = await City.findOne({
         attributes: ["id", "emdName"],
         where: {
@@ -131,12 +113,12 @@ module.exports.addUserResidence = async function addUserResidence(event) {
       });
       await user.addResidences(city, {
         through: {
-          now: true,
+          now: false,
         },
       });
       return {
         statusCode: 201,
-        body: `{"statusText": "Accepted","message": "${user.nickname}님의 거주지가 ${city.emdName}로 설정되었습니다."}`,
+        body: `{"statusText": "Accepted","message": "${user.nickname}님의 거주지에 ${city.emdName}를 추기하였습니다."}`,
       };
     }
   } catch (error) {
@@ -159,6 +141,13 @@ module.exports.changeUserResidence = async function changeUserResidence(event) {
         id: userId,
       },
     });
+    const preResidences = await user.getResidences({
+      attributes: ["id", "emdName"],
+      where: {
+        id: preCityId,
+      },
+    });
+    console.log("preResidences NOW: ", preResidences[0].UsersCities.now);
     const preCity = await City.findOne({
       attributes: ["id", "emdName"],
       where: {
@@ -172,14 +161,15 @@ module.exports.changeUserResidence = async function changeUserResidence(event) {
         id: cityId,
       },
     });
+    const preResidencesNow = preResidences[0].UsersCities.now === true ? true : false;
     await user.addResidences(city, {
       through: {
-        now: true,
+        now: preResidencesNow,
       },
     });
     return {
       statusCode: 201,
-      body: `{"statusText": "Accepted","message": "${user.nickname}님의 거주지가 ${preCity.emdName}에서 ${city.emdName}(으)로 수정되었습니다."}`,
+      body: `{"statusText": "Accepted","message": "${user.nickname}님의 거주지가 ${city.emdName}(으)로 수정되었습니다."}`,
     };
   } catch (error) {
     console.error(error);
@@ -207,6 +197,28 @@ module.exports.deleteUserResidence = async function deleteUserResidence(event) {
         id: cityId,
       },
     });
+    const deletedResidence = await user.getResidences({
+      where: {
+        id: cityId,
+      },
+    });
+    if (deletedResidence[0].UsersCities.now === true) {
+      const leftResidence = await user.getResidences({
+        where: {
+          id: {
+            [Sequelize.Op.ne]: cityId,
+          },
+        },
+      });
+      await Residence.update(
+        {
+          now: true,
+        },
+        {
+          where: { city: leftResidence[0].id, resident: user.id },
+        }
+      );
+    }
     await user.removeResidences(city);
     return {
       statusCode: 204,
