@@ -368,6 +368,7 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
       });
       if (comment) {
         const reply = await db.Review_comment.create({
+          reviewId: reviewId,
           userId: userId,
           description: description,
         });
@@ -410,6 +411,7 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
       });
       if (comment) {
         const reply = await db.Community_comment.create({
+          communityId: postId,
           userId: userId,
           description: description,
         });
