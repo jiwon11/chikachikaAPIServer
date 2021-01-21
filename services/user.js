@@ -1,4 +1,5 @@
-const { City, User } = require("../utils/models");
+const { City, User, NewTown } = require("../utils/models");
+const Sequelize = require("sequelize");
 const jwt = require("jsonwebtoken");
 
 module.exports.getUserInfo = async function getUserInfo(event) {
@@ -15,10 +16,22 @@ module.exports.getUserInfo = async function getUserInfo(event) {
         {
           model: City,
           as: "Residences",
-          attributes: ["id", "sido", "sigungu", "emdName"],
+          attributes: [
+            "id",
+            "sido",
+            "sigungu",
+            "emdName",
+            [Sequelize.literal("IF(emdName = adCity, CONCAT(sido,' ',sigungu,' ',emdName),CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')'))"), "fullCityName"],
+          ],
           through: {
-            attributes: [],
+            attributes: ["now"],
           },
+          include: [
+            {
+              model: NewTown,
+              attributes: ["id", "name"],
+            },
+          ],
         },
       ],
     });
