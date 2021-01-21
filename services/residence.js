@@ -56,7 +56,7 @@ module.exports.getUserResidence = async function getUserResidence(event) {
     });
     const userResidence = await user.getResidences({
       attributes: ["id", "emdName"],
-      order: sequelize.literal("`UsersCities`.`createdAt` DESC"),
+      order: sequelize.literal("`UsersCities`.`now` DESC"),
     });
     return {
       statusCode: 200,
