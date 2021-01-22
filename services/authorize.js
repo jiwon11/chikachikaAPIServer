@@ -44,7 +44,7 @@ module.exports.verifyToken = (event, context, callback) => {
     if (decoded && user) {
       return callback(null, generateAuthResponse(user, "Allow", methodArn));
     } else {
-      return callback(null, generateAuthResponse("user", "Deny", methodArn));
+      return callback(null, generateAuthResponse(user, "Deny", methodArn));
     }
   });
 };
