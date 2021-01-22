@@ -54,7 +54,7 @@ module.exports.clinics = async function clinics(event) {
 
 module.exports.redienceClinics = async function redienceClinics(event) {
   try {
-    const user = event.requestContext.authorizer.principalId;
+    const user = event.requestContext.authorizer;
     const { limit, offset } = event.queryStringParameters;
     const userResidences = await user.getResidences({
       attributes: ["id", "sido", "sigungu", "emdName", "newTownId"],
