@@ -46,7 +46,7 @@ module.exports.citiesBycurrentLocation = async function citiesBycurrentLocation(
 
 module.exports.getUserResidence = async function getUserResidence(event) {
   try {
-    const user = event.requestContext.authorizer.principalId;
+    const user = event.requestContext.authorizer;
     const userResidence = await user.getResidences({
       attributes: ["id", "emdName"],
       order: sequelize.literal("`UsersCities`.`now` DESC"),
@@ -66,7 +66,7 @@ module.exports.getUserResidence = async function getUserResidence(event) {
 
 module.exports.addUserResidence = async function addUserResidence(event) {
   try {
-    const user = event.requestContext.authorizer.principalId;
+    const user = event.requestContext.authorizer;
     const { cityId } = JSON.parse(event.body);
     const userResidences = await user.getResidences();
     if (userResidences.length == 2) {
@@ -109,7 +109,7 @@ module.exports.addUserResidence = async function addUserResidence(event) {
 
 module.exports.changeUserResidence = async function changeUserResidence(event) {
   try {
-    const user = event.requestContext.authorizer.principalId;
+    const user = event.requestContext.authorizer;
     const { preCityId, cityId } = JSON.parse(event.body);
     const preResidences = await user.getResidences({
       attributes: ["id", "emdName"],
@@ -152,7 +152,7 @@ module.exports.changeUserResidence = async function changeUserResidence(event) {
 
 module.exports.deleteUserResidence = async function deleteUserResidence(event) {
   try {
-    const user = event.requestContext.authorizer.principalId;
+    const user = event.requestContext.authorizer;
     const { cityId } = JSON.parse(event.body);
     const city = await City.findOne({
       attributes: ["id", "emdName"],
@@ -200,7 +200,7 @@ module.exports.deleteUserResidence = async function deleteUserResidence(event) {
 
 module.exports.userResidenceNow = async function userResidenceNow(event) {
   try {
-    const user = event.requestContext.authorizer.principalId;
+    const user = event.requestContext.authorizer;
     const { cityId } = JSON.parse(event.body);
     await Residence.update(
       {
