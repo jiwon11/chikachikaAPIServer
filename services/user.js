@@ -4,7 +4,8 @@ const jwt = require("jsonwebtoken");
 
 module.exports.getUserInfo = async function getUserInfo(event) {
   try {
-    const user = event.requestContext.authorizer.principalId;
+    console.log(event.requestContext.authorizer);
+    const user = event.requestContext.authorizer;
     const userId = user.id;
     const userInfo = await User.findOne({
       where: {

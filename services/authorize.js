@@ -1,12 +1,12 @@
 const jwt = require("jsonwebtoken");
 const { User } = require("../utils/models");
-function generateAuthResponse(principalId, effect, methodArn) {
+function generateAuthResponse(principalId, context, effect, methodArn) {
   const policyDocument = generatePolicyDocument(effect, methodArn);
-
-  return {
-    principalId,
-    policyDocument,
-  };
+  var authResponse = {};
+  authResponse.principalId = principalId;
+  authResponse.policyDocument = policyDocument;
+  authResponse.context = context;
+  return authResponse;
 }
 
 function generatePolicyDocument(effect, methodArn) {
@@ -43,10 +43,10 @@ module.exports.verifyToken = (event, context, callback) => {
   }).then((user) => {
     if (decoded && user) {
       console.log("exist decoded AND user");
-      return callback(null, generateAuthResponse(user, "Allow", methodArn));
+      return callback(null, generateAuthResponse(user.id, user, "Allow", methodArn));
     } else {
       console.log("undefined decoded AND user");
-      return callback(null, generateAuthResponse(user, "Deny", methodArn));
+      return callback(null, generateAuthResponse(user.id, user, "Deny", methodArn));
     }
   });
 };
