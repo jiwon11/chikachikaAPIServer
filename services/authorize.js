@@ -26,30 +26,26 @@ function generatePolicyDocument(effect, methodArn) {
   return policyDocument;
 }
 
-module.exports.verifyToken = async function verifyToken(event, context, callback) {
-  try {
-    const token = event.authorizationToken;
-    const methodArn = event.methodArn;
+module.exports.verifyToken = async (event, context, callback) => {
+  context.callbackWaitsForEmptyEventLoop = false;
+  const token = event.authorizationToken;
+  const methodArn = event.methodArn;
 
-    if (!token) return callback(null, "Unauthorized");
+  if (!token) return callback(null, "Unauthorized");
 
-    // verifies token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.time("find user");
-    const user = await User.findOne({
-      attributes: ["id"],
-      where: {
-        id: decoded.id,
-      },
-    });
-    console.timeEnd("find user");
-    if (decoded && user) {
-      return callback(null, generateAuthResponse(user, "Allow", methodArn));
-    } else {
-      return callback(null, generateAuthResponse("user", "Deny", methodArn));
-    }
-  } catch (error) {
-    console.log(error);
-    return callback(null, error);
+  // verifies token
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  console.time("find user");
+  const user = await User.findOne({
+    attributes: ["id"],
+    where: {
+      id: decoded.id,
+    },
+  });
+  console.timeEnd("find user");
+  if (decoded && user) {
+    return callback(null, generateAuthResponse(user, "Allow", methodArn));
+  } else {
+    return callback(null, generateAuthResponse("user", "Deny", methodArn));
   }
 };
