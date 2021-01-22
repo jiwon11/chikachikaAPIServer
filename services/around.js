@@ -54,15 +54,8 @@ module.exports.clinics = async function clinics(event) {
 
 module.exports.redienceClinics = async function redienceClinics(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = event.requestContext.authorizer.principalId;
     const { limit, offset } = event.queryStringParameters;
-    const userId = decoded.id;
-    const user = await db.User.findOne({
-      where: {
-        id: userId,
-      },
-    });
     const userResidences = await user.getResidences({
       attributes: ["id", "sido", "sigungu", "emdName", "newTownId"],
       through: {

@@ -3,18 +3,11 @@ const jwt = require("jsonwebtoken");
 
 module.exports.updateNotificationConfig = async function updateNotificationConfig(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    const user = event.requestContext.authorizer.principalId;
     const requestBody = JSON.parse(event.body);
     const likeValue = requestBody.like;
     const commentValue = requestBody.comment;
     const eventValue = requestBody.event;
-    const user = await User.findOne({
-      where: {
-        id: userId,
-      },
-    });
     if (user) {
       await NotificationConfig.update(
         {

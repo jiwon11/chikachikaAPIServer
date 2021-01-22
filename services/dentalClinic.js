@@ -12,9 +12,8 @@ const s3 = new AWS.S3({
 
 module.exports.detailClinics = async function detailClinics(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    const user = event.requestContext.authorizer.principalId;
+    const userId = user.id;
     const { clinicId } = event.queryStringParameters;
     var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
     const today = new Date();
@@ -88,6 +87,7 @@ module.exports.detailClinics = async function detailClinics(event) {
         responseType: "arraybuffer",
       });
       console.timeEnd("stasticMap API 호출");
+      console.time("stasticMap S3 저장");
       var param = {
         Bucket: "chikachika-clinic-static-map",
         Key: `${clinic.name}-static-map.png`,
@@ -105,8 +105,8 @@ module.exports.detailClinics = async function detailClinics(event) {
           where: { id: clinicMap.id },
         }
       );
+      console.timeEnd("stasticMap S3 저장");
     }
-    const userScrapClinics = await clinic.hasScrapers([userId]);
     const clinicInfoHeader = {
       name: clinic.name,
       originalName: clinic.originalName,
@@ -124,7 +124,6 @@ module.exports.detailClinics = async function detailClinics(event) {
         treatment: clinic.get("reviewTreatmentAVGStarRate"),
         service: clinic.get("reviewServiceAVGStarRate"),
       },
-      userScrapClinics: userScrapClinics,
     };
     const clinicInfoBody = {};
     const clinicTreatmentTime = {
@@ -225,8 +224,10 @@ module.exports.detailClinics = async function detailClinics(event) {
     clinicInfoBody.location = clinicLocation;
     result.clinicInfoHeader = clinicInfoHeader;
     result.clinicInfoBody = clinicInfoBody;
+    /*
     const reviews = await db.Review.getClinicReviewsAll(db, clinicId, userId, 10, 0);
     result.reviews = reviews;
+    */
     return {
       statusCode: 200,
       body: JSON.stringify(result),
@@ -240,11 +241,42 @@ module.exports.detailClinics = async function detailClinics(event) {
   }
 };
 
+module.exports.userScrapClinics = async function userScrapClinics(event) {
+  try {
+    const clinicId = event.queryStringParameters.clinicId;
+    const user = event.requestContext.authorizer.principalId;
+    if (user) {
+      console.log(clinicId);
+      const userScrapClinics = await sequelize.query("SELECT IF((SELECT COUNT(*) FROM UserScrapClinics where userId = :userId AND dentalClinicId = :clinicId)>0,true,false) AS scraped LIMIT 1", {
+        replacements: {
+          userId: user.id,
+          clinicId: clinicId,
+        },
+        type: sequelize.QueryTypes.SELECT,
+      });
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ scraped: userScrapClinics[0].scraped === 1 ? true : false }),
+      };
+    } else {
+      return {
+        statusCode: 401,
+        body: `{"statusText": "Unauthorized","message": "사용자를 찾을 수 없습니다."}`,
+      };
+    }
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
+
 module.exports.clinicReviews = async function clinicReview(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    const user = event.requestContext.authorizer.principalId;
+    const userId = user.id;
     const { clinicId } = event.queryStringParameters;
     const limit = parseInt(event.queryStringParameters.limit);
     const offset = parseInt(event.queryStringParameters.offset);
