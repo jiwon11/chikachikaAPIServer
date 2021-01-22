@@ -41,10 +41,11 @@ module.exports.verifyToken = (event, context, callback) => {
       id: decoded.id,
     },
   }).then((user) => {
-    console.log(user.id);
     if (decoded && user) {
+      console.log("exist decoded AND user");
       return callback(null, generateAuthResponse(user, "Allow", methodArn));
     } else {
+      console.log("undefined decoded AND user");
       return callback(null, generateAuthResponse(user, "Deny", methodArn));
     }
   });
