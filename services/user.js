@@ -1,4 +1,4 @@
-const { City, User, NewTown } = require("../utils/models");
+const { City, User, NewTown, Dental_clinic } = require("../utils/models");
 const Sequelize = require("sequelize");
 const jwt = require("jsonwebtoken");
 
@@ -35,7 +35,7 @@ module.exports.getUserInfo = async function getUserInfo(event) {
       ],
     });
     return {
-      statusCode: 201,
+      statusCode: 200,
       body: JSON.stringify(userInfo),
     };
   } catch (error) {
@@ -43,6 +43,64 @@ module.exports.getUserInfo = async function getUserInfo(event) {
     return {
       statusCode: 500,
       body: `{"statusText": "Unaccepted","message": "${error.message}"}`,
+    };
+  }
+};
+
+module.exports.getUserProfile = async function getUserProfile(event) {
+  try {
+    const user = event.requestContext.authorizer;
+    const userId = user.id;
+    const targetUserId = event.queryStringParameters.userId;
+    var attributes;
+    if (userId === targetUserId) {
+      attributes = [
+        "id",
+        "nickname",
+        "profileImg",
+        [Sequelize.literal(`IF(user.id="${userId}",true, false)`), "self"],
+        [Sequelize.literal(`(SELECT COUNT(*) FROM UserScrapClinics where userId="${userId}")`), "scrapClinicsNum"],
+      ];
+    } else {
+      attributes = ["id", "nickname", "profileImg", [Sequelize.literal(`IF(user.id="${userId}",true, false)`), "self"]];
+    }
+    const userProfile = await User.findOne({
+      where: {
+        id: targetUserId,
+      },
+      attributes: attributes,
+      include: [
+        {
+          model: City,
+          as: "Residences",
+          attributes: [
+            "id",
+            "sido",
+            "sigungu",
+            "emdName",
+            [Sequelize.literal("IF(emdName = adCity, CONCAT(sido,' ',sigungu,' ',emdName),CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')'))"), "fullCityName"],
+          ],
+          through: {
+            attributes: ["now"],
+          },
+          include: [
+            {
+              model: NewTown,
+              attributes: ["id", "name"],
+            },
+          ],
+        },
+      ],
+    });
+    return {
+      statusCode: 200,
+      body: JSON.stringify(userProfile),
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
     };
   }
 };

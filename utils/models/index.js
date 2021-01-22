@@ -20,6 +20,7 @@ db.ReviewBills = require("./reviewBills")(sequelize, Sequelize);
 db.Appointment = require("./appointment")(sequelize, Sequelize);
 db.Brush_condition = require("./brush_condition")(sequelize, Sequelize);
 db.Clinic_report = require("./clinic_report")(sequelize, Sequelize);
+db.Clinic_report_img = require("./clinic_report_img")(sequelize, Sequelize);
 db.Community_comment = require("./community_comment")(sequelize, Sequelize);
 db.Community_comment_reply = require("./community_comment_reply")(sequelize, Sequelize);
 db.Community_img = require("./community_img")(sequelize, Sequelize);
@@ -581,4 +582,9 @@ db.Dental_clinic.hasMany(db.DentalClinicProfileImg, {
 });
 db.DentalClinicProfileImg.belongsTo(db.Dental_clinic);
 
-module.exports = db;
+db.Clinic_report.hasMany(db.Clinic_report_img, {
+  foreignKey: "reportId",
+  onDelete: "CASCADE",
+});
+db.Clinic_report_img.belongsTo(db.Clinic_report);
+export default db;
