@@ -27,6 +27,7 @@ function generatePolicyDocument(effect, methodArn) {
 }
 
 module.exports.verifyToken = (event, context, callback) => {
+  context.callbackWaitsForEmptyEventLoop = false;
   const token = event.authorizationToken;
   const methodArn = event.methodArn;
 
