@@ -27,24 +27,29 @@ function generatePolicyDocument(effect, methodArn) {
 }
 
 module.exports.verifyToken = async (event, context, callback) => {
-  const token = event.authorizationToken;
-  const methodArn = event.methodArn;
+  try {
+    const token = event.authorizationToken;
+    const methodArn = event.methodArn;
 
-  if (!token) return callback(null, "Unauthorized");
+    if (!token) return callback(null, "Unauthorized");
 
-  // verifies token
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  console.time("find user");
-  const user = await User.findOne({
-    attributes: ["id"],
-    where: {
-      id: decoded.id,
-    },
-  });
-  console.timeEnd("find user");
-  if (decoded && user) {
-    return callback(null, generateAuthResponse(user, "Allow", methodArn));
-  } else {
-    return callback(null, generateAuthResponse(decoded.id, "Deny", methodArn));
+    // verifies token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.time("find user");
+    const user = await User.findOne({
+      attributes: ["id"],
+      where: {
+        id: decoded.id,
+      },
+    });
+    console.timeEnd("find user");
+    if (decoded && user) {
+      return callback(null, generateAuthResponse(user, "Allow", methodArn));
+    } else {
+      return callback(null, generateAuthResponse("user", "Deny", methodArn));
+    }
+  } catch (error) {
+    console.log(error);
+    return callback(null, error);
   }
 };
