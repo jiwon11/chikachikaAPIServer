@@ -76,9 +76,7 @@ module.exports.dentalClinics = async function dentalClinics(event) {
 
 module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    const user = event.requestContext.authorizer.principalId;
     const { lat, long, query, sort, days, time, wantParking, holiday } = event.queryStringParameters;
     const limit = parseInt(event.queryStringParameters.limit);
     const offset = parseInt(event.queryStringParameters.offset);
@@ -88,11 +86,6 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
         body: `{"statusText": "Bad Request","message": "검색어를 입력해주새요."}`,
       };
     }
-    const user = await User.findOne({
-      where: {
-        id: userId,
-      },
-    });
     if (user) {
       await Search_record.create({
         query: query,

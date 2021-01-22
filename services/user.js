@@ -4,9 +4,9 @@ const jwt = require("jsonwebtoken");
 
 module.exports.getUserInfo = async function getUserInfo(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    //console.log(event.requestContext.authorizer);
+    const user = event.requestContext.authorizer.principalId;
+    const userId = user.id;
     const userInfo = await User.findOne({
       where: {
         id: userId,
@@ -50,9 +50,8 @@ module.exports.getUserInfo = async function getUserInfo(event) {
 
 module.exports.deleteUser = async function deleteUser(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    const user = event.requestContext.authorizer.principalId;
+    const userId = user.id;
     await User.destroy({
       where: {
         id: userId,

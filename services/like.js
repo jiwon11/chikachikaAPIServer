@@ -3,9 +3,8 @@ const { User, Review, Community, Sequelize } = require("../utils/models");
 
 module.exports.addLikeReview = async function addLikeReview(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    const user = event.requestContext.authorizer.principalId;
+    const userId = user.id;
     const reviewId = event.queryStringParameters.reviewId;
     const review = await Review.findOne({
       where: {
@@ -43,9 +42,8 @@ module.exports.addLikeReview = async function addLikeReview(event) {
 
 module.exports.removeLikeReview = async function removeLikeReview(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    const user = event.requestContext.authorizer.principalId;
+    const userId = user.id;
     const reviewId = event.queryStringParameters.reviewId;
     const review = await Review.findOne({
       where: {
@@ -56,11 +54,6 @@ module.exports.removeLikeReview = async function removeLikeReview(event) {
       },
     });
     if (review) {
-      const user = await User.findOne({
-        where: {
-          id: userId,
-        },
-      });
       await user.removeLikeReview(review);
       return {
         statusCode: 204,
@@ -83,9 +76,7 @@ module.exports.removeLikeReview = async function removeLikeReview(event) {
 
 module.exports.addLikeCommunity = async function addLikeCommunity(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    const user = event.requestContext.authorizer.principalId;
     const postId = event.queryStringParameters.postId;
     const post = await Community.findOne({
       where: {
@@ -96,11 +87,6 @@ module.exports.addLikeCommunity = async function addLikeCommunity(event) {
       },
     });
     if (post) {
-      const user = await User.findOne({
-        where: {
-          id: userId,
-        },
-      });
       await user.addLikeCommunities(post);
       return {
         statusCode: 200,
@@ -123,9 +109,8 @@ module.exports.addLikeCommunity = async function addLikeCommunity(event) {
 
 module.exports.removeLikeCommunity = async function removeLikeCommunity(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    const user = event.requestContext.authorizer.principalId;
+    const userId = user.id;
     const postId = event.queryStringParameters.postId;
     const post = await Community.findOne({
       where: {
@@ -136,11 +121,6 @@ module.exports.removeLikeCommunity = async function removeLikeCommunity(event) {
       },
     });
     if (post) {
-      const user = await User.findOne({
-        where: {
-          id: userId,
-        },
-      });
       await user.removeLikeCommunities(post);
       return {
         statusCode: 200,

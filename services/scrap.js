@@ -3,9 +3,8 @@ const { User, Review, Community, Dental_clinic, Sequelize } = require("../utils/
 
 module.exports.addScrapReview = async function addScrapReview(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    const user = event.requestContext.authorizer.principalId;
+    const userId = user.id;
     const reviewId = event.queryStringParameters.reviewId;
     const review = await Review.findOne({
       where: {
@@ -16,11 +15,6 @@ module.exports.addScrapReview = async function addScrapReview(event) {
       },
     });
     if (review) {
-      const user = await User.findOne({
-        where: {
-          id: userId,
-        },
-      });
       await user.addScrapReviews(review);
       return {
         statusCode: 200,
@@ -43,9 +37,8 @@ module.exports.addScrapReview = async function addScrapReview(event) {
 
 module.exports.removeScrapReview = async function removeScrapReview(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    const user = event.requestContext.authorizer.principalId;
+    const userId = user.id;
     const reviewId = event.queryStringParameters.reviewId;
     const review = await Review.findOne({
       where: {
@@ -56,11 +49,6 @@ module.exports.removeScrapReview = async function removeScrapReview(event) {
       },
     });
     if (review) {
-      const user = await User.findOne({
-        where: {
-          id: userId,
-        },
-      });
       await user.removeScrapReviews(review);
       return {
         statusCode: 204,
@@ -83,9 +71,7 @@ module.exports.removeScrapReview = async function removeScrapReview(event) {
 
 module.exports.addScrapCommunities = async function addScrapCommunities(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    const user = event.requestContext.authorizer.principalId;
     const postId = event.queryStringParameters.postId;
     const post = await Community.findOne({
       where: {
@@ -96,11 +82,6 @@ module.exports.addScrapCommunities = async function addScrapCommunities(event) {
       },
     });
     if (post) {
-      const user = await User.findOne({
-        where: {
-          id: userId,
-        },
-      });
       await user.addScrapCommunities(post);
       return {
         statusCode: 200,
@@ -123,9 +104,7 @@ module.exports.addScrapCommunities = async function addScrapCommunities(event) {
 
 module.exports.removeScrapCommunities = async function removeScrapCommunities(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    const user = event.requestContext.authorizer.principalId;
     const postId = event.queryStringParameters.postId;
     const post = await Community.findOne({
       where: {
@@ -136,11 +115,6 @@ module.exports.removeScrapCommunities = async function removeScrapCommunities(ev
       },
     });
     if (post) {
-      const user = await User.findOne({
-        where: {
-          id: userId,
-        },
-      });
       await user.removeScrapCommunities(post);
       return {
         statusCode: 200,
@@ -163,9 +137,7 @@ module.exports.removeScrapCommunities = async function removeScrapCommunities(ev
 
 module.exports.addScrapClinic = async function addScrapClinic(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    const user = event.requestContext.authorizer.principalId;
     const clinicId = event.queryStringParameters.clinicId;
     const clinic = await Dental_clinic.findOne({
       where: {
@@ -173,11 +145,6 @@ module.exports.addScrapClinic = async function addScrapClinic(event) {
       },
     });
     if (clinic) {
-      const user = await User.findOne({
-        where: {
-          id: userId,
-        },
-      });
       await user.addScrapClinics(clinic);
       return {
         statusCode: 200,
@@ -200,9 +167,7 @@ module.exports.addScrapClinic = async function addScrapClinic(event) {
 
 module.exports.removeScrapClinic = async function removeScrapClinic(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    const user = event.requestContext.authorizer.principalId;
     const clinicId = event.queryStringParameters.clinicId;
     const clinic = await Dental_clinic.findOne({
       where: {
@@ -210,11 +175,6 @@ module.exports.removeScrapClinic = async function removeScrapClinic(event) {
       },
     });
     if (clinic) {
-      const user = await User.findOne({
-        where: {
-          id: userId,
-        },
-      });
       await user.removeScrapClinics(clinic);
       return {
         statusCode: 204,

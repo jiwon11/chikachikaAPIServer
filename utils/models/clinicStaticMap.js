@@ -3,10 +3,10 @@ module.exports = (sequelize, DataTypes) =>
     "clinicStaticMap",
     {
       imgUrl: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(1000),
       },
       requestUrl: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(1000),
         allowNull: false,
       },
     },

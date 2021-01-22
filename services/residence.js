@@ -46,14 +46,7 @@ module.exports.citiesBycurrentLocation = async function citiesBycurrentLocation(
 
 module.exports.getUserResidence = async function getUserResidence(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
-    const user = await User.findOne({
-      where: {
-        id: userId,
-      },
-    });
+    const user = event.requestContext.authorizer.principalId;
     const userResidence = await user.getResidences({
       attributes: ["id", "emdName"],
       order: sequelize.literal("`UsersCities`.`now` DESC"),
@@ -73,26 +66,10 @@ module.exports.getUserResidence = async function getUserResidence(event) {
 
 module.exports.addUserResidence = async function addUserResidence(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    const user = event.requestContext.authorizer.principalId;
     const { cityId } = JSON.parse(event.body);
-    const user = await User.findOne({
-      where: {
-        id: userId,
-      },
-      include: [
-        {
-          model: City,
-          as: "Residences",
-          attributes: ["id", "emdName"],
-          through: {
-            attributes: [],
-          },
-        },
-      ],
-    });
-    if (user.Residences.length == 2) {
+    const userResidences = await user.getResidences();
+    if (userResidences.length == 2) {
       return {
         statusCode: 403,
         body: `{"statusText": "Upper Set Cities","message": "거주지는 2곳을 초과할 수 없습니다."}`,
@@ -132,15 +109,8 @@ module.exports.addUserResidence = async function addUserResidence(event) {
 
 module.exports.changeUserResidence = async function changeUserResidence(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    const user = event.requestContext.authorizer.principalId;
     const { preCityId, cityId } = JSON.parse(event.body);
-    const user = await User.findOne({
-      where: {
-        id: userId,
-      },
-    });
     const preResidences = await user.getResidences({
       attributes: ["id", "emdName"],
       where: {
@@ -182,15 +152,8 @@ module.exports.changeUserResidence = async function changeUserResidence(event) {
 
 module.exports.deleteUserResidence = async function deleteUserResidence(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    const user = event.requestContext.authorizer.principalId;
     const { cityId } = JSON.parse(event.body);
-    const user = await User.findOne({
-      where: {
-        id: userId,
-      },
-    });
     const city = await City.findOne({
       attributes: ["id", "emdName"],
       where: {
@@ -237,15 +200,8 @@ module.exports.deleteUserResidence = async function deleteUserResidence(event) {
 
 module.exports.userResidenceNow = async function userResidenceNow(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    const user = event.requestContext.authorizer.principalId;
     const { cityId } = JSON.parse(event.body);
-    const user = await User.findOne({
-      where: {
-        id: userId,
-      },
-    });
     await Residence.update(
       {
         now: false,
