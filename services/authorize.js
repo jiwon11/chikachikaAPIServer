@@ -26,7 +26,7 @@ function generatePolicyDocument(effect, methodArn) {
   return policyDocument;
 }
 
-module.exports.verifyToken = async (event, context, callback) => {
+module.exports.verifyToken = async function verifyToken(event, context, callback) {
   try {
     const token = event.authorizationToken;
     const methodArn = event.methodArn;
