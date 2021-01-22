@@ -27,7 +27,6 @@ function generatePolicyDocument(effect, methodArn) {
 }
 
 module.exports.verifyToken = (event, context, callback) => {
-  context.callbackWaitsForEmptyEventLoop = false;
   const token = event.authorizationToken;
   const methodArn = event.methodArn;
 
@@ -41,6 +40,7 @@ module.exports.verifyToken = (event, context, callback) => {
       id: decoded.id,
     },
   }).then((user) => {
+    console.log(user.id);
     if (decoded && user) {
       return callback(null, generateAuthResponse(user, "Allow", methodArn));
     } else {
