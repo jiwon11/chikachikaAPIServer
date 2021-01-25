@@ -11,6 +11,10 @@ custom:
     enabled: true
     clusterSize: '0.5' # defaults to '0.5'
     ttlInSeconds: 300 # defaults to the maximum allowed: 3600
+  enabled:
+    dev: false
+    test: true
+    prod: true
 dashboard:
   lambda:
     enabled: true
@@ -630,8 +634,16 @@ functions:
     handler: services/notificationTaskWorker.comment
     events:
       - sqs: arn:aws:sqs:ap-northeast-1:751612718299:commentNotification-${opt:stage, 'dev'}
+resources:
+  Resources:
+  - If: '"${self:provider.stage}" == "test"'
+    commentNotification:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: commentNotification-${self:provider.stage}
 plugins:
   - serverless-offline
   - serverless-apigw-binary
   - serverless-plugin-cloudwatch-dashboard
   - serverless-api-gateway-caching
+  - serverless-plugin-ifelse
