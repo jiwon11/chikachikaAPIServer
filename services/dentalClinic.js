@@ -251,7 +251,7 @@ module.exports.userScrapClinics = async function userScrapClinics(event) {
   try {
     const clinicId = event.queryStringParameters.clinicId;
     const userId = event.requestContext.authorizer.principalId;
-    const user = await User.findOne({
+    const user = await db.User.findOne({
       where: {
         id: userId,
       },
