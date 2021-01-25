@@ -201,6 +201,19 @@ router.post("/", getUserInToken, multerBody.none(), async (req, res, next) => {
           description: description,
         });
         //await pushNotification("comment", comment, post, userId, "community"); //type, comment, target, userId
+        const commentConsumerBody = {
+          commentId: comment.id,
+          communityId: post.id,
+          writeCommentUserId: userId,
+          targetUserId: post.user.id,
+          targetUserFcmToken: post.user.fcmToken,
+          description: description,
+          targetType: "review",
+        };
+        const pushCommentNotification = await commentConsumer(commentConsumerBody);
+        if (pushCommentNotification.statusCode === 200) {
+          console.log(JSON.parse(pushCommentNotification.body));
+        }
         const communityComments = await db.Community_comment.getAll(db, "community", postId);
         return res.status(201).json(communityComments);
       } else {
