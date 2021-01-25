@@ -643,11 +643,11 @@ resources:
     likeNotification:
       Type: "AWS::SQS::Queue"
       Properties:
-        QueueName: commentNotification-${self:provider.stage}
+        QueueName: likeNotification-${self:provider.stage}
     eventNotification:
       Type: "AWS::SQS::Queue"
       Properties:
-        QueueName: commentNotification-${self:provider.stage}
+        QueueName: eventNotification-${self:provider.stage}
 plugins:
   - serverless-offline
   - serverless-apigw-binary
