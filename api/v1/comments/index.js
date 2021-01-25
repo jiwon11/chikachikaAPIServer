@@ -165,7 +165,7 @@ router.post("/", getUserInToken, multerBody.none(), async (req, res, next) => {
           targetUserId: review.user.id,
           targetUserFcmToken: review.user.fcmToken,
           description: description,
-          targetType: "review",
+          targetType: type,
         };
         const pushCommentNotification = await commentConsumer(commentConsumerBody);
         if (pushCommentNotification.statusCode === 200) {
@@ -208,7 +208,7 @@ router.post("/", getUserInToken, multerBody.none(), async (req, res, next) => {
           targetUserId: post.user.id,
           targetUserFcmToken: post.user.fcmToken,
           description: description,
-          targetType: "review",
+          targetType: type,
         };
         const pushCommentNotification = await commentConsumer(commentConsumerBody);
         if (pushCommentNotification.statusCode === 200) {
