@@ -4,6 +4,7 @@ const multer = require("multer");
 //const firebase = require("firebase-admin");
 const db = require("../../../utils/models");
 const commentConsumer = require("../../../utils/Class/SQSconsumer").comment;
+const replyConsumer = require("../../../utils/Class/SQSconsumer").reply;
 const Sequelize = require("sequelize");
 const router = express.Router();
 
@@ -410,6 +411,22 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
           },
         });
         //await pushNotification("reply", reply, comment, userId, "review"); //type, comment, target, userId
+        const replyConsumerBody = {
+          replyId: reply.id,
+          reviewCommentId: comment.id,
+          reviewId: reviewId,
+          writeCommentUserId: userId,
+          commentTargetUserId: comment.user.id,
+          postTargetUserId: comment.review.user.id,
+          commentTargetUserFcmToken: comment.user.fcmToken,
+          postTargetUserFcmToken: comment.review.user.fcmToken,
+          description: description,
+          targetType: type,
+        };
+        const pushReplyNotification = await replyConsumer(replyConsumerBody);
+        if (pushReplyNotification.statusCode === 200) {
+          console.log(JSON.parse(pushReplyNotification.body));
+        }
         const reviewComments = await db.Review_comment.getAll(db, "review", reviewId);
         return res.status(200).json(reviewComments);
       } else {
@@ -453,6 +470,22 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
           },
         });
         //await pushNotification("reply", reply, comment, userId, "community"); //type, comment, target, userId
+        const replyConsumerBody = {
+          replyId: reply.id,
+          communityCommentId: comment.id,
+          communityId: postId,
+          writeCommentUserId: userId,
+          commentTargetUserId: comment.user.id,
+          postTargetUserId: comment.community.user.id,
+          commentTargetUserFcmToken: comment.user.fcmToken,
+          postTargetUserFcmToken: comment.community.user.fcmToken,
+          description: description,
+          targetType: type,
+        };
+        const pushReplyNotification = await replyConsumer(replyConsumerBody);
+        if (pushReplyNotification.statusCode === 200) {
+          console.log(JSON.parse(pushReplyNotification.body));
+        }
         const communityComments = await db.Community_comment.getAll(db, "community", postId);
         return res.status(200).json(communityComments);
       } else {

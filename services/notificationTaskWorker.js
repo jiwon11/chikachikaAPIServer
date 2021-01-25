@@ -81,3 +81,122 @@ module.exports.comment = async function (event) {
     };
   }
 };
+
+module.exports.reply = async function (event) {
+  try {
+    const body = JSON.parse(event.Records[0].body);
+    console.log(body);
+    if (body.targetType === "review") {
+      await db.Notification.create({
+        type: "Comment",
+        message: `리뷰글에 작성한 댓글에 새로운 답글이 달렸습니다.`,
+        notificatedUserId: body.postTargetUserId,
+        senderId: body.writeCommentUserId,
+        reviewId: body.reviewId,
+        reviewCommentId: body.reviewCommentId,
+      });
+      await db.Notification.create({
+        type: "Comment",
+        message: `리뷰글에 작성한 댓글에 새로운 답글이 달렸습니다.`,
+        notificatedUserId: body.commentTargetUserId,
+        senderId: body.writeCommentUserId,
+        reviewId: body.reviewId,
+        reviewCommentId: body.commentId,
+      });
+    } else {
+      await db.Notification.create({
+        type: "Comment",
+        message: `수다방 게시글에 새로운 댓글이 달렸습니다.`,
+        notificatedUserId: body.postTargetUserId,
+        senderId: body.writeCommentUserId,
+        communityId: body.communityId,
+        communityCommentId: body.commentId,
+      });
+      await db.Notification.create({
+        type: "Comment",
+        message: `수다방 글에 작성한 댓글에 새로운 답글이 달렸습니다.`,
+        notificatedUserId: body.postTargetUserId,
+        senderId: body.writeCommentUserId,
+        communityId: body.communityId,
+        communityCommentId: body.communityCommentId,
+      });
+    }
+    const postTargetUser = await db.NotificationConfig.findOne({
+      where: {
+        userId: body.postTargetUserId,
+      },
+    });
+    if (postTargetUser.comment === true) {
+      const targetId = body.targetType === "review" ? body.reviewId : body.communityId;
+      const message = {
+        notification: {
+          title: body.targetType === "review" ? "리뷰 댓글" : "커뮤니티 댓글",
+          body: body.targetType === "review" ? `리뷰에 새로운 댓글이 달렸습니다.` : `게시글에 새로운 댓글이 달렸습니다.`,
+        },
+        data: { targetType: `${body.targetType}`, targetId: `${targetId}`, commentId: `${body.commentId}`, replyId: `${body.replyId}`, type: "comment" },
+        token: body.postTargetUserFcmToken,
+      };
+      /*
+      commentFcm
+        .messaging()
+        .send(message)
+        .then((response) => {
+          // Response is a message ID string.
+          console.log("Successfully sent message:", response);
+        })
+        .catch(async (error) => {
+          console.log("Error sending message:", error);
+          return res.status(404).json({
+            message: "Comment FCM Post Error",
+            error: error.message,
+          });
+        });
+        */
+    }
+    const commentTargetUser = await db.NotificationConfig.findOne({
+      where: {
+        userId: body.commentTargetUserId,
+      },
+    });
+    if (commentTargetUser.comment === true) {
+      const targetId = body.targetType === "review" ? body.reviewId : body.communityId;
+      const message = {
+        notification: {
+          title: body.targetType === "review" ? "리뷰 답글" : "수다방 답글",
+          body: body.targetType === "review" ? `리뷰글에 작성한 댓글에 새로운 답글이 달렸습니다.` : `수다방 글에 작성한 댓글에 새로운 답글이 달렸습니다.`,
+        },
+        data: { targetType: `${body.targetType}`, targetId: `${targetId}`, commentId: `${body.commentId}`, replyId: `${body.replyId}`, type: "comment" },
+        token: body.postTargetUserFcmToken,
+      };
+      /*
+      commentFcm
+        .messaging()
+        .send(message)
+        .then((response) => {
+          // Response is a message ID string.
+          console.log("Successfully sent message:", response);
+        })
+        .catch(async (error) => {
+          console.log("Error sending message:", error);
+          return res.status(404).json({
+            message: "Comment FCM Post Error",
+            error: error.message,
+          });
+        });
+        */
+    }
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        message: "Task Worker PULL successfully",
+        input: event,
+      }),
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
