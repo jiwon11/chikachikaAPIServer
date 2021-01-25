@@ -3,8 +3,12 @@ const jwt = require("jsonwebtoken");
 
 module.exports.updateNotificationConfig = async function updateNotificationConfig(event) {
   try {
-    const user = event.requestContext.authorizer;
-    console.log(user);
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
     if (user) {
       const requestBody = JSON.parse(event.body);
       const likeValue = requestBody.like;

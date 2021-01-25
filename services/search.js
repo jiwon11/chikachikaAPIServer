@@ -76,8 +76,12 @@ module.exports.dentalClinics = async function dentalClinics(event) {
 
 module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
   try {
-    const user = event.requestContext.authorizer;
-    console.log(user);
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
     if (user) {
       const { lat, long, query, sort, days, time, wantParking, holiday } = event.queryStringParameters;
       const limit = parseInt(event.queryStringParameters.limit);
