@@ -587,4 +587,5 @@ db.Clinic_report.hasMany(db.Clinic_report_img, {
   onDelete: "CASCADE",
 });
 db.Clinic_report_img.belongsTo(db.Clinic_report);
-export default db;
+
+module.exports = db;
