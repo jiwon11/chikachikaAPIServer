@@ -4,26 +4,34 @@ const { User, Review, Community, Dental_clinic, Sequelize } = require("../utils/
 module.exports.addScrapReview = async function addScrapReview(event) {
   try {
     const user = event.requestContext.authorizer;
-    const userId = user.id;
-    const reviewId = event.queryStringParameters.reviewId;
-    const review = await Review.findOne({
-      where: {
-        id: reviewId,
-        userId: {
-          [Sequelize.Op.not]: null,
+    console.log(user);
+    if (user) {
+      const userId = user.id;
+      const reviewId = event.queryStringParameters.reviewId;
+      const review = await Review.findOne({
+        where: {
+          id: reviewId,
+          userId: {
+            [Sequelize.Op.not]: null,
+          },
         },
-      },
-    });
-    if (review) {
-      await user.addScrapReviews(review);
-      return {
-        statusCode: 200,
-        body: `{"statusText": "OK","message": "리뷰를 스크랩하였습니다."}`,
-      };
+      });
+      if (review) {
+        await user.addScrapReviews(review);
+        return {
+          statusCode: 200,
+          body: `{"statusText": "OK","message": "리뷰를 스크랩하였습니다."}`,
+        };
+      } else {
+        return {
+          statusCode: 404,
+          body: `{"statusText": "Not Found","message": "요청한 리뷰를 찾을 수 없습니다."}`,
+        };
+      }
     } else {
       return {
-        statusCode: 404,
-        body: `{"statusText": "Not Found","message": "요청한 리뷰를 찾을 수 없습니다."}`,
+        statusCode: 401,
+        body: `{"statusText": "Unauthorized","message": "사용자를 찾을 수 없습니다."}`,
       };
     }
   } catch (error) {
@@ -38,26 +46,34 @@ module.exports.addScrapReview = async function addScrapReview(event) {
 module.exports.removeScrapReview = async function removeScrapReview(event) {
   try {
     const user = event.requestContext.authorizer;
-    const userId = user.id;
-    const reviewId = event.queryStringParameters.reviewId;
-    const review = await Review.findOne({
-      where: {
-        id: reviewId,
-        userId: {
-          [Sequelize.Op.not]: null,
+    console.log(user);
+    if (user) {
+      const userId = user.id;
+      const reviewId = event.queryStringParameters.reviewId;
+      const review = await Review.findOne({
+        where: {
+          id: reviewId,
+          userId: {
+            [Sequelize.Op.not]: null,
+          },
         },
-      },
-    });
-    if (review) {
-      await user.removeScrapReviews(review);
-      return {
-        statusCode: 204,
-        body: `{"statusText": "No Content","message": "리뷰를 스크랩 취소하였습니다."}`,
-      };
+      });
+      if (review) {
+        await user.removeScrapReviews(review);
+        return {
+          statusCode: 204,
+          body: `{"statusText": "No Content","message": "리뷰를 스크랩 취소하였습니다."}`,
+        };
+      } else {
+        return {
+          statusCode: 404,
+          body: `{"statusText": "Not Found","message": "요청한 리뷰를 찾을 수 없습니다."}`,
+        };
+      }
     } else {
       return {
-        statusCode: 404,
-        body: `{"statusText": "Not Found","message": "요청한 리뷰를 찾을 수 없습니다."}`,
+        statusCode: 401,
+        body: `{"statusText": "Unauthorized","message": "사용자를 찾을 수 없습니다."}`,
       };
     }
   } catch (error) {
@@ -72,25 +88,33 @@ module.exports.removeScrapReview = async function removeScrapReview(event) {
 module.exports.addScrapCommunities = async function addScrapCommunities(event) {
   try {
     const user = event.requestContext.authorizer;
-    const postId = event.queryStringParameters.postId;
-    const post = await Community.findOne({
-      where: {
-        id: postId,
-        userId: {
-          [Sequelize.Op.not]: null,
+    console.log(user);
+    if (user) {
+      const postId = event.queryStringParameters.postId;
+      const post = await Community.findOne({
+        where: {
+          id: postId,
+          userId: {
+            [Sequelize.Op.not]: null,
+          },
         },
-      },
-    });
-    if (post) {
-      await user.addScrapCommunities(post);
-      return {
-        statusCode: 200,
-        body: `{"statusText": "OK","message": "수다방 글을 스크랩하였습니다."}`,
-      };
+      });
+      if (post) {
+        await user.addScrapCommunities(post);
+        return {
+          statusCode: 200,
+          body: `{"statusText": "OK","message": "수다방 글을 스크랩하였습니다."}`,
+        };
+      } else {
+        return {
+          statusCode: 404,
+          body: `{"statusText": "Not Found","message": "요청한 수다방 글을 찾을 수 없습니다."}`,
+        };
+      }
     } else {
       return {
-        statusCode: 404,
-        body: `{"statusText": "Not Found","message": "요청한 수다방 글을 찾을 수 없습니다."}`,
+        statusCode: 401,
+        body: `{"statusText": "Unauthorized","message": "사용자를 찾을 수 없습니다."}`,
       };
     }
   } catch (error) {
@@ -105,25 +129,33 @@ module.exports.addScrapCommunities = async function addScrapCommunities(event) {
 module.exports.removeScrapCommunities = async function removeScrapCommunities(event) {
   try {
     const user = event.requestContext.authorizer;
-    const postId = event.queryStringParameters.postId;
-    const post = await Community.findOne({
-      where: {
-        id: postId,
-        userId: {
-          [Sequelize.Op.not]: null,
+    console.log(user);
+    if (user) {
+      const postId = event.queryStringParameters.postId;
+      const post = await Community.findOne({
+        where: {
+          id: postId,
+          userId: {
+            [Sequelize.Op.not]: null,
+          },
         },
-      },
-    });
-    if (post) {
-      await user.removeScrapCommunities(post);
-      return {
-        statusCode: 200,
-        body: `{"statusText": "OK","message": "수다방 글을 스크랩 취소하였습니다."}`,
-      };
+      });
+      if (post) {
+        await user.removeScrapCommunities(post);
+        return {
+          statusCode: 200,
+          body: `{"statusText": "OK","message": "수다방 글을 스크랩 취소하였습니다."}`,
+        };
+      } else {
+        return {
+          statusCode: 404,
+          body: `{"statusText": "Not Found","message": "요청한 수다방 글을 찾을 수 없습니다."}`,
+        };
+      }
     } else {
       return {
-        statusCode: 404,
-        body: `{"statusText": "Not Found","message": "요청한 수다방 글을 찾을 수 없습니다."}`,
+        statusCode: 401,
+        body: `{"statusText": "Unauthorized","message": "사용자를 찾을 수 없습니다."}`,
       };
     }
   } catch (error) {
@@ -138,22 +170,30 @@ module.exports.removeScrapCommunities = async function removeScrapCommunities(ev
 module.exports.addScrapClinic = async function addScrapClinic(event) {
   try {
     const user = event.requestContext.authorizer;
-    const clinicId = event.queryStringParameters.clinicId;
-    const clinic = await Dental_clinic.findOne({
-      where: {
-        id: clinicId,
-      },
-    });
-    if (clinic) {
-      await user.addScrapClinics(clinic);
-      return {
-        statusCode: 200,
-        body: `{"statusText": "OK","message": "치과병원을 스크랩하였습니다."}`,
-      };
+    console.log(user);
+    if (user) {
+      const clinicId = event.queryStringParameters.clinicId;
+      const clinic = await Dental_clinic.findOne({
+        where: {
+          id: clinicId,
+        },
+      });
+      if (clinic) {
+        await user.addScrapClinics(clinic);
+        return {
+          statusCode: 200,
+          body: `{"statusText": "OK","message": "치과병원을 스크랩하였습니다."}`,
+        };
+      } else {
+        return {
+          statusCode: 404,
+          body: `{"statusText": "Not Found","message": "요청한 병원을 찾을 수 없습니다."}`,
+        };
+      }
     } else {
       return {
-        statusCode: 404,
-        body: `{"statusText": "Not Found","message": "요청한 병원을 찾을 수 없습니다."}`,
+        statusCode: 401,
+        body: `{"statusText": "Unauthorized","message": "사용자를 찾을 수 없습니다."}`,
       };
     }
   } catch (error) {
@@ -168,22 +208,30 @@ module.exports.addScrapClinic = async function addScrapClinic(event) {
 module.exports.removeScrapClinic = async function removeScrapClinic(event) {
   try {
     const user = event.requestContext.authorizer;
-    const clinicId = event.queryStringParameters.clinicId;
-    const clinic = await Dental_clinic.findOne({
-      where: {
-        id: clinicId,
-      },
-    });
-    if (clinic) {
-      await user.removeScrapClinics(clinic);
-      return {
-        statusCode: 204,
-        body: `{"statusText": "No Content","message": "치과병원을 스크랩 취소하였습니다."}`,
-      };
+    console.log(user);
+    if (user) {
+      const clinicId = event.queryStringParameters.clinicId;
+      const clinic = await Dental_clinic.findOne({
+        where: {
+          id: clinicId,
+        },
+      });
+      if (clinic) {
+        await user.removeScrapClinics(clinic);
+        return {
+          statusCode: 204,
+          body: `{"statusText": "No Content","message": "치과병원을 스크랩 취소하였습니다."}`,
+        };
+      } else {
+        return {
+          statusCode: 404,
+          body: `{"statusText": "Not Found","message": "요청한 치과병원을 찾을 수 없습니다."}`,
+        };
+      }
     } else {
       return {
-        statusCode: 404,
-        body: `{"statusText": "Not Found","message": "요청한 치과병원을 찾을 수 없습니다."}`,
+        statusCode: 401,
+        body: `{"statusText": "Unauthorized","message": "사용자를 찾을 수 없습니다."}`,
       };
     }
   } catch (error) {

@@ -55,34 +55,42 @@ module.exports.clinics = async function clinics(event) {
 module.exports.redienceClinics = async function redienceClinics(event) {
   try {
     const user = event.requestContext.authorizer;
-    const { limit, offset } = event.queryStringParameters;
-    const userResidences = await user.getResidences({
-      attributes: ["id", "sido", "sigungu", "emdName", "newTownId"],
-      through: {
-        where: {
-          now: true,
+    console.log(user);
+    if (user) {
+      const { limit, offset } = event.queryStringParameters;
+      const userResidences = await user.getResidences({
+        attributes: ["id", "sido", "sigungu", "emdName", "newTownId"],
+        through: {
+          where: {
+            now: true,
+          },
         },
-      },
-    });
-    const clusterQuery = userResidences[0].newTownId
-      ? {
-          newTownId: userResidences[0].newTownId,
-        }
-      : {
-          sigungu: userResidences[0].sigungu,
-        };
-    console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
-    const cities = await db.City.findAll({
-      attributes: ["id"],
-      where: clusterQuery,
-    });
-    const cityIds = cities.map((city) => city.id);
-    const clinics = await db.Dental_clinic.searchAll("residence", cityIds, null, null, null, null, null, null, parseInt(limit), parseInt(offset), "accuracy", null, null);
-    let response = {
-      statusCode: 200,
-      body: JSON.stringify(clinics),
-    };
-    return response;
+      });
+      const clusterQuery = userResidences[0].newTownId
+        ? {
+            newTownId: userResidences[0].newTownId,
+          }
+        : {
+            sigungu: userResidences[0].sigungu,
+          };
+      console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
+      const cities = await db.City.findAll({
+        attributes: ["id"],
+        where: clusterQuery,
+      });
+      const cityIds = cities.map((city) => city.id);
+      const clinics = await db.Dental_clinic.searchAll("residence", cityIds, null, null, null, null, null, null, parseInt(limit), parseInt(offset), "accuracy", null, null);
+      let response = {
+        statusCode: 200,
+        body: JSON.stringify(clinics),
+      };
+      return response;
+    } else {
+      return {
+        statusCode: 401,
+        body: `{"statusText": "Unauthorized","message": "사용자를 찾을 수 없습니다."}`,
+      };
+    }
   } catch (error) {
     console.error(error);
     return {

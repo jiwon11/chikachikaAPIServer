@@ -77,76 +77,79 @@ module.exports.dentalClinics = async function dentalClinics(event) {
 module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
   try {
     const user = event.requestContext.authorizer;
-    const { lat, long, query, sort, days, time, wantParking, holiday } = event.queryStringParameters;
-    const limit = parseInt(event.queryStringParameters.limit);
-    const offset = parseInt(event.queryStringParameters.offset);
-    if (!query) {
-      return {
-        statusCode: 400,
-        body: `{"statusText": "Bad Request","message": "검색어를 입력해주새요."}`,
-      };
-    }
+    console.log(user);
     if (user) {
-      await Search_record.create({
-        query: query,
-        category: "keyword",
-        userId: user.id,
-      });
-    } else {
-      return {
-        statusCode: 401,
-        body: `{"statusText": "Unauthorized","message": "사용자를 찾을 수 없습니다."}`,
-      };
-    }
-    if (parseFloat(long) > 131.87222222 && parseFloat(long) < 125.06666667) {
-      return {
-        statusCode: 400,
-        body: `{"statusText": "Bad Request","message": "한국 내 경도 범위를 입력하세요."}`,
-      };
-    }
-    if (parseFloat(lat) > 38.45 && parseFloat(lat) < 33.1) {
-      return {
-        statusCode: 400,
-        body: `{"statusText": "Bad Request","message": "한국 내 위도 범위를 입력하세요."}`,
-      };
-    }
-    var week = {
-      mon: null,
-      tus: null,
-      wed: null,
-      thu: null,
-      fri: null,
-      sat: null,
-    };
-    if (time !== "") {
-      if (days !== "") {
-        days.split(",").forEach((day) => {
-          week[day] = time;
+      const { lat, long, query, sort, days, time, wantParking, holiday } = event.queryStringParameters;
+      const limit = parseInt(event.queryStringParameters.limit);
+      const offset = parseInt(event.queryStringParameters.offset);
+      if (!query) {
+        return {
+          statusCode: 400,
+          body: `{"statusText": "Bad Request","message": "검색어를 입력해주새요."}`,
+        };
+      }
+      if (user) {
+        await Search_record.create({
+          query: query,
+          category: "keyword",
+          userId: user.id,
         });
       } else {
-        const today = new Date();
-        const weekDay = ["sun", "mon", "tus", "wed", "thu", "fri", "sat"];
-        const day = weekDay[today.getDay()];
-        week[day] = time;
+        return {
+          statusCode: 401,
+          body: `{"statusText": "Unauthorized","message": "사용자를 찾을 수 없습니다."}`,
+        };
       }
+      if (parseFloat(long) > 131.87222222 && parseFloat(long) < 125.06666667) {
+        return {
+          statusCode: 400,
+          body: `{"statusText": "Bad Request","message": "한국 내 경도 범위를 입력하세요."}`,
+        };
+      }
+      if (parseFloat(lat) > 38.45 && parseFloat(lat) < 33.1) {
+        return {
+          statusCode: 400,
+          body: `{"statusText": "Bad Request","message": "한국 내 위도 범위를 입력하세요."}`,
+        };
+      }
+      var week = {
+        mon: null,
+        tus: null,
+        wed: null,
+        thu: null,
+        fri: null,
+        sat: null,
+      };
+      if (time !== "") {
+        if (days !== "") {
+          days.split(",").forEach((day) => {
+            week[day] = time;
+          });
+        } else {
+          const today = new Date();
+          const weekDay = ["sun", "mon", "tus", "wed", "thu", "fri", "sat"];
+          const day = weekDay[today.getDay()];
+          week[day] = time;
+        }
+      }
+      var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
+      const today = new Date();
+      const nowTime = `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`;
+      const day = weekDay[today.getDay()];
+      const todayHoliday = await Korea_holiday.findAll({
+        where: {
+          date: today,
+        },
+      });
+      console.log(day, nowTime);
+      console.log(todayHoliday);
+      const clinics = await Dental_clinic.searchAll("keyword", query, nowTime, day, week, todayHoliday, lat, long, limit, offset, sort, wantParking, holiday);
+      let response = {
+        statusCode: 200,
+        body: JSON.stringify(clinics),
+      };
+      return response;
     }
-    var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
-    const today = new Date();
-    const nowTime = `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`;
-    const day = weekDay[today.getDay()];
-    const todayHoliday = await Korea_holiday.findAll({
-      where: {
-        date: today,
-      },
-    });
-    console.log(day, nowTime);
-    console.log(todayHoliday);
-    const clinics = await Dental_clinic.searchAll("keyword", query, nowTime, day, week, todayHoliday, lat, long, limit, offset, sort, wantParking, holiday);
-    let response = {
-      statusCode: 200,
-      body: JSON.stringify(clinics),
-    };
-    return response;
   } catch (error) {
     console.log(error);
     return {

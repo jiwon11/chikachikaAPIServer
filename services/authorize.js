@@ -31,26 +31,31 @@ module.exports.verifyToken = (event, context, callback) => {
     context.callbackWaitsForEmptyEventLoop = false;
     const token = event.authorizationToken;
     const methodArn = event.methodArn;
-
-    if (!token) return callback(null, "Unauthorized");
-
+    if (token === undefined) {
+      return callback(null, "Unauthorized");
+    } else {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      User.findOne({
+        attributes: ["id"],
+        where: {
+          id: decoded.id,
+        },
+      }).then((user) => {
+        if (decoded && user) {
+          console.log("exist decoded AND user");
+          return callback(null, generateAuthResponse(user.id, user, "Allow", methodArn));
+        } else {
+          console.log("undefined decoded AND user");
+          return callback(null, generateAuthResponse(user.id, user, "Deny", methodArn));
+        }
+      });
+    }
     // verifies token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    User.findOne({
-      attributes: ["id"],
-      where: {
-        id: decoded.id,
-      },
-    }).then((user) => {
-      if (decoded && user) {
-        console.log("exist decoded AND user");
-        return callback(null, generateAuthResponse(user.id, user, "Allow", methodArn));
-      } else {
-        console.log("undefined decoded AND user");
-        return callback(null, generateAuthResponse(user.id, user, "Deny", methodArn));
-      }
-    });
   } catch (error) {
     console.log(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
   }
 };
