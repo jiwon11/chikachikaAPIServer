@@ -245,6 +245,8 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
               description: paragraph.description,
               img_before_after: paragraph.imgBeforeAfter,
               reviewId: review.id,
+              img_width: paragraph.width,
+              img_height: paragraph.height,
             })
           )
         );
