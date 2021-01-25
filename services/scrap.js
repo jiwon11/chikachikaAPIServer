@@ -94,6 +94,11 @@ module.exports.removeScrapReview = async function removeScrapReview(event) {
 module.exports.addScrapCommunities = async function addScrapCommunities(event) {
   try {
     const userId = event.requestContext.authorizer.principalId;
+    const user = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
     console.log(user);
     if (user) {
       const postId = event.queryStringParameters.postId;
