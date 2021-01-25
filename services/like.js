@@ -96,6 +96,7 @@ module.exports.addLikeCommunity = async function addLikeCommunity(event) {
     const postId = event.queryStringParameters.postId;
     console.log(user);
     if (user) {
+      console.log(user instanceof User);
       const post = await Community.findOne({
         where: {
           id: postId,
