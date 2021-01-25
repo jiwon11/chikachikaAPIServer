@@ -633,9 +633,9 @@ functions:
 resources:
   Resources:
     commentNotification:
-      Type: "AWS::SQS::Queue"
+      Type: AWS::SQS::Queue
       Properties:
-        QueueName: "commentNotification"
+        QueueName: commentNotification-${opt:stage, 'dev'}
 plugins:
   - serverless-offline
   - serverless-offline-sqs

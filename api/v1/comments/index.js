@@ -3,6 +3,7 @@ const { getUserInToken } = require("../middlewares");
 const multer = require("multer");
 //const firebase = require("firebase-admin");
 const db = require("../../../utils/models");
+const commentConsumer = require("../../../utils/Class/SQSconsumer").comment;
 const Sequelize = require("sequelize");
 const router = express.Router();
 
@@ -157,6 +158,17 @@ router.post("/", getUserInToken, multerBody.none(), async (req, res, next) => {
           description: description,
         });
         //await pushNotification("comment", comment, review, userId, "review"); //type, comment, target, userId
+        const commentConsumerBody = {
+          commentId: comment.id,
+          reviewId: review.id,
+          targetUserId: userId,
+          description: description,
+          targetType: "review",
+        };
+        const pushCommentNotification = await commentConsumer(commentConsumerBody);
+        if (pushCommentNotification.statusCode === 200) {
+          console.log(JSON.parse(pushCommentNotification.body));
+        }
         const reviewComments = await db.Review_comment.getAll(db, "review", reviewId);
         return res.status(200).json(reviewComments);
       } else {
