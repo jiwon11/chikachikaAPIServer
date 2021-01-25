@@ -46,8 +46,12 @@ module.exports.citiesBycurrentLocation = async function citiesBycurrentLocation(
 
 module.exports.getUserResidence = async function getUserResidence(event) {
   try {
-    const user = event.requestContext.authorizer;
-    console.log(user);
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
     if (user) {
       console.time("get Residences");
       const userResidence = await user.getResidences({
@@ -83,8 +87,12 @@ module.exports.getUserResidence = async function getUserResidence(event) {
 
 module.exports.addUserResidence = async function addUserResidence(event) {
   try {
-    const user = event.requestContext.authorizer;
-    console.log(user);
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
     if (user) {
       const { cityId } = JSON.parse(event.body);
       const userResidences = await user.getResidences();
@@ -134,7 +142,12 @@ module.exports.addUserResidence = async function addUserResidence(event) {
 
 module.exports.changeUserResidence = async function changeUserResidence(event) {
   try {
-    const user = event.requestContext.authorizer;
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
     if (user) {
       const { preCityId, cityId } = JSON.parse(event.body);
       const preResidences = await user.getResidences({
@@ -184,8 +197,12 @@ module.exports.changeUserResidence = async function changeUserResidence(event) {
 
 module.exports.deleteUserResidence = async function deleteUserResidence(event) {
   try {
-    const user = event.requestContext.authorizer;
-    console.log(user);
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
     if (user) {
       const { cityId } = JSON.parse(event.body);
       const city = await City.findOne({
@@ -240,8 +257,12 @@ module.exports.deleteUserResidence = async function deleteUserResidence(event) {
 
 module.exports.userResidenceNow = async function userResidenceNow(event) {
   try {
-    const user = event.requestContext.authorizer;
-    console.log(user);
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
     if (user) {
       const { cityId } = JSON.parse(event.body);
       await Residence.update(

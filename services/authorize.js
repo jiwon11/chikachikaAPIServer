@@ -1,11 +1,10 @@
 const jwt = require("jsonwebtoken");
 const { User } = require("../utils/models");
-function generateAuthResponse(principalId, context, effect, methodArn) {
+function generateAuthResponse(principalId, effect, methodArn) {
   const policyDocument = generatePolicyDocument(effect, methodArn);
   var authResponse = {};
   authResponse.principalId = principalId;
   authResponse.policyDocument = policyDocument;
-  authResponse.context = context;
   return authResponse;
 }
 
@@ -28,27 +27,19 @@ function generatePolicyDocument(effect, methodArn) {
 
 module.exports.verifyToken = (event, context, callback) => {
   try {
-    context.callbackWaitsForEmptyEventLoop = false;
     const token = event.authorizationToken;
     const methodArn = event.methodArn;
     if (token === undefined) {
       return callback(null, "Unauthorized");
     } else {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      User.findOne({
-        attributes: ["id"],
-        where: {
-          id: decoded.id,
-        },
-      }).then((user) => {
-        if (decoded && user) {
-          console.log("exist decoded AND user");
-          return callback(null, generateAuthResponse(user.id, user, "Allow", methodArn));
-        } else {
-          console.log("undefined decoded AND user");
-          return callback(null, generateAuthResponse(user.id, user, "Deny", methodArn));
-        }
-      });
+      if (decoded && user) {
+        console.log("exist decoded AND user");
+        return callback(null, generateAuthResponse(user.id, "Allow", methodArn));
+      } else {
+        console.log("undefined decoded AND user");
+        return callback(null, generateAuthResponse(user.id, "Deny", methodArn));
+      }
     }
     // verifies token
   } catch (error) {

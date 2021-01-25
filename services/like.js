@@ -3,10 +3,13 @@ const { User, Review, Community, Sequelize } = require("../utils/models");
 
 module.exports.addLikeReview = async function addLikeReview(event) {
   try {
-    const user = event.requestContext.authorizer;
-    console.log(user);
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
     if (user) {
-      const userId = user.id;
       const reviewId = event.queryStringParameters.reviewId;
       const review = await Review.findOne({
         where: {
@@ -50,10 +53,13 @@ module.exports.addLikeReview = async function addLikeReview(event) {
 
 module.exports.removeLikeReview = async function removeLikeReview(event) {
   try {
-    const user = event.requestContext.authorizer;
-    console.log(user);
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await db.user.findOne({
+      where: {
+        id: userId,
+      },
+    });
     if (user) {
-      const userId = user.id;
       const reviewId = event.queryStringParameters.reviewId;
       const review = await Review.findOne({
         where: {
@@ -92,11 +98,14 @@ module.exports.removeLikeReview = async function removeLikeReview(event) {
 
 module.exports.addLikeCommunity = async function addLikeCommunity(event) {
   try {
-    const user = event.requestContext.authorizer;
+    const userId = event.requestContext.authorizer.principalId;
     const postId = event.queryStringParameters.postId;
-    console.log(user);
+    const user = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
     if (user) {
-      console.log(user instanceof User);
       const post = await Community.findOne({
         where: {
           id: postId,
@@ -134,10 +143,13 @@ module.exports.addLikeCommunity = async function addLikeCommunity(event) {
 
 module.exports.removeLikeCommunity = async function removeLikeCommunity(event) {
   try {
-    const user = event.requestContext.authorizer;
-    console.log(user);
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
     if (user) {
-      const userId = user.id;
       const postId = event.queryStringParameters.postId;
       const post = await Community.findOne({
         where: {

@@ -2,10 +2,13 @@ const db = require("../utils/models");
 
 module.exports.postClinicReport = async function postClinicReport(event) {
   try {
-    const user = event.requestContext.authorizer;
-    console.log(user);
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await db.User.findOne({
+      where: {
+        id: userId,
+      },
+    });
     if (user) {
-      const userId = user.id;
       const clinicId = event.queryStringParameters.clinicId;
       const body = JSON.parse(event.body);
       const bodyImages = body.images;

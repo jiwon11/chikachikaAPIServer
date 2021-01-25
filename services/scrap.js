@@ -3,10 +3,13 @@ const { User, Review, Community, Dental_clinic, Sequelize } = require("../utils/
 
 module.exports.addScrapReview = async function addScrapReview(event) {
   try {
-    const user = event.requestContext.authorizer;
-    console.log(user);
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
     if (user) {
-      const userId = user.id;
       const reviewId = event.queryStringParameters.reviewId;
       const review = await Review.findOne({
         where: {
@@ -45,10 +48,13 @@ module.exports.addScrapReview = async function addScrapReview(event) {
 
 module.exports.removeScrapReview = async function removeScrapReview(event) {
   try {
-    const user = event.requestContext.authorizer;
-    console.log(user);
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
     if (user) {
-      const userId = user.id;
       const reviewId = event.queryStringParameters.reviewId;
       const review = await Review.findOne({
         where: {
@@ -87,7 +93,7 @@ module.exports.removeScrapReview = async function removeScrapReview(event) {
 
 module.exports.addScrapCommunities = async function addScrapCommunities(event) {
   try {
-    const user = event.requestContext.authorizer;
+    const userId = event.requestContext.authorizer.principalId;
     console.log(user);
     if (user) {
       const postId = event.queryStringParameters.postId;
@@ -128,8 +134,12 @@ module.exports.addScrapCommunities = async function addScrapCommunities(event) {
 
 module.exports.removeScrapCommunities = async function removeScrapCommunities(event) {
   try {
-    const user = event.requestContext.authorizer;
-    console.log(user);
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
     if (user) {
       const postId = event.queryStringParameters.postId;
       const post = await Community.findOne({
@@ -169,8 +179,12 @@ module.exports.removeScrapCommunities = async function removeScrapCommunities(ev
 
 module.exports.addScrapClinic = async function addScrapClinic(event) {
   try {
-    const user = event.requestContext.authorizer;
-    console.log(user);
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
     if (user) {
       const clinicId = event.queryStringParameters.clinicId;
       const clinic = await Dental_clinic.findOne({
@@ -207,8 +221,12 @@ module.exports.addScrapClinic = async function addScrapClinic(event) {
 
 module.exports.removeScrapClinic = async function removeScrapClinic(event) {
   try {
-    const user = event.requestContext.authorizer;
-    console.log(user);
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
     if (user) {
       const clinicId = event.queryStringParameters.clinicId;
       const clinic = await Dental_clinic.findOne({

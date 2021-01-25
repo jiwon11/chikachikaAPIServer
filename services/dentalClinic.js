@@ -12,10 +12,8 @@ const s3 = new AWS.S3({
 
 module.exports.detailClinics = async function detailClinics(event) {
   try {
-    const user = event.requestContext.authorizer;
-    console.log(user);
-    if (user) {
-      const userId = user.id;
+    const userId = event.requestContext.authorizer.principalId;
+    if (userId) {
       const { clinicId } = event.queryStringParameters;
       var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
       const today = new Date();
@@ -252,8 +250,12 @@ module.exports.detailClinics = async function detailClinics(event) {
 module.exports.userScrapClinics = async function userScrapClinics(event) {
   try {
     const clinicId = event.queryStringParameters.clinicId;
-    const user = event.requestContext.authorizer;
-    console.log(user);
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
     if (user) {
       console.log(clinicId);
       const userScrapClinics = await sequelize.query("SELECT IF((SELECT COUNT(*) FROM UserScrapClinics where userId = :userId AND dentalClinicId = :clinicId)>0,true,false) AS scraped LIMIT 1", {
@@ -284,10 +286,13 @@ module.exports.userScrapClinics = async function userScrapClinics(event) {
 
 module.exports.clinicReviews = async function clinicReview(event) {
   try {
-    const user = event.requestContext.authorizer;
-    console.log(user);
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await db.user.findOne({
+      where: {
+        id: userId,
+      },
+    });
     if (user) {
-      const userId = user.id;
       const { clinicId } = event.queryStringParameters;
       const limit = parseInt(event.queryStringParameters.limit);
       const offset = parseInt(event.queryStringParameters.offset);

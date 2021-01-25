@@ -4,10 +4,13 @@ const jwt = require("jsonwebtoken");
 
 module.exports.getUserInfo = async function getUserInfo(event) {
   try {
-    const user = event.requestContext.authorizer;
-    console.log(user);
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
     if (user) {
-      const userId = user.id;
       const userInfo = await User.findOne({
         where: {
           id: userId,
@@ -57,10 +60,13 @@ module.exports.getUserInfo = async function getUserInfo(event) {
 
 module.exports.getUserProfile = async function getUserProfile(event) {
   try {
-    const user = event.requestContext.authorizer;
-    console.log(user);
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
     if (user) {
-      const userId = user.id;
       const targetUserId = event.queryStringParameters.userId;
       var attributes;
       if (userId === targetUserId) {
@@ -123,10 +129,13 @@ module.exports.getUserProfile = async function getUserProfile(event) {
 
 module.exports.deleteUser = async function deleteUser(event) {
   try {
-    const user = event.requestContext.authorizer;
-    console.log(user);
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await User.findOne({
+      where: {
+        id: userId,
+      },
+    });
     if (user) {
-      const userId = user.id;
       await User.destroy({
         where: {
           id: userId,
