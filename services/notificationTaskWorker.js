@@ -16,41 +16,42 @@ module.exports.comment = async function (event) {
   try {
     const body = JSON.parse(event.Records[0].body);
     console.log(body);
-    if (body.targetType === "review") {
-      await db.Notification.create({
-        type: "Comment",
-        message: `리뷰에 새로운 댓글이 달렸습니다.`,
-        notificatedUserId: body.targetUserId,
-        senderId: body.writeCommentUserId,
-        reviewId: body.reviewId,
-        reviewCommentId: body.commentId,
-      });
-    } else {
-      await db.Notification.create({
-        type: "Comment",
-        message: `수다방 게시글에 새로운 댓글이 달렸습니다.`,
-        notificatedUserId: body.targetUserId,
-        senderId: body.writeCommentUserId,
-        communityId: body.communityId,
-        communityCommentId: body.commentId,
-      });
-    }
-    const userNotifyConfig = await db.NotificationConfig.findOne({
-      where: {
-        userId: body.targetUserId,
-      },
-    });
-    if (userNotifyConfig.comment === true) {
-      const targetId = body.targetType === "review" ? body.reviewId : body.communityId;
-      const message = {
-        notification: {
-          title: body.targetType === "review" ? "리뷰 댓글" : "커뮤니티 댓글",
-          body: body.targetType === "review" ? `리뷰에 새로운 댓글이 달렸습니다.` : `게시글에 새로운 댓글이 달렸습니다.`,
+    if (body.targetUserId !== body.writeCommentUserId) {
+      if (body.targetType === "review") {
+        await db.Notification.create({
+          type: "Comment",
+          message: `리뷰에 새로운 댓글이 달렸습니다.`,
+          notificatedUserId: body.targetUserId,
+          senderId: body.writeCommentUserId,
+          reviewId: body.reviewId,
+          reviewCommentId: body.commentId,
+        });
+      } else {
+        await db.Notification.create({
+          type: "Comment",
+          message: `수다방 게시글에 새로운 댓글이 달렸습니다.`,
+          notificatedUserId: body.targetUserId,
+          senderId: body.writeCommentUserId,
+          communityId: body.communityId,
+          communityCommentId: body.commentId,
+        });
+      }
+      const userNotifyConfig = await db.NotificationConfig.findOne({
+        where: {
+          userId: body.targetUserId,
         },
-        data: { targetType: `${body.targetType}`, targetId: `${targetId}`, commentId: `${body.commentId}`, type: "comment" },
-        token: body.targetUserFcmToken,
-      };
-      /*
+      });
+      if (userNotifyConfig.comment === true) {
+        const targetId = body.targetType === "review" ? body.reviewId : body.communityId;
+        const message = {
+          notification: {
+            title: body.targetType === "review" ? "리뷰 댓글" : "커뮤니티 댓글",
+            body: body.targetType === "review" ? `리뷰에 새로운 댓글이 달렸습니다.` : `게시글에 새로운 댓글이 달렸습니다.`,
+          },
+          data: { targetType: `${body.targetType}`, targetId: `${targetId}`, commentId: `${body.commentId}`, type: "comment" },
+          token: body.targetUserFcmToken,
+        };
+        /*
       commentFcm
         .messaging()
         .send(message)
@@ -66,6 +67,7 @@ module.exports.comment = async function (event) {
           });
         });
         */
+      }
     }
     return {
       statusCode: 200,
@@ -86,57 +88,58 @@ module.exports.reply = async function (event) {
   try {
     const body = JSON.parse(event.Records[0].body);
     console.log(body);
-    if (body.targetType === "review") {
-      await db.Notification.create({
-        type: "Comment",
-        message: `리뷰글에 작성한 댓글에 새로운 답글이 달렸습니다.`,
-        notificatedUserId: body.postTargetUserId,
-        senderId: body.writeCommentUserId,
-        reviewId: body.reviewId,
-        reviewCommentId: body.reviewCommentId,
-      });
-      await db.Notification.create({
-        type: "Comment",
-        message: `리뷰글에 작성한 댓글에 새로운 답글이 달렸습니다.`,
-        notificatedUserId: body.commentTargetUserId,
-        senderId: body.writeCommentUserId,
-        reviewId: body.reviewId,
-        reviewCommentId: body.commentId,
-      });
-    } else {
-      await db.Notification.create({
-        type: "Comment",
-        message: `수다방 게시글에 새로운 댓글이 달렸습니다.`,
-        notificatedUserId: body.postTargetUserId,
-        senderId: body.writeCommentUserId,
-        communityId: body.communityId,
-        communityCommentId: body.commentId,
-      });
-      await db.Notification.create({
-        type: "Comment",
-        message: `수다방 글에 작성한 댓글에 새로운 답글이 달렸습니다.`,
-        notificatedUserId: body.postTargetUserId,
-        senderId: body.writeCommentUserId,
-        communityId: body.communityId,
-        communityCommentId: body.communityCommentId,
-      });
-    }
-    const postTargetUser = await db.NotificationConfig.findOne({
-      where: {
-        userId: body.postTargetUserId,
-      },
-    });
-    if (postTargetUser.comment === true) {
-      const targetId = body.targetType === "review" ? body.reviewId : body.communityId;
-      const message = {
-        notification: {
-          title: body.targetType === "review" ? "리뷰 댓글" : "커뮤니티 댓글",
-          body: body.targetType === "review" ? `리뷰에 새로운 댓글이 달렸습니다.` : `게시글에 새로운 댓글이 달렸습니다.`,
+    if (body.postTargetUserId !== body.commentTargetUserId) {
+      if (body.targetType === "review") {
+        await db.Notification.create({
+          type: "Comment",
+          message: `리뷰글에 새로운 답글이 달렸습니다.`,
+          notificatedUserId: body.postTargetUserId,
+          senderId: body.writeCommentUserId,
+          reviewId: body.reviewId,
+          reviewCommentId: body.reviewCommentId,
+        });
+        await db.Notification.create({
+          type: "Comment",
+          message: `리뷰글에 작성한 댓글에 새로운 답글이 달렸습니다.`,
+          notificatedUserId: body.commentTargetUserId,
+          senderId: body.writeCommentUserId,
+          reviewId: body.reviewId,
+          reviewCommentId: body.commentId,
+        });
+      } else {
+        await db.Notification.create({
+          type: "Comment",
+          message: `수다방 게시글에 새로운 댓글이 달렸습니다.`,
+          notificatedUserId: body.postTargetUserId,
+          senderId: body.writeCommentUserId,
+          communityId: body.communityId,
+          communityCommentId: body.commentId,
+        });
+        await db.Notification.create({
+          type: "Comment",
+          message: `수다방 글에 작성한 댓글에 새로운 답글이 달렸습니다.`,
+          notificatedUserId: body.postTargetUserId,
+          senderId: body.writeCommentUserId,
+          communityId: body.communityId,
+          communityCommentId: body.communityCommentId,
+        });
+      }
+      const postTargetUser = await db.NotificationConfig.findOne({
+        where: {
+          userId: body.postTargetUserId,
         },
-        data: { targetType: `${body.targetType}`, targetId: `${targetId}`, commentId: `${body.commentId}`, replyId: `${body.replyId}`, type: "comment" },
-        token: body.postTargetUserFcmToken,
-      };
-      /*
+      });
+      if (postTargetUser.comment === true) {
+        const targetId = body.targetType === "review" ? body.reviewId : body.communityId;
+        const message = {
+          notification: {
+            title: body.targetType === "review" ? "리뷰 댓글" : "커뮤니티 댓글",
+            body: body.targetType === "review" ? `리뷰에 새로운 댓글이 달렸습니다.` : `게시글에 새로운 댓글이 달렸습니다.`,
+          },
+          data: { targetType: `${body.targetType}`, targetId: `${targetId}`, commentId: `${body.commentId}`, replyId: `${body.replyId}`, type: "comment" },
+          token: body.postTargetUserFcmToken,
+        };
+        /*
       commentFcm
         .messaging()
         .send(message)
@@ -152,23 +155,23 @@ module.exports.reply = async function (event) {
           });
         });
         */
-    }
-    const commentTargetUser = await db.NotificationConfig.findOne({
-      where: {
-        userId: body.commentTargetUserId,
-      },
-    });
-    if (commentTargetUser.comment === true) {
-      const targetId = body.targetType === "review" ? body.reviewId : body.communityId;
-      const message = {
-        notification: {
-          title: body.targetType === "review" ? "리뷰 답글" : "수다방 답글",
-          body: body.targetType === "review" ? `리뷰글에 작성한 댓글에 새로운 답글이 달렸습니다.` : `수다방 글에 작성한 댓글에 새로운 답글이 달렸습니다.`,
+      }
+      const commentTargetUser = await db.NotificationConfig.findOne({
+        where: {
+          userId: body.commentTargetUserId,
         },
-        data: { targetType: `${body.targetType}`, targetId: `${targetId}`, commentId: `${body.commentId}`, replyId: `${body.replyId}`, type: "comment" },
-        token: body.postTargetUserFcmToken,
-      };
-      /*
+      });
+      if (commentTargetUser.comment === true) {
+        const targetId = body.targetType === "review" ? body.reviewId : body.communityId;
+        const message = {
+          notification: {
+            title: body.targetType === "review" ? "리뷰 답글" : "수다방 답글",
+            body: body.targetType === "review" ? `리뷰글에 작성한 댓글에 새로운 답글이 달렸습니다.` : `수다방 글에 작성한 댓글에 새로운 답글이 달렸습니다.`,
+          },
+          data: { targetType: `${body.targetType}`, targetId: `${targetId}`, commentId: `${body.commentId}`, replyId: `${body.replyId}`, type: "comment" },
+          token: body.postTargetUserFcmToken,
+        };
+        /*
       commentFcm
         .messaging()
         .send(message)
@@ -184,6 +187,7 @@ module.exports.reply = async function (event) {
           });
         });
         */
+      }
     }
     return {
       statusCode: 200,
