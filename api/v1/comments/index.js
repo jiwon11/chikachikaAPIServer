@@ -161,7 +161,9 @@ router.post("/", getUserInToken, multerBody.none(), async (req, res, next) => {
         const commentConsumerBody = {
           commentId: comment.id,
           reviewId: review.id,
-          targetUserId: userId,
+          writeCommentUserId: userId,
+          targetUserId: review.user.id,
+          targetUserFcmToken: review.user.fcmToken,
           description: description,
           targetType: "review",
         };
