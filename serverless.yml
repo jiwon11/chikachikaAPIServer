@@ -636,8 +636,15 @@ functions:
       - sqs: arn:aws:sqs:ap-northeast-1:751612718299:commentNotification-${opt:stage, 'dev'}
 resources:
   Resources:
-  - If: '"${self:provider.stage}" == "test"'
     commentNotification:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: commentNotification-${self:provider.stage}
+    likeNotification:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: commentNotification-${self:provider.stage}
+    eventNotification:
       Type: "AWS::SQS::Queue"
       Properties:
         QueueName: commentNotification-${self:provider.stage}
