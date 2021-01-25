@@ -3,11 +3,11 @@ const AWS = require("aws-sdk");
 AWS.config.update({ region: "ap-northeast-1" });
 const sqs = new AWS.SQS({ apiVersion: "2012-11-05" });
 
-module.exports.comment = (body, context, callback) => {
+module.exports.comment = (body) => {
   const messageBody = JSON.stringify(body);
   let params = {
     MessageBody: messageBody,
-    QueueUrl: "https://sqs.ap-northeast-2.amazonaws.com/478069740483/sampleQueue",
+    QueueUrl: "https://sqs.ap-northeast-1.amazonaws.com/751612718299/commentNotification-dev",
   };
   sqs
     .sendMessage(params)
