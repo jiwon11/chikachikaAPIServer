@@ -38,7 +38,7 @@ module.exports.verifyToken = (event, context, callback) => {
         return callback(null, generateAuthResponse(decoded.id, "Allow", methodArn));
       } else {
         console.log("undefined decoded token");
-        return callback(null, generateAuthResponse(decoded.id, "Allow", methodArn));
+        return callback(null, generateAuthResponse(decoded.id, "Deny", methodArn));
       }
     }
     // verifies token

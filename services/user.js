@@ -1,4 +1,4 @@
-const { City, User, NewTown, Dental_clinic } = require("../utils/models");
+const { City, User, NewTown, Dental_clinic, NotificationConfig } = require("../utils/models");
 const Sequelize = require("sequelize");
 const jwt = require("jsonwebtoken");
 
@@ -17,6 +17,15 @@ module.exports.getUserInfo = async function getUserInfo(event) {
         },
         attributes: ["id", "nickname", "profileImg", "phoneNumber", "gender", "birthdate", "provider"],
         include: [
+          {
+            model: NotificationConfig,
+            attributes: [
+              [Sequelize.literal("(SELECT IF((notificationConfig.like = TRUE) OR (notificationConfig.comment = TRUE) OR (notificationConfig.event = TRUE),true, false))"), "ALOTrue"],
+              "like",
+              "comment",
+              "event",
+            ],
+          },
           {
             model: City,
             as: "Residences",
