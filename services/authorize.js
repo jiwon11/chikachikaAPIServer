@@ -30,15 +30,15 @@ module.exports.verifyToken = (event, context, callback) => {
     const token = event.authorizationToken;
     const methodArn = event.methodArn;
     if (token === undefined) {
-      return callback(null, "Unauthorized");
+      return callback("Unauthorized");
     } else {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      if (decoded && user) {
-        console.log("exist decoded AND user");
-        return callback(null, generateAuthResponse(user.id, "Allow", methodArn));
+      if (decoded) {
+        console.log("exist decoded token");
+        return callback(null, generateAuthResponse(decoded.id, "Allow", methodArn));
       } else {
-        console.log("undefined decoded AND user");
-        return callback(null, generateAuthResponse(user.id, "Deny", methodArn));
+        console.log("undefined decoded token");
+        return callback(null, generateAuthResponse(decoded.id, "Allow", methodArn));
       }
     }
     // verifies token

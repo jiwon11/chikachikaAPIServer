@@ -55,13 +55,13 @@ module.exports.clinics = async function clinics(event) {
 module.exports.redienceClinics = async function redienceClinics(event) {
   try {
     const userId = event.requestContext.authorizer.principalId;
-    if (userId) {
+    const user = await db.User.findOne({
+      where: {
+        id: userId,
+      },
+    });
+    if (user) {
       const { limit, offset } = event.queryStringParameters;
-      const user = await db.User.findOne({
-        where: {
-          id: userId,
-        },
-      });
       const userResidences = await user.getResidences({
         attributes: ["id", "sido", "sigungu", "emdName", "newTownId"],
         through: {
