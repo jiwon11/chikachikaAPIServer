@@ -13,7 +13,7 @@ custom:
     ttlInSeconds: 300 # defaults to the maximum allowed: 3600
 dashboard:
   lambda:
-    enabled: false
+    enabled: true
 
 provider:
   name: aws
@@ -70,6 +70,19 @@ functions:
     events:
       - http:
           path: userInfo
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  getUserProfile:
+    handler: services/user.getUserProfile
+    events:
+      - http:
+          path: user/profile
           method: get
           cors: true
           authorizer:
@@ -594,6 +607,19 @@ functions:
           caching:
             enabled: true
             ttlInSeconds: 300 # overrides the global setting for ttlInSeconds
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  postClinicReport:
+    handler: services/report.postClinicReport
+    events:
+      - http:
+          path: reports/clinics
+          method: post
+          cors: true
           authorizer:
               name: verify-token
               # this tells the lambda where to take the information from,
