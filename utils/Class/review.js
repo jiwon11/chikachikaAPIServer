@@ -33,7 +33,7 @@ const reviewIncludeModels = function (db, viewType, appendModels) {
       },
       {
         model: db.Review_content,
-        attributes: ["id", "img_url", "index", "img_before_after"],
+        attributes: ["id", "img_url", "index", "img_before_after", "img_width", "img_height"],
         required: false,
         where: {
           img_url: {

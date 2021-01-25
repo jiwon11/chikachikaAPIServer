@@ -626,8 +626,19 @@ functions:
               # in our case the HTTP Authorization header
               identitySource: method.request.header.Authorization
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  pushNotifiactionCommentTaskWorker:
+    handler: services/notificationTaskWorker.comment
+    events:
+      - sqs: arn:aws:sqs:ap-northeast-1:751612718299:commentNotification-${opt:stage, 'dev'}
+resources:
+  Resources:
+    commentNotification:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: "commentNotification"
 plugins:
   - serverless-offline
+  - serverless-offline-sqs
   - serverless-apigw-binary
   - serverless-plugin-cloudwatch-dashboard
   - serverless-api-gateway-caching
