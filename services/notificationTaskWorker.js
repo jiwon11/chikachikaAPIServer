@@ -3,6 +3,7 @@ const AWS = require("aws-sdk");
 const S3 = new AWS.S3();
 const firebase = require("firebase-admin");
 
+console.log(process.env.AWS_Access_Key_ID);
 AWS.config.update({
   accessKeyId: process.env.AWS_Access_Key_ID,
   secretAccessKey: process.env.AWS_Secret_Access_Key,
