@@ -36,6 +36,8 @@ const pushFcm = async function (message) {
   });
   var commentFcm;
   if (!firebase.apps.length) {
+    console.log(typeof serviceAccount);
+    console.log(serviceAccount);
     commentFcm = firebase.initializeApp({
       credential: firebase.credential.cert(serviceAccount),
       databaseURL: "https://hooging-f33b0.firebaseio.com",
