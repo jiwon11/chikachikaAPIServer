@@ -45,7 +45,7 @@ const pushFcm = async function (message) {
     console.log(serviceAccount);
     commentFcm = firebase.initializeApp({
       credential: firebase.credential.cert(serviceAccount),
-      databaseURL: "https://hooging-f33b0.firebaseio.com",
+      databaseURL: "https://chika-chika.firebaseio.com",
     });
   } else {
     commentFcm = firebase.app();
