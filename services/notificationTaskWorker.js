@@ -124,7 +124,19 @@ module.exports.reply = async function (event) {
   try {
     const body = JSON.parse(event.Records[0].body);
     console.log(body);
-    const { replyId, communityCommentId, communityId, writeCommentUserId, commentTargetUserId, postTargetUserId, commentTargetUserFcmToken, postTargetUserFcmToken, description, targetType } = body;
+    const {
+      replyId,
+      communityCommentId,
+      reviewId,
+      communityId,
+      writeCommentUserId,
+      commentTargetUserId,
+      postTargetUserId,
+      commentTargetUserFcmToken,
+      postTargetUserFcmToken,
+      description,
+      targetType,
+    } = body;
     if (body.targetType === "review") {
       if (postTargetUserId !== writeCommentUserId) {
         await db.Notification.create({
