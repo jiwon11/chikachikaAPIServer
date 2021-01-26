@@ -413,7 +413,7 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
         //await pushNotification("reply", reply, comment, userId, "review"); //type, comment, target, userId
         const replyConsumerBody = {
           replyId: reply.id,
-          reviewCommentId: comment.id,
+          commentId: comment.id,
           reviewId: reviewId,
           writeCommentUserId: userId,
           commentTargetUserId: comment.user.id,
@@ -472,7 +472,7 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
         //await pushNotification("reply", reply, comment, userId, "community"); //type, comment, target, userId
         const replyConsumerBody = {
           replyId: reply.id,
-          communityCommentId: comment.id,
+          commentId: comment.id,
           communityId: postId,
           writeCommentUserId: userId,
           commentTargetUserId: comment.user.id,

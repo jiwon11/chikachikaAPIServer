@@ -126,6 +126,7 @@ module.exports.reply = async function (event) {
     console.log(body);
     const {
       replyId,
+      commentId,
       communityCommentId,
       reviewId,
       communityId,
@@ -145,7 +146,7 @@ module.exports.reply = async function (event) {
           notificatedUserId: postTargetUserId,
           senderId: writeCommentUserId,
           reviewId: reviewId,
-          reviewCommentId: reviewCommentId,
+          reviewCommentId: commentId,
         });
       }
       if (commentTargetUserId !== writeCommentUserId) {
@@ -176,7 +177,7 @@ module.exports.reply = async function (event) {
           notificatedUserId: postTargetUserId,
           senderId: writeCommentUserId,
           communityId: communityId,
-          communityCommentId: communityCommentId,
+          communityCommentId: commentId,
         });
       }
     }
