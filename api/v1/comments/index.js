@@ -1,7 +1,6 @@
 const express = require("express");
 const { getUserInToken } = require("../middlewares");
 const multer = require("multer");
-//const firebase = require("firebase-admin");
 const db = require("../../../utils/models");
 const commentConsumer = require("../../../utils/Class/SQSconsumer").comment;
 const replyConsumer = require("../../../utils/Class/SQSconsumer").reply;
@@ -9,127 +8,6 @@ const Sequelize = require("sequelize");
 const router = express.Router();
 
 const multerBody = multer();
-/*
-var serviceAccount = require("../hooging-f33b0-firebase-adminsdk-82err-5e26adea5b.json");
-var commentFcm;
-if (!firebase.apps.length) {
-  commentFcm = firebase.initializeApp({
-    credential: firebase.credential.cert(serviceAccount),
-    databaseURL: "https://hooging-f33b0.firebaseio.com",
-  });
-} else {
-  commentFcm = firebase.app();
-}
-*/
-const pushNotification = async (type, commentOrReply, target, userId, targetType) => {
-  const userNotifyConfig = await db.NotificationConfig.findOne({
-    where: {
-      userId: target.userId,
-    },
-  });
-  if (type === "comment") {
-    if (userNotifyConfig.comment === true) {
-      var message;
-      message = {
-        notification: {
-          title: targetType === "review" ? "리뷰 댓글" : "커뮤니티 댓글",
-          body: targetType === "review" ? `리뷰에 새로운 댓글이 달렸습니다.` : `게시글에 새로운 댓글이 달렸습니다.`,
-        },
-        data: { targetType: `${targetType}`, targetId: `${target.id}`, commentId: `${commentOrReply.id}`, type: "comment" },
-        token: target.user.fcmToken,
-      };
-      /*
-      commentFcm
-        .messaging()
-        .send(message)
-        .then((response) => {
-          // Response is a message ID string.
-          console.log("Successfully sent message:", response);
-        })
-        .catch(async (error) => {
-          console.log("Error sending message:", error);
-          return res.status(404).json({
-            message: "Comment FCM Post Error",
-            error: error.message,
-          });
-        });
-        */
-    }
-    if (targetType === "review") {
-      await db.Notification.create({
-        type: "Comment",
-        message: `리뷰에 새로운 댓글이 달렸습니다.`,
-        userId: target.user.id,
-        notificatedUserId: target.user.id,
-        senderId: userId,
-        reviewId: target.id,
-      });
-    } else {
-      await db.Notification.create({
-        type: "Comment",
-        message: `게시글에 새로운 댓글이 달렸습니다.`,
-        userId: target.user.id,
-        notificatedUserId: target.user.id,
-        senderId: userId,
-        communityId: target.id,
-      });
-    }
-  } else if (type === "reply") {
-    if (userNotifyConfig.comment === true) {
-      var message;
-      if (target.reviewId) {
-        message = {
-          notification: {
-            title: "답글 알림",
-            body: `댓글에 새로운 답글이 달렸습니다.`,
-          },
-          data: { targetType: `${targetType}`, targetId: `${target.reviewId}`, commentId: `${target.id}`, type: "reply" },
-          token: target.user.fcmToken,
-        };
-      } else {
-        message = {
-          notification: {
-            title: "답글 알림",
-            body: `답글에 새로운 답글이 달렸습니다.`,
-          },
-          data: { targetType: `${targetType}`, targetId: `${target.reviewId}`, commentId: `${target.id}`, type: "reply" },
-          token: target.user.fcmToken,
-        };
-      }
-      /*
-      commentFcm
-        .messaging()
-        .send(message)
-        .then((response) => {
-          // Response is a message ID string.
-          console.log("Successfully sent message:", response);
-        })
-        .catch((error) => {
-          console.log("Error sending message:", error);
-        });
-        */
-    }
-    if (targetType === "review") {
-      await db.Notification.create({
-        type: "Reply",
-        message: `댓글에 새로운 답글이 달렸습니다.`,
-        notificatedUserId: target.user.id,
-        senderId: userId,
-        reviewId: target.review.id,
-        reviewCommentId: target.id,
-      });
-    }
-  } else {
-    await db.Notification.create({
-      type: "Reply",
-      message: `댓글에 새로운 답글이 달렸습니다.`,
-      notificatedUserId: target.user.id,
-      senderId: userId,
-      communityId: target.review.id,
-      communityCommentId: target.id,
-    });
-  }
-};
 
 router.post("/", getUserInToken, multerBody.none(), async (req, res, next) => {
   //localhost:3000/comment?type=review&commentId=1

@@ -4,6 +4,10 @@ org: jiwon112
 
 custom:
   #secrets: ${file(secrets.json)}
+  serverless-offline-env:
+    # path / include / exclude not defined thus no file will be loaded
+    environment:
+      path: .env
   prune:
     automatic: true
     number: 3
@@ -51,10 +55,10 @@ provider:
     NCP_serviceID: ${param:NCP_serviceID}
     AWS_Access_Key_ID: ${param:AWS_Access_Key_ID}
     AWS_Secret_Access_Key: ${param:AWS_Secret_Access_Key}
-    fcmBucketName: ${param:fcmBucketName}
-    fcmkey: ${param:fcmkey}
     TZ: ${param:TZ}
     stage: ${self:provider.stage}
+    fcmBucketName: ${param:fcmBucketName}
+    fcmkey: ${param:fcmkey}
   memorySize: 1024 # optional, in MB, default: 1024
   timeout: 6 # optional, in seconds, default: 6
   versionFunctions: false # optional, default: true
@@ -676,6 +680,7 @@ resources:
       Properties:
         QueueName: eventNotification-${self:provider.stage}
 plugins:
+  - serverless-offline-env
   - serverless-offline
   - serverless-apigw-binary
   - serverless-plugin-cloudwatch-dashboard

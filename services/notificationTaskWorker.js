@@ -18,19 +18,6 @@ const s3getFile = async function (params) {
     console.log(err);
   }
 };
-//
-/*
-var serviceAccount = require("../hooging-f33b0-firebase-adminsdk-82err-5e26adea5b.json");
-var commentFcm;
-if (!firebase.apps.length) {
-  commentFcm = firebase.initializeApp({
-    credential: firebase.credential.cert(serviceAccount),
-    databaseURL: "https://hooging-f33b0.firebaseio.com",
-  });
-} else {
-  commentFcm = firebase.app();
-}
-*/
 
 const pushFcm = async function (message) {
   try {
@@ -63,7 +50,8 @@ const pushFcm = async function (message) {
 
 module.exports.comment = async function (event) {
   try {
-    console.log("Now", Date.now());
+    var timezoneDate = new Date(Date.now());
+    console.log(timezoneDate.toISOString());
     const body = JSON.parse(event.Records[0].body);
     console.log(body);
     if (body.targetUserId !== body.writeCommentUserId) {
@@ -123,7 +111,8 @@ module.exports.comment = async function (event) {
 
 module.exports.reply = async function (event) {
   try {
-    console.log("Now", Date.now());
+    var timezoneDate = new Date(Date.now());
+    console.log(timezoneDate.toISOString());
     const body = JSON.parse(event.Records[0].body);
     console.log(body);
     const {
@@ -218,7 +207,7 @@ module.exports.reply = async function (event) {
             body: targetType === "review" ? `리뷰글에 작성한 댓글에 새로운 답글이 달렸습니다.` : `수다방 글에 작성한 댓글에 새로운 답글이 달렸습니다.`,
           },
           data: { targetType: `${body.targetType}`, targetId: `${targetId}`, commentId: `${body.commentId}`, replyId: `${body.replyId}`, type: "comment" },
-          token: "emiz_6zoiEoaoazaRLPCod:APA91bH_4gMp4zsDs41JoZggVD0Fxw_GqWci7YQLwW3dzSLhHCpngQK43ev9rkkkQ-fLdLVeEWBpT5xD6LdWZEhuJQOqkU2kesZfxdIxC-vrUpyBZlOC05W4G6yBQDLj0WpPM4E4JJ_L",
+          token: commentTargetUserFcmToken,
         };
         console.log(message);
         const fcmResponse = await pushFcm(message);
