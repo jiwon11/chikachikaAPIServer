@@ -249,6 +249,8 @@ router.delete("/", getUserInToken, multerBody.none(), async (req, res, next) => 
 router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) => {
   //localhost:8001/comment/reply?type=review&commentId=1
   try {
+    var timezoneDate = new Date(Date.now());
+    console.log(timezoneDate.toISOString());
     const userId = req.user.id;
     const commentId = req.query.commentId;
     const description = req.body.description;
