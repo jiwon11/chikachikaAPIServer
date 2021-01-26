@@ -47,7 +47,7 @@ const pushFcm = async function (message) {
     } else {
       commentFcm = firebase.app();
     }
-    const response = commentFcm.messaging().send(message);
+    const response = await commentFcm.messaging().send(message);
     console.log("Successfully sent message:", response);
     return {
       statusCode: 200,
