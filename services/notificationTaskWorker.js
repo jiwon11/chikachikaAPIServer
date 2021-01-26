@@ -101,6 +101,7 @@ module.exports.comment = async function (event) {
           data: { targetType: `${body.targetType}`, targetId: `${targetId}`, commentId: `${body.commentId}`, type: "comment" },
           token: body.targetUserFcmToken,
         };
+        console.log(message);
         const fcmResponse = await pushFcm(message);
         console.log(fcmResponse);
       }
@@ -198,6 +199,7 @@ module.exports.reply = async function (event) {
           data: { targetType: `${targetType}`, targetId: `${targetId}`, commentId: `${commentId}`, replyId: `${replyId}`, type: "comment" },
           token: postTargetUserFcmToken,
         };
+        console.log(message);
         const fcmResponse = await pushFcm(message);
         console.log(fcmResponse);
       }
@@ -218,6 +220,7 @@ module.exports.reply = async function (event) {
           data: { targetType: `${body.targetType}`, targetId: `${targetId}`, commentId: `${body.commentId}`, replyId: `${body.replyId}`, type: "comment" },
           token: commentTargetUserFcmToken,
         };
+        console.log(message);
         const fcmResponse = await pushFcm(message);
         console.log(fcmResponse);
       }
