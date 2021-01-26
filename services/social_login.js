@@ -1,6 +1,5 @@
 const { User, NotificationConfig, City } = require("../utils/models");
 const jwt = require("jsonwebtoken");
-process.env.TZ = "Asia/Seoul";
 
 module.exports.socialUserCheck = async function socialUserCheck(event) {
   try {

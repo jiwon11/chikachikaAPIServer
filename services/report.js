@@ -1,5 +1,4 @@
 const db = require("../utils/models");
-process.env.TZ = "Asia/Seoul";
 
 module.exports.postClinicReport = async function postClinicReport(event) {
   try {

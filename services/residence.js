@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const { User, City, Residence, sequelize } = require("../utils/models");
 const Sequelize = require("sequelize");
-process.env.TZ = "Asia/Seoul";
+
 module.exports.searchCities = async function searchCities(event) {
   try {
     const query = event.queryStringParameters.q;

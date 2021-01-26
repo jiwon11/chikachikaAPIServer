@@ -4,13 +4,6 @@ org: jiwon112
 
 custom:
   #secrets: ${file(secrets.json)}
-  serverless-offline-env:
-    # path / include / exclude not defined thus no file will be loaded
-    environment:
-      path: .env
-  prune:
-    automatic: true
-    number: 3
   apigwBinary:
     types:           #list of mime-types 
        - 'multipart/form-data'
@@ -55,6 +48,7 @@ provider:
     NCP_serviceID: ${param:NCP_serviceID}
     AWS_Access_Key_ID: ${param:AWS_Access_Key_ID}
     AWS_Secret_Access_Key: ${param:AWS_Secret_Access_Key}
+    TZ: ${param:TZ}
     stage: ${self:provider.stage}
     fcmBucketName: ${param:fcmBucketName}
     fcmkey: ${param:fcmkey}
@@ -679,11 +673,9 @@ resources:
       Properties:
         QueueName: eventNotification-${self:provider.stage}
 plugins:
-  - serverless-offline-env
   - serverless-offline
   - serverless-apigw-binary
   - serverless-plugin-cloudwatch-dashboard
   - serverless-api-gateway-caching
   - serverless-plugin-ifelse
   - serverless-offline-sqs
-  - serverless-prune-plugin

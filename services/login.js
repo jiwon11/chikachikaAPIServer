@@ -1,7 +1,7 @@
 const { verifyPhoneNumberFunc } = require("../utils/verify");
 const { User, NotificationConfig, City } = require("../utils/models");
 const jwt = require("jsonwebtoken");
-process.env.TZ = "Asia/Seoul";
+
 /**
  ### 핸드폰 번호 인증을 통해 로그인(로컬)을 진행하는 함수
  * 해당 함수를 진행하기 위해서는 sendTokenToPhoneNumber를 반드시 먼저 수행하여야 함.

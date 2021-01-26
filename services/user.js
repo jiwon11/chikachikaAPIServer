@@ -1,7 +1,6 @@
 const { City, User, NewTown, Dental_clinic, NotificationConfig } = require("../utils/models");
 const Sequelize = require("sequelize");
 const jwt = require("jsonwebtoken");
-process.env.TZ = "Asia/Seoul";
 
 module.exports.getUserInfo = async function getUserInfo(event) {
   try {

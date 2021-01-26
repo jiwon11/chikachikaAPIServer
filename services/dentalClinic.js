@@ -9,7 +9,6 @@ const s3 = new AWS.S3({
   secretAccessKey: process.env.AWS_Secret_Access_Key,
   region: "ap-northeast-2",
 });
-process.env.TZ = "Asia/Seoul";
 
 module.exports.detailClinics = async function detailClinics(event) {
   try {

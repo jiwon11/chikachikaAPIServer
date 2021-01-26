@@ -8,7 +8,7 @@ const Sequelize = require("sequelize");
 const router = express.Router();
 
 const multerBody = multer();
-process.env.TZ = "Asia/Seoul";
+
 router.post("/", getUserInToken, multerBody.none(), async (req, res, next) => {
   //localhost:3000/comment?type=review&commentId=1
   try {
@@ -249,6 +249,7 @@ router.delete("/", getUserInToken, multerBody.none(), async (req, res, next) => 
 router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) => {
   //localhost:8001/comment/reply?type=review&commentId=1
   try {
+    console.log(process.env.TZ);
     var timezoneDate = new Date(Date.now());
     console.log(timezoneDate.toISOString());
     const userId = req.user.id;
