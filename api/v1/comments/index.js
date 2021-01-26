@@ -8,7 +8,7 @@ const Sequelize = require("sequelize");
 const router = express.Router();
 
 const multerBody = multer();
-
+process.env.TZ = "Asia/Seoul";
 router.post("/", getUserInToken, multerBody.none(), async (req, res, next) => {
   //localhost:3000/comment?type=review&commentId=1
   try {

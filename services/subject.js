@@ -1,5 +1,6 @@
 const { Dental_subject, Dental_clinic, Special_treatment } = require("../utils/models");
 const { Op } = require("sequelize");
+process.env.TZ = "Asia/Seoul";
 
 module.exports.importDentalSubject = async function importDentalSubject(event) {
   try {

@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { User, Review, Community, Sequelize } = require("../utils/models");
+process.env.TZ = "Asia/Seoul";
 
 module.exports.addLikeReview = async function addLikeReview(event) {
   try {

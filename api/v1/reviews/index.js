@@ -9,7 +9,7 @@ const { getUserInToken } = require("../middlewares");
 const db = require("../../../utils/models");
 
 const router = express.Router();
-
+process.env.TZ = "Asia/Seoul";
 const cloudFrontUrl = "";
 
 AWS.config.update({

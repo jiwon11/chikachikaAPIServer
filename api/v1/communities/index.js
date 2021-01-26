@@ -8,7 +8,7 @@ const db = require("../../../utils/models");
 const Sequelize = require("sequelize");
 
 const router = express.Router();
-
+process.env.TZ = "Asia/Seoul";
 const communityImgUpload = multer({
   storage: multerS3({
     s3: new AWS.S3(),

@@ -55,7 +55,6 @@ provider:
     NCP_serviceID: ${param:NCP_serviceID}
     AWS_Access_Key_ID: ${param:AWS_Access_Key_ID}
     AWS_Secret_Access_Key: ${param:AWS_Secret_Access_Key}
-    TZ: ${param:TZ}
     stage: ${self:provider.stage}
     fcmBucketName: ${param:fcmBucketName}
     fcmkey: ${param:fcmkey}

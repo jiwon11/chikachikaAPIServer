@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { Symptom_item, Dental_clinic, Treatment_item, User, Review_content, Search_record, GeneralTag, Korea_holiday, City, Sequelize, Sido, Sigungu } = require("../utils/models");
+process.env.TZ = "Asia/Seoul";
 
 module.exports.treatmentItems = async function treatmentItems(event) {
   try {

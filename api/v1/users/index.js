@@ -7,7 +7,7 @@ const { getUserInToken } = require("../middlewares");
 const reviewQueryClass = require("../../../utils/Class/review");
 const communityQueryClass = require("../../../utils/Class/community");
 const router = express.Router();
-
+process.env.TZ = "Asia/Seoul";
 const userProfileUpload = multer();
 // CRUD example
 router.get("/", getUserInToken, async (req, res, next) => {

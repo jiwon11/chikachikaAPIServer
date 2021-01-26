@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { Search_record } = require("../utils/models");
+process.env.TZ = "Asia/Seoul";
 
 module.exports.getRecent = async function getRecentSearch(event) {
   try {

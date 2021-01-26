@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const db = require("../utils/models");
 const Sequelize = require("sequelize");
+process.env.TZ = "Asia/Seoul";
 module.exports.clinics = async function clinics(event) {
   try {
     const { lat, long, wantParking, sort, days, time, holiday } = event.queryStringParameters;

@@ -2,6 +2,7 @@ const db = require("../utils/models");
 const AWS = require("aws-sdk");
 const S3 = new AWS.S3();
 const firebase = require("firebase-admin");
+process.env.TZ = "Asia/Seoul";
 
 AWS.config.update({
   accessKeyId: process.env.AWS_Access_Key_ID,
