@@ -63,7 +63,7 @@ const pushFcm = async function (message) {
 
 module.exports.comment = async function (event) {
   try {
-    console.log("Now", new Date.now());
+    console.log("Now", Date.now());
     const body = JSON.parse(event.Records[0].body);
     console.log(body);
     if (body.targetUserId !== body.writeCommentUserId) {
@@ -123,7 +123,7 @@ module.exports.comment = async function (event) {
 
 module.exports.reply = async function (event) {
   try {
-    console.log("Now", new Date.now());
+    console.log("Now", Date.now());
     const body = JSON.parse(event.Records[0].body);
     console.log(body);
     const {
@@ -218,7 +218,7 @@ module.exports.reply = async function (event) {
             body: targetType === "review" ? `리뷰글에 작성한 댓글에 새로운 답글이 달렸습니다.` : `수다방 글에 작성한 댓글에 새로운 답글이 달렸습니다.`,
           },
           data: { targetType: `${body.targetType}`, targetId: `${targetId}`, commentId: `${body.commentId}`, replyId: `${body.replyId}`, type: "comment" },
-          token: commentTargetUserFcmToken,
+          token: "emiz_6zoiEoaoazaRLPCod:APA91bH_4gMp4zsDs41JoZggVD0Fxw_GqWci7YQLwW3dzSLhHCpngQK43ev9rkkkQ-fLdLVeEWBpT5xD6LdWZEhuJQOqkU2kesZfxdIxC-vrUpyBZlOC05W4G6yBQDLj0WpPM4E4JJ_L",
         };
         console.log(message);
         const fcmResponse = await pushFcm(message);
