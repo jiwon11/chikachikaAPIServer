@@ -37,7 +37,7 @@ if (!firebase.apps.length) {
 const pushFcm = async function (message) {
   var serviceAccount = await s3getFile({
     Bucket: "chikachika-fcm-service-account", // your bucket name,
-    Key: "hooging-f33b0-firebase-adminsdk-82err-5e26adea5b.json", // path to the object you're looking for
+    Key: "chika-chika-firebase-adminsdk-kgcs6-ebeef18466.json", // path to the object you're looking for
   });
   var commentFcm;
   if (!firebase.apps.length) {
