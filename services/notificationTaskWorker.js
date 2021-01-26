@@ -3,6 +3,11 @@ const AWS = require("aws-sdk");
 const S3 = new AWS.S3();
 const firebase = require("firebase-admin");
 
+AWS.config.update({
+  accessKeyId: process.env.AWS_Access_Key_ID,
+  secretAccessKey: process.env.AWS_Secret_Access_Key,
+  region: "ap-northeast-1",
+});
 const s3getFile = async function (params) {
   try {
     const file = await S3.getObject(params).promise();
@@ -31,7 +36,7 @@ if (!firebase.apps.length) {
 
 const pushFcm = async function (message) {
   var serviceAccount = await s3getFile({
-    Bucket: "chikachika-fcm-service-account", // your bucket name,
+    Bucket: "https://chikachika-fcm-service-account.s3-ap-northeast-1.amazonaws.com", // your bucket name,
     Key: "hooging-f33b0-firebase-adminsdk-82err-5e26adea5b.json", // path to the object you're looking for
   });
   var commentFcm;
