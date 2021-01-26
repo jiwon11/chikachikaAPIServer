@@ -4,6 +4,9 @@ org: jiwon112
 
 custom:
   #secrets: ${file(secrets.json)}
+  prune:
+    automatic: true
+    number: 3
   apigwBinary:
     types:           #list of mime-types 
        - 'multipart/form-data'
@@ -48,6 +51,8 @@ provider:
     NCP_serviceID: ${param:NCP_serviceID}
     AWS_Access_Key_ID: ${param:AWS_Access_Key_ID}
     AWS_Secret_Access_Key: ${param:AWS_Secret_Access_Key}
+    fcmBucketName: ${param:fcmBucketName}
+    fcmkey: ${param:fcmkey}
     TZ: ${param:TZ}
     stage: ${self:provider.stage}
   memorySize: 1024 # optional, in MB, default: 1024
@@ -618,6 +623,19 @@ functions:
               # in our case the HTTP Authorization header
               identitySource: method.request.header.Authorization
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  getNotifications:
+    handler: services/notification.getNotifications
+    events:
+      - http:
+          path: notifications/{type}
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   postClinicReport:
     handler: services/report.postClinicReport
     events:
@@ -664,3 +682,4 @@ plugins:
   - serverless-api-gateway-caching
   - serverless-plugin-ifelse
   - serverless-offline-sqs
+  - serverless-prune-plugin

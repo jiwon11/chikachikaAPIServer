@@ -35,8 +35,8 @@ if (!firebase.apps.length) {
 const pushFcm = async function (message) {
   try {
     var serviceAccount = await s3getFile({
-      Bucket: "chikachika-fcm-service-account", // your bucket name,
-      Key: "chika-chika-firebase-adminsdk-kgcs6-ebeef18466.json", // path to the object you're looking for
+      Bucket: process.env.fcmBucketName, // your bucket name,
+      Key: process.env.fcmkey, // path to the object you're looking for
     });
     var commentFcm;
     if (!firebase.apps.length) {
@@ -63,6 +63,7 @@ const pushFcm = async function (message) {
 
 module.exports.comment = async function (event) {
   try {
+    console.log("Now", new Date.now());
     const body = JSON.parse(event.Records[0].body);
     console.log(body);
     if (body.targetUserId !== body.writeCommentUserId) {
@@ -121,6 +122,7 @@ module.exports.comment = async function (event) {
 
 module.exports.reply = async function (event) {
   try {
+    console.log("Now", new Date.now());
     const body = JSON.parse(event.Records[0].body);
     console.log(body);
     const {
