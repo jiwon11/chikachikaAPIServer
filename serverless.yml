@@ -11,10 +11,6 @@ custom:
     enabled: true
     clusterSize: '0.5' # defaults to '0.5'
     ttlInSeconds: 300 # defaults to the maximum allowed: 3600
-  enabled:
-    dev: false
-    test: true
-    prod: true
 dashboard:
   lambda:
     enabled: true
