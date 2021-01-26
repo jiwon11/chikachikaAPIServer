@@ -1,5 +1,21 @@
 const db = require("../utils/models");
-//const firebase = require("firebase-admin");
+const AWS = require("aws-sdk");
+const S3 = new AWS.S3();
+const firebase = require("firebase-admin");
+
+const s3getFile = async function (params) {
+  try {
+    const file = await S3.getObject(params).promise();
+    console.log(file);
+    var objectString = Buffer.from(file.Body);
+    var serviceAccountJson = JSON.parse(objectString.toString());
+    console.log(serviceAccountJson);
+    return serviceAccountJson;
+  } catch (err) {
+    console.log(err);
+  }
+};
+//
 /*
 var serviceAccount = require("../hooging-f33b0-firebase-adminsdk-82err-5e26adea5b.json");
 var commentFcm;
@@ -12,7 +28,21 @@ if (!firebase.apps.length) {
   commentFcm = firebase.app();
 }
 */
-const pushFcm = function (message) {
+
+const pushFcm = async function (message) {
+  var serviceAccount = await s3getFile({
+    Bucket: "chikachika-fcm-service-account", // your bucket name,
+    Key: "hooging-f33b0-firebase-adminsdk-82err-5e26adea5b.json", // path to the object you're looking for
+  });
+  var commentFcm;
+  if (!firebase.apps.length) {
+    commentFcm = firebase.initializeApp({
+      credential: firebase.credential.cert(serviceAccount),
+      databaseURL: "https://hooging-f33b0.firebaseio.com",
+    });
+  } else {
+    commentFcm = firebase.app();
+  }
   commentFcm
     .messaging()
     .send(message)
@@ -72,22 +102,7 @@ module.exports.comment = async function (event) {
           data: { targetType: `${body.targetType}`, targetId: `${targetId}`, commentId: `${body.commentId}`, type: "comment" },
           token: body.targetUserFcmToken,
         };
-        /*
-      commentFcm
-        .messaging()
-        .send(message)
-        .then((response) => {
-          // Response is a message ID string.
-          console.log("Successfully sent message:", response);
-        })
-        .catch(async (error) => {
-          console.log("Error sending message:", error);
-          return res.status(404).json({
-            message: "Comment FCM Post Error",
-            error: error.message,
-          });
-        });
-        */
+        await pushFcm(message);
       }
     }
     return {
@@ -168,22 +183,7 @@ module.exports.reply = async function (event) {
           data: { targetType: `${body.targetType}`, targetId: `${targetId}`, commentId: `${body.commentId}`, replyId: `${body.replyId}`, type: "comment" },
           token: body.postTargetUserFcmToken,
         };
-        /*
-      commentFcm
-        .messaging()
-        .send(message)
-        .then((response) => {
-          // Response is a message ID string.
-          console.log("Successfully sent message:", response);
-        })
-        .catch(async (error) => {
-          console.log("Error sending message:", error);
-          return res.status(404).json({
-            message: "Comment FCM Post Error",
-            error: error.message,
-          });
-        });
-        */
+        await pushFcm(message);
       }
     }
     if (commentTargetUserId !== writeCommentUserId) {
@@ -202,22 +202,7 @@ module.exports.reply = async function (event) {
           data: { targetType: `${body.targetType}`, targetId: `${targetId}`, commentId: `${body.commentId}`, replyId: `${body.replyId}`, type: "comment" },
           token: body.postTargetUserFcmToken,
         };
-        /*
-      commentFcm
-        .messaging()
-        .send(message)
-        .then((response) => {
-          // Response is a message ID string.
-          console.log("Successfully sent message:", response);
-        })
-        .catch(async (error) => {
-          console.log("Error sending message:", error);
-          return res.status(404).json({
-            message: "Comment FCM Post Error",
-            error: error.message,
-          });
-        });
-        */
+        await pushFcm(message);
       }
     }
     return {
