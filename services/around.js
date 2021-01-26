@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const db = require("../utils/models");
 const Sequelize = require("sequelize");
-
+const moment = require("moment");
 module.exports.clinics = async function clinics(event) {
   try {
     const { lat, long, wantParking, sort, days, time, holiday } = event.queryStringParameters;
@@ -19,17 +19,17 @@ module.exports.clinics = async function clinics(event) {
           week[day] = time;
         });
       } else {
-        const today = new Date();
+        const today = moment().tz(process.env.TZ);
         const weekDay = ["sun", "mon", "tus", "wed", "thu", "fri", "sat"];
-        const day = weekDay[today.getDay()];
+        const day = weekDay[today.day()];
         week[day] = time;
       }
     }
     console.log(week);
     var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
-    const today = new Date();
+    const today = moment().tz(process.env.TZ);
     const nowTime = `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`;
-    const day = weekDay[today.getDay()];
+    const day = weekDay[today.day()];
     const todayHoliday = await db.Korea_holiday.findAll({
       where: {
         date: today,

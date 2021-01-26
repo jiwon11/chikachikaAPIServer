@@ -3,7 +3,7 @@ const { sequelize, Sequelize } = require("../utils/models");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const AWS = require("aws-sdk");
-
+const moment = require("moment");
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_Access_Key_ID,
   secretAccessKey: process.env.AWS_Secret_Access_Key,
@@ -16,9 +16,9 @@ module.exports.detailClinics = async function detailClinics(event) {
     if (userId) {
       const { clinicId } = event.queryStringParameters;
       var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
-      const today = new Date();
+      const today = moment().tz(process.env.TZ);
       const nowTime = `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`;
-      const day = weekDay[today.getDay()];
+      const day = weekDay[today.day()];
       const todayHoliday = await db.Korea_holiday.findAll({
         where: {
           date: today,

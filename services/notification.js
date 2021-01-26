@@ -1,7 +1,9 @@
 const db = require("../utils/models");
-
+const moment = require("moment");
 module.exports.getNotifications = async function getNotifications(event) {
   try {
+    var timezoneDate = moment().tz(process.env.TZ);
+    console.log(timezoneDate.day());
     const userId = event.requestContext.authorizer.principalId;
     const type = event.pathParameters.type; //Comment,Like,Event
     const user = await db.User.findOne({
