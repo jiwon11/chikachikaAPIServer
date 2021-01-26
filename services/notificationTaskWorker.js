@@ -12,6 +12,27 @@ if (!firebase.apps.length) {
   commentFcm = firebase.app();
 }
 */
+const pushFcm = function (message) {
+  commentFcm
+    .messaging()
+    .send(message)
+    .then((response) => {
+      // Response is a message ID string.
+      console.log("Successfully sent message:", response);
+      return {
+        statusCode: 200,
+        body: `{"statusText": "OK","message": "Successfully sent message: ${response}"}`,
+      };
+    })
+    .catch((error) => {
+      console.log("Error sending message:", error);
+      return {
+        statusCode: 404,
+        body: `{"statusText": "Server error","message": "${error.message}"}`,
+      };
+    });
+};
+
 module.exports.comment = async function (event) {
   try {
     const body = JSON.parse(event.Records[0].body);
@@ -88,8 +109,8 @@ module.exports.reply = async function (event) {
   try {
     const body = JSON.parse(event.Records[0].body);
     console.log(body);
-    if (body.postTargetUserId !== body.commentTargetUserId) {
-      if (body.targetType === "review") {
+    if (body.targetType === "review") {
+      if (postTargetUserId !== writeCommentUserId) {
         await db.Notification.create({
           type: "Comment",
           message: `리뷰글에 새로운 답글이 달렸습니다.`,
@@ -98,6 +119,8 @@ module.exports.reply = async function (event) {
           reviewId: body.reviewId,
           reviewCommentId: body.reviewCommentId,
         });
+      }
+      if (commentTargetUserId !== writeCommentUserId) {
         await db.Notification.create({
           type: "Comment",
           message: `리뷰글에 작성한 댓글에 새로운 답글이 달렸습니다.`,
@@ -106,7 +129,9 @@ module.exports.reply = async function (event) {
           reviewId: body.reviewId,
           reviewCommentId: body.commentId,
         });
-      } else {
+      }
+    } else {
+      if (postTargetUserId !== writeCommentUserId) {
         await db.Notification.create({
           type: "Comment",
           message: `수다방 게시글에 새로운 댓글이 달렸습니다.`,
@@ -115,6 +140,8 @@ module.exports.reply = async function (event) {
           communityId: body.communityId,
           communityCommentId: body.commentId,
         });
+      }
+      if (postTargetUserId !== writeCommentUserId) {
         await db.Notification.create({
           type: "Comment",
           message: `수다방 글에 작성한 댓글에 새로운 답글이 달렸습니다.`,
@@ -124,6 +151,8 @@ module.exports.reply = async function (event) {
           communityCommentId: body.communityCommentId,
         });
       }
+    }
+    if (postTargetUserId !== postTargetUserId) {
       const postTargetUser = await db.NotificationConfig.findOne({
         where: {
           userId: body.postTargetUserId,
@@ -156,6 +185,8 @@ module.exports.reply = async function (event) {
         });
         */
       }
+    }
+    if (commentTargetUserId !== writeCommentUserId) {
       const commentTargetUser = await db.NotificationConfig.findOne({
         where: {
           userId: body.commentTargetUserId,
