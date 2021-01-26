@@ -46,8 +46,8 @@ provider:
     AWS_Secret_Access_Key: ${param:AWS_Secret_Access_Key}
     TZ: ${param:TZ}
     stage: ${self:provider.stage}
-    fcmBucketName: ${self:custom.secrets.fcmBucketName}
-    fcmkey: ${self:custom.secrets.fcmkey}
+    fcmBucketName: ${param:fcmBucketName, self:custom.secrets.fcmBucketName}
+    fcmkey: ${param:fcmkey, self:custom.secrets.fcmkey}
   memorySize: 1024 # optional, in MB, default: 1024
   timeout: 6 # optional, in seconds, default: 6
   versionFunctions: false # optional, default: true

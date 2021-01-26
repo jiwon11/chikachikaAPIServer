@@ -174,7 +174,7 @@ router.get("/scraps", getUserInToken, async (req, res, next) => {
         offset: offset,
         order: [
           [Sequelize.literal("`Scrap.createdAt`"), "DESC"],
-          ["TreatmentItems", Review_treatment_item, "index", "ASC"],
+          ["TreatmentItems", db.Review_treatment_item, "index", "ASC"],
           ["review_contents", "index", "ASC"],
         ],
       });
