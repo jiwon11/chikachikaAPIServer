@@ -3,7 +3,6 @@ const AWS = require("aws-sdk");
 const S3 = new AWS.S3();
 const firebase = require("firebase-admin");
 
-console.log(process.env.AWS_Access_Key_ID);
 AWS.config.update({
   accessKeyId: process.env.AWS_Access_Key_ID,
   secretAccessKey: process.env.AWS_Secret_Access_Key,
@@ -12,10 +11,8 @@ AWS.config.update({
 const s3getFile = async function (params) {
   try {
     const file = await S3.getObject(params).promise();
-    console.log(file);
     var objectString = Buffer.from(file.Body);
     var serviceAccountJson = JSON.parse(objectString.toString());
-    console.log(serviceAccountJson);
     return serviceAccountJson;
   } catch (err) {
     console.log(err);
@@ -42,8 +39,6 @@ const pushFcm = async function (message) {
   });
   var commentFcm;
   if (!firebase.apps.length) {
-    console.log(typeof serviceAccount);
-    console.log(serviceAccount);
     commentFcm = firebase.initializeApp({
       credential: firebase.credential.cert(serviceAccount),
       databaseURL: "https://chika-chika.firebaseio.com",
@@ -110,7 +105,8 @@ module.exports.comment = async function (event) {
           data: { targetType: `${body.targetType}`, targetId: `${targetId}`, commentId: `${body.commentId}`, type: "comment" },
           token: body.targetUserFcmToken,
         };
-        await pushFcm(message);
+        const fcmResponse = await pushFcm(message);
+        console.log(fcmResponse);
       }
     }
     return {
@@ -205,7 +201,8 @@ module.exports.reply = async function (event) {
           data: { targetType: `${targetType}`, targetId: `${targetId}`, commentId: `${commentId}`, replyId: `${replyId}`, type: "comment" },
           token: postTargetUserFcmToken,
         };
-        await pushFcm(message);
+        const fcmResponse = await pushFcm(message);
+        console.log(fcmResponse);
       }
     }
     if (commentTargetUserId !== writeCommentUserId) {
@@ -224,7 +221,8 @@ module.exports.reply = async function (event) {
           data: { targetType: `${body.targetType}`, targetId: `${targetId}`, commentId: `${body.commentId}`, replyId: `${body.replyId}`, type: "comment" },
           token: commentTargetUserFcmToken,
         };
-        await pushFcm(message);
+        const fcmResponse = await pushFcm(message);
+        console.log(fcmResponse);
       }
     }
     return {
