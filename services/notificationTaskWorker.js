@@ -33,37 +33,32 @@ if (!firebase.apps.length) {
 */
 
 const pushFcm = async function (message) {
-  var serviceAccount = await s3getFile({
-    Bucket: "chikachika-fcm-service-account", // your bucket name,
-    Key: "chika-chika-firebase-adminsdk-kgcs6-ebeef18466.json", // path to the object you're looking for
-  });
-  var commentFcm;
-  if (!firebase.apps.length) {
-    commentFcm = firebase.initializeApp({
-      credential: firebase.credential.cert(serviceAccount),
-      databaseURL: "https://chika-chika.firebaseio.com",
+  try {
+    var serviceAccount = await s3getFile({
+      Bucket: "chikachika-fcm-service-account", // your bucket name,
+      Key: "chika-chika-firebase-adminsdk-kgcs6-ebeef18466.json", // path to the object you're looking for
     });
-  } else {
-    commentFcm = firebase.app();
+    var commentFcm;
+    if (!firebase.apps.length) {
+      commentFcm = firebase.initializeApp({
+        credential: firebase.credential.cert(serviceAccount),
+        databaseURL: "https://chika-chika.firebaseio.com",
+      });
+    } else {
+      commentFcm = firebase.app();
+    }
+    const response = commentFcm.messaging().send(message);
+    console.log("Successfully sent message:", response);
+    return {
+      statusCode: 200,
+      body: `{"statusText": "OK","message": "Successfully sent message: ${response}"}`,
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server Error","message": "${error.message}"}`,
+    };
   }
-  commentFcm
-    .messaging()
-    .send(message)
-    .then((response) => {
-      // Response is a message ID string.
-      console.log("Successfully sent message:", response);
-      return {
-        statusCode: 200,
-        body: `{"statusText": "OK","message": "Successfully sent message: ${response}"}`,
-      };
-    })
-    .catch((error) => {
-      console.log("Error sending message:", error);
-      return {
-        statusCode: 404,
-        body: `{"statusText": "Server error","message": "${error.message}"}`,
-      };
-    });
 };
 
 module.exports.comment = async function (event) {
