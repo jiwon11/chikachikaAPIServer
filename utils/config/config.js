@@ -7,6 +7,11 @@ const development = {
   dialect: "mysql",
   logging: false,
   timezone: "+09:00",
+  dialectOptions: {
+    charset: "utf8mb4",
+    dateStrings: true,
+    typeCast: true,
+  },
   pool: {
     max: 1000,
     min: 5,
@@ -56,6 +61,11 @@ const production = {
   dialect: "mysql",
   logging: false,
   timezone: "+09:00",
+  dialectOptions: {
+    charset: "utf8mb4",
+    dateStrings: true,
+    typeCast: true,
+  },
   pool: {
     max: 1000,
     min: 5,

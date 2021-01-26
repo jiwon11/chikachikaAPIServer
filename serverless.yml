@@ -3,7 +3,7 @@ service: chikachika-API-serverless
 org: jiwon112
 
 custom:
-  #secrets: ${file(secrets.json)}
+  secrets: ${file(secrets.json)}
   apigwBinary:
     types:           #list of mime-types 
        - 'multipart/form-data'
@@ -11,10 +11,6 @@ custom:
     enabled: true
     clusterSize: '0.5' # defaults to '0.5'
     ttlInSeconds: 300 # defaults to the maximum allowed: 3600
-  enabled:
-    dev: false
-    test: true
-    prod: true
 dashboard:
   lambda:
     enabled: true
@@ -49,6 +45,9 @@ provider:
     AWS_Access_Key_ID: ${param:AWS_Access_Key_ID}
     AWS_Secret_Access_Key: ${param:AWS_Secret_Access_Key}
     TZ: ${param:TZ}
+    stage: ${self:provider.stage}
+    fcmBucketName: ${param:fcmBucketName, self:custom.secrets.fcmBucketName}
+    fcmkey: ${param:fcmkey, self:custom.secrets.fcmkey}
   memorySize: 1024 # optional, in MB, default: 1024
   timeout: 6 # optional, in seconds, default: 6
   versionFunctions: false # optional, default: true
@@ -617,6 +616,19 @@ functions:
               # in our case the HTTP Authorization header
               identitySource: method.request.header.Authorization
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  getNotifications:
+    handler: services/notification.getNotifications
+    events:
+      - http:
+          path: notifications/{type}
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   postClinicReport:
     handler: services/report.postClinicReport
     events:
@@ -634,12 +646,20 @@ functions:
     handler: services/notificationTaskWorker.comment
     events:
       - sqs: arn:aws:sqs:ap-northeast-1:751612718299:commentNotification-${opt:stage, 'dev'}
+  pushNotifiactionReplyTaskWorker:
+    handler: services/notificationTaskWorker.reply
+    events:
+      - sqs: arn:aws:sqs:ap-northeast-1:751612718299:replyNotification-${opt:stage, 'dev'}
 resources:
   Resources:
     commentNotification:
       Type: "AWS::SQS::Queue"
       Properties:
         QueueName: commentNotification-${self:provider.stage}
+    replyNotification:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: replyNotification-${self:provider.stage}
     likeNotification:
       Type: "AWS::SQS::Queue"
       Properties:
@@ -654,3 +674,4 @@ plugins:
   - serverless-plugin-cloudwatch-dashboard
   - serverless-api-gateway-caching
   - serverless-plugin-ifelse
+  - serverless-offline-sqs

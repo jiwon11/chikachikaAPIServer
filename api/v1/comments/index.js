@@ -1,134 +1,13 @@
 const express = require("express");
 const { getUserInToken } = require("../middlewares");
 const multer = require("multer");
-//const firebase = require("firebase-admin");
 const db = require("../../../utils/models");
 const commentConsumer = require("../../../utils/Class/SQSconsumer").comment;
+const replyConsumer = require("../../../utils/Class/SQSconsumer").reply;
 const Sequelize = require("sequelize");
 const router = express.Router();
 
 const multerBody = multer();
-/*
-var serviceAccount = require("../hooging-f33b0-firebase-adminsdk-82err-5e26adea5b.json");
-var commentFcm;
-if (!firebase.apps.length) {
-  commentFcm = firebase.initializeApp({
-    credential: firebase.credential.cert(serviceAccount),
-    databaseURL: "https://hooging-f33b0.firebaseio.com",
-  });
-} else {
-  commentFcm = firebase.app();
-}
-*/
-const pushNotification = async (type, commentOrReply, target, userId, targetType) => {
-  const userNotifyConfig = await db.NotificationConfig.findOne({
-    where: {
-      userId: target.userId,
-    },
-  });
-  if (type === "comment") {
-    if (userNotifyConfig.comment === true) {
-      var message;
-      message = {
-        notification: {
-          title: targetType === "review" ? "리뷰 댓글" : "커뮤니티 댓글",
-          body: targetType === "review" ? `리뷰에 새로운 댓글이 달렸습니다.` : `게시글에 새로운 댓글이 달렸습니다.`,
-        },
-        data: { targetType: `${targetType}`, targetId: `${target.id}`, commentId: `${commentOrReply.id}`, type: "comment" },
-        token: target.user.fcmToken,
-      };
-      /*
-      commentFcm
-        .messaging()
-        .send(message)
-        .then((response) => {
-          // Response is a message ID string.
-          console.log("Successfully sent message:", response);
-        })
-        .catch(async (error) => {
-          console.log("Error sending message:", error);
-          return res.status(404).json({
-            message: "Comment FCM Post Error",
-            error: error.message,
-          });
-        });
-        */
-    }
-    if (targetType === "review") {
-      await db.Notification.create({
-        type: "Comment",
-        message: `리뷰에 새로운 댓글이 달렸습니다.`,
-        userId: target.user.id,
-        notificatedUserId: target.user.id,
-        senderId: userId,
-        reviewId: target.id,
-      });
-    } else {
-      await db.Notification.create({
-        type: "Comment",
-        message: `게시글에 새로운 댓글이 달렸습니다.`,
-        userId: target.user.id,
-        notificatedUserId: target.user.id,
-        senderId: userId,
-        communityId: target.id,
-      });
-    }
-  } else if (type === "reply") {
-    if (userNotifyConfig.comment === true) {
-      var message;
-      if (target.reviewId) {
-        message = {
-          notification: {
-            title: "답글 알림",
-            body: `댓글에 새로운 답글이 달렸습니다.`,
-          },
-          data: { targetType: `${targetType}`, targetId: `${target.reviewId}`, commentId: `${target.id}`, type: "reply" },
-          token: target.user.fcmToken,
-        };
-      } else {
-        message = {
-          notification: {
-            title: "답글 알림",
-            body: `답글에 새로운 답글이 달렸습니다.`,
-          },
-          data: { targetType: `${targetType}`, targetId: `${target.reviewId}`, commentId: `${target.id}`, type: "reply" },
-          token: target.user.fcmToken,
-        };
-      }
-      /*
-      commentFcm
-        .messaging()
-        .send(message)
-        .then((response) => {
-          // Response is a message ID string.
-          console.log("Successfully sent message:", response);
-        })
-        .catch((error) => {
-          console.log("Error sending message:", error);
-        });
-        */
-    }
-    if (targetType === "review") {
-      await db.Notification.create({
-        type: "Reply",
-        message: `댓글에 새로운 답글이 달렸습니다.`,
-        notificatedUserId: target.user.id,
-        senderId: userId,
-        reviewId: target.review.id,
-        reviewCommentId: target.id,
-      });
-    }
-  } else {
-    await db.Notification.create({
-      type: "Reply",
-      message: `댓글에 새로운 답글이 달렸습니다.`,
-      notificatedUserId: target.user.id,
-      senderId: userId,
-      communityId: target.review.id,
-      communityCommentId: target.id,
-    });
-  }
-};
 
 router.post("/", getUserInToken, multerBody.none(), async (req, res, next) => {
   //localhost:3000/comment?type=review&commentId=1
@@ -370,6 +249,9 @@ router.delete("/", getUserInToken, multerBody.none(), async (req, res, next) => 
 router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) => {
   //localhost:8001/comment/reply?type=review&commentId=1
   try {
+    console.log(process.env.TZ);
+    var timezoneDate = new Date(Date.now());
+    console.log(timezoneDate.toISOString());
     const userId = req.user.id;
     const commentId = req.query.commentId;
     const description = req.body.description;
@@ -395,7 +277,7 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
       });
       if (comment) {
         const reply = await db.Review_comment.create({
-          reviewId: reviewId,
+          //reviewId: reviewId,
           userId: userId,
           description: description,
         });
@@ -410,6 +292,22 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
           },
         });
         //await pushNotification("reply", reply, comment, userId, "review"); //type, comment, target, userId
+        const replyConsumerBody = {
+          replyId: reply.id,
+          commentId: comment.id,
+          reviewId: reviewId,
+          writeCommentUserId: userId,
+          commentTargetUserId: comment.user.id,
+          postTargetUserId: comment.review.user.id,
+          commentTargetUserFcmToken: comment.user.fcmToken,
+          postTargetUserFcmToken: comment.review.user.fcmToken,
+          description: description,
+          targetType: type,
+        };
+        const pushReplyNotification = await replyConsumer(replyConsumerBody);
+        if (pushReplyNotification.statusCode === 200) {
+          console.log(JSON.parse(pushReplyNotification.body));
+        }
         const reviewComments = await db.Review_comment.getAll(db, "review", reviewId);
         return res.status(200).json(reviewComments);
       } else {
@@ -438,7 +336,7 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
       });
       if (comment) {
         const reply = await db.Community_comment.create({
-          communityId: postId,
+          //communityId: postId,
           userId: userId,
           description: description,
         });
@@ -453,6 +351,22 @@ router.post("/reply", getUserInToken, multerBody.none(), async (req, res, next) 
           },
         });
         //await pushNotification("reply", reply, comment, userId, "community"); //type, comment, target, userId
+        const replyConsumerBody = {
+          replyId: reply.id,
+          commentId: comment.id,
+          communityId: postId,
+          writeCommentUserId: userId,
+          commentTargetUserId: comment.user.id,
+          postTargetUserId: comment.community.user.id,
+          commentTargetUserFcmToken: comment.user.fcmToken,
+          postTargetUserFcmToken: comment.community.user.fcmToken,
+          description: description,
+          targetType: type,
+        };
+        const pushReplyNotification = await replyConsumer(replyConsumerBody);
+        if (pushReplyNotification.statusCode === 200) {
+          console.log(JSON.parse(pushReplyNotification.body));
+        }
         const communityComments = await db.Community_comment.getAll(db, "community", postId);
         return res.status(200).json(communityComments);
       } else {

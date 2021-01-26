@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { Symptom_item, Dental_clinic, Treatment_item, User, Review_content, Search_record, GeneralTag, Korea_holiday, City, Sequelize, Sido, Sigungu } = require("../utils/models");
+const moment = require("moment");
 
 module.exports.treatmentItems = async function treatmentItems(event) {
   try {
@@ -130,16 +131,16 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
             week[day] = time;
           });
         } else {
-          const today = new Date();
+          const today = moment().tz(process.env.TZ);
           const weekDay = ["sun", "mon", "tus", "wed", "thu", "fri", "sat"];
-          const day = weekDay[today.getDay()];
+          const day = weekDay[today.day()];
           week[day] = time;
         }
       }
       var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
-      const today = new Date();
+      const today = moment().tz(process.env.TZ);
       const nowTime = `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`;
-      const day = weekDay[today.getDay()];
+      const day = weekDay[today.day()];
       const todayHoliday = await Korea_holiday.findAll({
         where: {
           date: today,

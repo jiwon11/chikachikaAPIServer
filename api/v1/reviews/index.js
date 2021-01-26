@@ -7,7 +7,7 @@ const Sequelize = require("sequelize");
 const ApiError = require("../../../utils/error");
 const { getUserInToken } = require("../middlewares");
 const db = require("../../../utils/models");
-
+const moment = require("moment");
 const router = express.Router();
 
 const cloudFrontUrl = "";
@@ -95,7 +95,7 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
       parseTreatmentDate = new Date(treatmentDate);
       console.log(`parseTreatmentDate : ${parseTreatmentDate}`);
     } else {
-      parseTreatmentDate = new Date();
+      parseTreatmentDate = moment().tz(process.env.TZ);
     }
     const review = await db.Review.create({
       certifiedBill: false,
@@ -189,7 +189,7 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
         if (treatmentDate !== "undefined" && treatmentDate) {
           parseTreatmentDate = new Date(treatmentDate);
         } else {
-          parseTreatmentDate = new Date();
+          parseTreatmentDate = moment().tz(process.env.TZ);
         }
         await db.Review_content.destroy({
           where: {
