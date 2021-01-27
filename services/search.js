@@ -139,7 +139,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
       }
       var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
       const today = moment().tz(process.env.TZ);
-      const nowTime = `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`;
+      const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
       const day = weekDay[today.day()];
       const todayHoliday = await Korea_holiday.findAll({
         where: {
