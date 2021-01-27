@@ -186,7 +186,7 @@ module.exports.detailClinics = async function detailClinics(event) {
         parkingNotice: clinic.parking_others_notice,
       };
       const clinicReviewImg = await db.Review_content.findAll({
-        attributes: ["id", "img_url", "index", "img_before_after", "createdAt"],
+        attributes: ["id", "img_url", "index", "img_before_after", "createdAt", "img_width", "img_height"],
         where: {
           img_url: {
             [Sequelize.Op.not]: null,
