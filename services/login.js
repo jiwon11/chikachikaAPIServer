@@ -10,7 +10,7 @@ const jwt = require("jsonwebtoken");
  * @returns {JSON} Response 인증번호와 핸드폰 번호의 확인 여부
  */
 module.exports.handler = async function signInUser(event) {
-  const { userPhoneNumber, token } = JSON.parse(event.body);
+  const { userPhoneNumber, token, fcmToken } = JSON.parse(event.body);
   try {
     const user = await User.findOne({
       where: {
@@ -30,6 +30,9 @@ module.exports.handler = async function signInUser(event) {
     const isValidPhoneNumber = await verifyPhoneNumberFunc(userPhoneNumber, token);
     if (isValidPhoneNumber.statusCode === 200) {
       console.log(user.dataValues.id);
+      await user.update({
+        fcmToken: fcmToken,
+      });
       const token = jwt.sign({ id: user.dataValues.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
       let responseBody = `{"token": "${token}","statusText": "Accepted","message": "사용자 토큰이 발급되었습니다.", "user":{"userId": "${user.id}", "userNickname":"${
         user.nickname
