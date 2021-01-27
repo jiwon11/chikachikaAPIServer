@@ -54,7 +54,7 @@ module.exports.addLikeReview = async function addLikeReview(event) {
 module.exports.removeLikeReview = async function removeLikeReview(event) {
   try {
     const userId = event.requestContext.authorizer.principalId;
-    const user = await db.user.findOne({
+    const user = await User.findOne({
       where: {
         id: userId,
       },
