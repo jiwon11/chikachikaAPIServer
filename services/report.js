@@ -19,33 +19,26 @@ module.exports.postClinicReport = async function postClinicReport(event) {
         reporterId: userId,
         dentalClinicId: clinicId,
       });
-      if (bodyImages.length > 0) {
-        const images = await Promise.all(
-          bodyImages.map((image) =>
-            db.Clinic_report_img.create({
-              img_originalname: image.originalname,
-              img_mimetype: image.mimetype,
-              img_filename: image.filename,
-              img_size: image.size,
-              img_url: image.location, //`${cloudFrontUrl}/${image.key}`
-              img_index: bodyImages.indexOf(image) + 1,
-              img_width: image.width,
-              img_height: image.height,
-              reportId: clinicReport.id,
-            })
-          )
-        );
-        console.log(images.length);
-        return {
-          statusCode: 200,
-          body: `{"statusText": "OK","message": "수청 요청이 완료되었습니다."}`,
-        };
-      } else {
-        return {
-          statusCode: 400,
-          body: `{"statusText": "Bad Request","message": "관련 사진은 반드시 1개 이상 있어야 합니다."}`,
-        };
-      }
+      const images = await Promise.all(
+        bodyImages.map((image) =>
+          db.Clinic_report_img.create({
+            img_originalname: image.originalname,
+            img_mimetype: image.mimetype,
+            img_filename: image.filename,
+            img_size: image.size,
+            img_url: image.location, //`${cloudFrontUrl}/${image.key}`
+            img_index: bodyImages.indexOf(image) + 1,
+            img_width: image.width,
+            img_height: image.height,
+            reportId: clinicReport.id,
+          })
+        )
+      );
+      console.log(images.length);
+      return {
+        statusCode: 200,
+        body: `{"statusText": "OK","message": "수청 요청이 완료되었습니다."}`,
+      };
     } else {
       return {
         statusCode: 401,
