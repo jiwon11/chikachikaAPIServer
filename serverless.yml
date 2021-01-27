@@ -49,7 +49,6 @@ provider:
     fcmBucketName: ${param:fcmBucketName, self:custom.secrets.fcmBucketName}
     fcmkey: ${param:fcmkey, self:custom.secrets.fcmkey}
     FbDBURL: ${param:fcmkey, self:custom.secrets.FbDBURL}
-    thundra_apiKey: ${param:thundra_apiKey, self:custom.secrets.thundra_apiKey}
   memorySize: 1024 # optional, in MB, default: 1024
   timeout: 6 # optional, in seconds, default: 6
   versionFunctions: false # optional, default: true
@@ -690,4 +689,3 @@ plugins:
   - serverless-api-gateway-caching
   - serverless-plugin-ifelse
   - serverless-offline-sqs
-  - serverless-plugin-thundra
