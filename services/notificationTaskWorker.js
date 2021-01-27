@@ -29,7 +29,7 @@ const pushFcm = async function (message) {
     if (!firebase.apps.length) {
       commentFcm = firebase.initializeApp({
         credential: firebase.credential.cert(serviceAccount),
-        databaseURL: "https://chika-chika.firebaseio.com",
+        databaseURL: process.env.FbDBURL,
       });
     } else {
       commentFcm = firebase.app();
