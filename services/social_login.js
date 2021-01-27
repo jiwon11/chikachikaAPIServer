@@ -7,6 +7,7 @@ module.exports.socialUserCheck = async function socialUserCheck(event) {
     const provider = body.provider;
     const email = body.email;
     const socialId = body.socialId;
+    const fcmToken = body.fcmToken;
     var overlapSocialUser;
     if (provider === "apple") {
       overlapSocialUser = await User.findOne({
@@ -36,6 +37,9 @@ module.exports.socialUserCheck = async function socialUserCheck(event) {
       });
     }
     if (overlapSocialUser) {
+      await overlapSocialUser.update({
+        fcmToken: fcmToken,
+      });
       const token = jwt.sign({ id: overlapSocialUser.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
       let responseBody = `{"token": "${token}","statusText": "Accepted","message": "사용자 토큰이 발급되었습니다.", "user":{"userId": "${overlapSocialUser.id}", "userNickname":"${
         overlapSocialUser.nickname
