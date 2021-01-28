@@ -11,6 +11,10 @@ custom:
     enabled: true
     clusterSize: '0.5' # defaults to '0.5'
     ttlInSeconds: 300 # defaults to the maximum allowed: 3600
+  prune:
+    automatic: true
+    includeLayers: true
+    number: 3
 dashboard:
   lambda:
     enabled: true
@@ -687,5 +691,5 @@ plugins:
   - serverless-apigw-binary
   - serverless-plugin-cloudwatch-dashboard
   - serverless-api-gateway-caching
-  - serverless-plugin-ifelse
+  - serverless-prune-plugin
   - serverless-offline-sqs
