@@ -39,9 +39,10 @@ module.exports.getAll = async function (db, type, targetId) {
               attributes: ["id", "nickname", "profileImg"],
             },
           ],
+          order: [["createdAt", "ASC"]],
         },
       ],
-      order: [["createdAt", "DESC"]],
+      order: [["createdAt", "ASC"]],
     });
   } else {
     [commentsNum, metadata] = await db.sequelize.query(
@@ -77,9 +78,10 @@ module.exports.getAll = async function (db, type, targetId) {
               attributes: ["id", "nickname", "profileImg"],
             },
           ],
+          order: [["createdAt", "ASC"]],
         },
       ],
-      order: [["createdAt", "DESC"]],
+      order: [["createdAt", "ASC"]],
     });
   }
   return { commentsNum: commentsNum[0], comments: comments };
