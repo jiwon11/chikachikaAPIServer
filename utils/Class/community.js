@@ -48,7 +48,7 @@ const communityIncludeModels = function (db, clusterQuery, appendModels) {
     {
       model: db.Dental_clinic,
       as: "Clinics",
-      attributes: ["id", "name"],
+      attributes: ["id", "name", "originalName"],
       through: {
         attributes: ["index"],
       },
@@ -80,20 +80,7 @@ const communityIncludeModels = function (db, clusterQuery, appendModels) {
     {
       model: db.City,
       as: "CityTags",
-      attributes: [
-        "id",
-        "sido",
-        "sigungu",
-        "adCity",
-        "emdName",
-        "relativeAddress",
-        [
-          Sequelize.literal(
-            "IF(CityTags.emdName = CityTags.adCity, CONCAT(CityTags.sido,' ',CityTags.sigungu,' ',CityTags.emdName),CONCAT(CityTags.sido,' ',CityTags.sigungu,' ',CityTags.emdName,'(',CityTags.adCity,')'))"
-          ),
-          "fullCityName",
-        ],
-      ],
+      attributes: ["id", "sido", "sigungu", "adCity", "emdName", "relativeAddress", "fullCityName"],
       through: {
         attributes: ["index"],
       },
@@ -170,5 +157,146 @@ module.exports.getUserCommunityPostAll = async function (db, type, userId, targe
     ],
     offset: offsetQuery,
     limit: limitQuery,
+  });
+};
+
+module.exports.getKeywordSearchAll = async function (db, type, query, userId, clusterQuery, offsetQuery, limitQuery, order) {
+  var orderQuery;
+  if (order === "createdAt") {
+    orderQuery = ["createdAt", "DESC"];
+  } else {
+    orderQuery = [
+      Sequelize.literal(
+        "(((SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id)*3)+ (SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id)) DESC"
+      ),
+    ];
+  }
+  var residenceClincQuery;
+  if (clusterQuery === undefined) {
+    // 함수 호출시 x에 해당하는 인수가 전달되지 않은 경우
+    residenceClincQuery = { id: { [Sequelize.Op.not]: null } };
+  } else {
+    if (clusterQuery.hasOwnProperty("newTownId")) {
+      residenceClincQuery = { ["$Clinics.city.newTownId$"]: { [Sequelize.Op.eq]: clusterQuery.newTownId } };
+    } else {
+      residenceClincQuery = { ["$Clinics.city.sigungu$"]: { [Sequelize.Op.eq]: clusterQuery.sigungu } };
+    }
+  }
+  console.log("residenceClincQuery:", residenceClincQuery);
+  return await this.findAll({
+    attributes: {
+      include: communityIncludeAttributes(userId),
+    },
+    where: {
+      [Sequelize.Op.and]: [
+        {
+          userId: {
+            [Sequelize.Op.not]: null,
+          },
+        },
+        { type: type },
+        residenceClincQuery,
+        {
+          [Sequelize.Op.or]: [
+            {
+              ["$user.nickname$"]: {
+                [Sequelize.Op.like]: `%${query}%`,
+              },
+            },
+            {
+              ["$Clinics.originalName$"]: {
+                [Sequelize.Op.like]: `%${query}%`,
+              },
+            },
+            {
+              ["$TreatmentItems.name$"]: {
+                [Sequelize.Op.like]: `%${query}%`,
+              },
+            },
+            {
+              ["$SymptomItems.name$"]: {
+                [Sequelize.Op.like]: `%${query}%`,
+              },
+            },
+            {
+              ["$GeneralTags.name$"]: {
+                [Sequelize.Op.like]: `%${query}%`,
+              },
+            },
+            {
+              ["$CityTags.fullCityName$"]: {
+                [Sequelize.Op.like]: `%${query}%`,
+              },
+            },
+          ],
+        },
+      ],
+    },
+    include: [
+      {
+        model: db.User,
+        attributes: ["id", "nickname", "profileImg"],
+      },
+      {
+        model: db.City,
+        attributes: {
+          exclude: ["geometry"],
+        },
+      },
+      {
+        model: db.Community_img,
+        attributes: ["id", "img_originalname", "img_mimetype", "img_filename", "img_url", "img_size", "img_index", "img_width", "img_height"],
+      },
+      {
+        model: db.Dental_clinic,
+        as: "Clinics",
+        attributes: ["id", "name", "originalName"],
+        through: {
+          attributes: ["index"],
+        },
+        include: [
+          {
+            model: db.City,
+            attributes: ["id", "fullCityName", "newTownId", "sigungu"],
+          },
+        ],
+      },
+      {
+        model: db.Treatment_item,
+        as: "TreatmentItems",
+        attributes: ["id", "name"],
+        through: {
+          attributes: ["index"],
+        },
+      },
+      {
+        model: db.Symptom_item,
+        as: "SymptomItems",
+        attributes: ["id", "name"],
+        through: {
+          attributes: ["index"],
+        },
+      },
+      {
+        model: db.GeneralTag,
+        as: "GeneralTags",
+        attributes: ["id", "name"],
+        through: {
+          attributes: ["index"],
+        },
+      },
+      {
+        model: db.City,
+        as: "CityTags",
+        attributes: ["id", "sido", "sigungu", "adCity", "emdName", "relativeAddress", "fullCityName"],
+        through: {
+          attributes: ["index"],
+        },
+      },
+    ],
+    order: [orderQuery, ["community_imgs", "img_index", "ASC"]],
+    limit: limitQuery * 9,
+    offset: offsetQuery * 9,
+    subQuery: false,
   });
 };

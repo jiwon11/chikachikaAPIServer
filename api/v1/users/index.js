@@ -250,6 +250,7 @@ router.get("/wroteCommentPosts", getUserInToken, async (req, res, next) => {
           ["review_contents", "index", "ASC"],
         ],
         subQuery: false,
+        logging: true,
       });
       return res.status(200).json(userWroteCommentReviews);
     } else if (type === "community") {

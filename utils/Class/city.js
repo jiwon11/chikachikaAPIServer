@@ -6,7 +6,7 @@ const cityAttributes = [
   "emdName",
   "legalCity",
   "relativeAddress",
-  [Sequelize.literal("IF(emdName = adCity, CONCAT(sido,' ',sigungu,' ',emdName),CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')'))"), "fullCityName"],
+  "fullCityName",
   [Sequelize.literal("(SELECT COUNT(*) FROM dental_clinics WHERE dental_clinics.cityId = cities.id)"), "clinicsNum"],
 ];
 

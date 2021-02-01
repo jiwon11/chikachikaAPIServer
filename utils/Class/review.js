@@ -3,6 +3,7 @@ const Sequelize = require("sequelize");
 const reviewIncludeAttributes = function (userId) {
   return [
     [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.updatedAt,NOW()))`), "createdDiff(second)"],
+    [Sequelize.literal(`(SELECT ROUND((starRate_cost + starRate_treatment + starRate_service)/3,1))`), "AVGStarRate"],
     [
       Sequelize.literal(
         "(SELECT COUNT(*) FROM review_comments WHERE review_comments.reviewId = review.id AND review_comments.deletedAt IS null) + (SELECT COUNT(*) FROM Review_reply LEFT JOIN review_comments AS replys ON replys.id = Review_reply.replyId LEFT JOIN review_comments AS comments ON comments.id = Review_reply.commentId where comments.reviewId=review.id AND replys.deletedAt IS NULL AND comments.deletedAt IS NULL)"
@@ -19,6 +20,7 @@ const reviewIncludeAttributes = function (userId) {
       ),
       "reviewDescriptions",
     ],
+    [Sequelize.literal(`IF((SELECT COUNT(*) FROM reviewBills where reviewBills.reviewId=review.id AND reviewBills.deletedAt IS NULL)>0,TRUE,FALSE)`), "verifyBills"],
   ];
 };
 module.exports.reviewIncludeAttributes = reviewIncludeAttributes;
@@ -29,7 +31,7 @@ const reviewIncludeModels = function (db, viewType, appendModels) {
     includeModels = [
       {
         model: db.User,
-        attributes: ["nickname", "profileImg"],
+        attributes: ["id", "nickname", "profileImg"],
       },
       {
         model: db.Review_content,
@@ -43,7 +45,13 @@ const reviewIncludeModels = function (db, viewType, appendModels) {
       },
       {
         model: db.Dental_clinic,
-        attributes: ["id", "name", "originalName"],
+        attributes: ["id", "originalName"],
+        include: [
+          {
+            model: db.City,
+            attributes: ["id", "fullCityName", "newTownId", "sigungu"],
+          },
+        ],
       },
       {
         model: db.Treatment_item,
@@ -227,5 +235,80 @@ module.exports.getUserReviewsAll = async function (db, targetUserId, userId, lim
     ],
     limit: limitQuery,
     offset: offsetQuery,
+  });
+};
+
+module.exports.getKeywordSearchAll = async function (db, userId, query, clusterQuery, limitQuery, offsetQuery, order) {
+  var orderQuery;
+  if (order === "createdAt") {
+    orderQuery = ["createdAt", "DESC"];
+  } else {
+    orderQuery = [
+      Sequelize.literal("(((SELECT COUNT(*) FROM Like_Review WHERE Like_Review.likedReviewId = review.id)*3)+ (SELECT COUNT(*) FROM ViewReviews WHERE ViewReviews.viewedReviewId = review.id)) DESC"),
+    ];
+  }
+  var residenceClincQuery;
+  if (clusterQuery === undefined) {
+    // 함수 호출시 x에 해당하는 인수가 전달되지 않은 경우
+    residenceClincQuery = { id: { [Sequelize.Op.not]: null } };
+  } else {
+    if (clusterQuery.hasOwnProperty("newTownId")) {
+      residenceClincQuery = { ["$dental_clinic.city.newTownId$"]: { [Sequelize.Op.eq]: clusterQuery.newTownId } };
+    } else {
+      residenceClincQuery = { ["$dental_clinic.city.sigungu$"]: { [Sequelize.Op.eq]: clusterQuery.sigungu } };
+    }
+  }
+  console.log("residenceClincQuery:", residenceClincQuery);
+  return this.findAll({
+    where: {
+      [Sequelize.Op.and]: [
+        {
+          userId: {
+            [Sequelize.Op.not]: null,
+          },
+        },
+        residenceClincQuery,
+        {
+          [Sequelize.Op.or]: [
+            {
+              ["$user.nickname$"]: {
+                [Sequelize.Op.like]: `%${query}%`,
+              },
+            },
+            {
+              ["$dental_clinic.originalName$"]: {
+                [Sequelize.Op.like]: `%${query}%`,
+              },
+            },
+            {
+              ["$dental_clinic.city.fullCityName$"]: {
+                [Sequelize.Op.like]: `%${query}%`,
+              },
+            },
+            {
+              ["$TreatmentItems.name$"]: {
+                [Sequelize.Op.like]: `%${query}%`,
+              },
+            },
+            Sequelize.where(
+              Sequelize.literal(
+                "(SELECT GROUP_CONCAT(description ORDER BY review_contents.index ASC SEPARATOR ' ') FROM review_contents WHERE review_contents.reviewId = review.id AND review_contents.deletedAt IS NULL)"
+              ),
+              {
+                [Sequelize.Op.like]: `%${query}%`,
+              }
+            ),
+          ],
+        },
+      ],
+    },
+    attributes: {
+      include: reviewIncludeAttributes(userId),
+    },
+    include: reviewIncludeModels(db, "list"),
+    order: [orderQuery, ["TreatmentItems", db.Review_treatment_item, "index", "ASC"], ["review_contents", "index", "ASC"]],
+    limit: limitQuery,
+    offset: offsetQuery,
+    subQuery: false,
   });
 };

@@ -33,6 +33,9 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: true,
     },
+    fullCityName: {
+      type: DataTypes.STRING,
+    },
   });
 
   city.searchAll = cityQueryClass.searchAll;
