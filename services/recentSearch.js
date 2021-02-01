@@ -5,11 +5,9 @@ module.exports.getRecent = async function getRecentSearch(event) {
   try {
     const token = event.headers.Authorization;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const category = event.queryStringParameters.category;
     const recentSearch = await Search_record.findAll({
       where: {
         userId: decoded.id,
-        category: category,
       },
       attributes: ["id", "query", "category", "updatedAt"],
       order: [["updatedAt", "DESC"]],

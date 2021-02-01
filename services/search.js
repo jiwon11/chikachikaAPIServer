@@ -85,7 +85,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
       },
     });
     if (user) {
-      const { lat, long, query, sort, days, time, wantParking, holiday } = event.queryStringParameters;
+      const { lat, long, query, sort, days, time, wantParking, holiday, category } = event.queryStringParameters;
       const limit = parseInt(event.queryStringParameters.limit);
       const offset = parseInt(event.queryStringParameters.offset);
       if (!query) {
@@ -97,7 +97,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
       if (user) {
         await db.Search_record.create({
           query: query,
-          category: "keyword",
+          category: category,
           userId: user.id,
         });
       } else {
@@ -369,26 +369,29 @@ module.exports.allTagItems = async function allTagItems(event) {
 module.exports.keywordSearchResults = async function keywordSearchResults(event) {
   try {
     const token = event.headers.Authorization;
-    const query = event.queryStringParameters.query;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const type = event.pathParameters.type;
     const userId = decoded.id;
+    const query = event.queryStringParameters.query;
     const limit = parseInt(event.queryStringParameters.limit);
     const offset = parseInt(event.queryStringParameters.offset);
     const order = event.queryStringParameters.order;
     const region = event.queryStringParameters.region;
     const cityId = event.queryStringParameters.cityId;
+    const category = event.queryStringParameters.category;
     const [search, created] = await db.Search_record.findOrCreate({
       where: {
         userId: userId,
         query: query,
-        category: "keyword",
+        category: category,
       },
     });
     if (!created) {
       await db.Search_record.update(
         {
-          category: "keyword",
+          userId: userId,
+          query: query,
+          category: category,
         },
         {
           where: {
