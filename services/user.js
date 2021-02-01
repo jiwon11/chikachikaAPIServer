@@ -29,13 +29,7 @@ module.exports.getUserInfo = async function getUserInfo(event) {
           {
             model: City,
             as: "Residences",
-            attributes: [
-              "id",
-              "sido",
-              "sigungu",
-              "emdName",
-              [Sequelize.literal("IF(emdName = adCity, CONCAT(sido,' ',sigungu,' ',emdName),CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')'))"), "fullCityName"],
-            ],
+            attributes: ["id", "sido", "sigungu", "emdName", "fullCityName"],
             through: {
               attributes: ["now"],
             },
@@ -98,13 +92,7 @@ module.exports.getUserProfile = async function getUserProfile(event) {
           {
             model: City,
             as: "Residences",
-            attributes: [
-              "id",
-              "sido",
-              "sigungu",
-              "emdName",
-              [Sequelize.literal("IF(emdName = adCity, CONCAT(sido,' ',sigungu,' ',emdName),CONCAT(sido,' ',sigungu,' ',emdName,'(',adCity,')'))"), "fullCityName"],
-            ],
+            attributes: ["id", "sido", "sigungu", "emdName", "fullCityName"],
             through: {
               attributes: ["now"],
             },

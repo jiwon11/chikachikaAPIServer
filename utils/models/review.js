@@ -43,5 +43,6 @@ module.exports = (sequelize, DataTypes) => {
   review.getAll = reviewQueryClass.getAll;
   review.getClinicReviewsAll = reviewQueryClass.getClinicReviewsAll;
   review.getUserReviewsAll = reviewQueryClass.getUserReviewsAll;
+  review.getKeywordSearchAll = reviewQueryClass.getKeywordSearchAll;
   return review;
 };

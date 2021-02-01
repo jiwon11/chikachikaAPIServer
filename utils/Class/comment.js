@@ -84,5 +84,5 @@ module.exports.getAll = async function (db, type, targetId) {
       order: [["createdAt", "ASC"]],
     });
   }
-  return { commentsNum: commentsNum[0], comments: comments };
+  return { commentsNum: commentsNum[0].commentsNum, comments: comments };
 };

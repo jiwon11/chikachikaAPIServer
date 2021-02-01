@@ -570,3 +570,30 @@ module.exports.sidoSigungu = async function sidoSigungu(event) {
     };
   }
 };
+module.exports.fullCityName = async function fullCityName(event) {
+  try {
+    const cities = await City.findAll({});
+    for (const city of cities) {
+      console.log(`${city.sido} ${city.sigungu} ${city.emdName}(${city.legalCity})`);
+      if (city.emdName === city.adCity) {
+        await city.update({
+          fullCityName: `${city.sido} ${city.sigungu} ${city.emdName}`,
+        });
+      } else {
+        await city.update({
+          fullCityName: `${city.sido} ${city.sigungu} ${city.emdName}(${city.adCity})`,
+        });
+      }
+    }
+    return {
+      statusCode: 200,
+      body: "OK",
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};

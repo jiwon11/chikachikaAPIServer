@@ -30,13 +30,11 @@ module.exports.delRecent = async function delRecentSearch(event) {
   try {
     const token = event.headers.Authorization;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const category = event.queryStringParameters.category;
     const searchId = event.queryStringParameters.searchId;
     if (searchId !== "all") {
       await Search_record.destroy({
         where: {
           userId: decoded.id,
-          category: category,
           id: searchId,
         },
       });
