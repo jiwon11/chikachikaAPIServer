@@ -67,7 +67,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
       )
     );
     var hashtags = [];
-    const regex = /\{\{[가-힣|ㄱ-ㅎ|ㅏ-ㅣ|0-9|a-zA-Z|(|)]+\}\}/gm;
+    const regex = /\{\{[가-힣|ㄱ-ㅎ|ㅏ-ㅣ|0-9|a-zA-Z|(|)|([\{\}\[\]\/?.,;:|\)*~`!^\-_+<>@\#$%&\\\=\(\'\")]*\}\}/gm;
     let m;
     while ((m = regex.exec(description)) !== null) {
       if (m.index === regex.lastIndex) {
@@ -330,7 +330,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
       )
     );
     var hashtags = [];
-    const regex = /\{\{[가-힣|ㄱ-ㅎ|ㅏ-ㅣ|0-9|a-zA-Z|(|)]+\}\}/gm;
+    const regex = /\{\{[가-힣|ㄱ-ㅎ|ㅏ-ㅣ|0-9|a-zA-Z|(|)|([\{\}\[\]\/?.,;:|\)*~`!^\-_+<>@\#$%&\\\=\(\'\")]*\}\}/gm;
     let m;
     while ((m = regex.exec(description)) !== null) {
       if (m.index === regex.lastIndex) {
@@ -345,7 +345,9 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
         }
       });
     }
+    tagArray = [];
     for (const hashtag of hashtags) {
+      console.log(hashtag);
       let clinic = await db.Dental_clinic.findOne({
         where: {
           name: hashtag,
@@ -357,6 +359,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
             index: hashtags.indexOf(hashtag) + 1,
           },
         });
+        tagArray.push(clinic.name);
       } else {
         let treatment = await db.Treatment_item.findOne({
           where: {
@@ -369,6 +372,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
               index: hashtags.indexOf(hashtag) + 1,
             },
           });
+          tagArray.push(treatment.name);
         } else {
           let symptom = await db.Symptom_item.findOne({
             where: {
@@ -381,12 +385,13 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
                 index: hashtags.indexOf(hashtag) + 1,
               },
             });
+            tagArray.push(symptom.name);
           } else {
             let city = await db.City.findOne({
               where: {
                 [Sequelize.Op.or]: [
                   Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), {
-                    [Sequelize.Op.like]: `%${hashtag}%`,
+                    [Sequelize.Op.like]: `${hashtag}`,
                   }),
                 ],
               },
@@ -397,6 +402,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
                   index: hashtags.indexOf(hashtag) + 1,
                 },
               });
+              tagArray.push(city.fullCityName);
             } else {
               let generalTag = await db.GeneralTag.findOne({
                 where: {
@@ -409,6 +415,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
                     index: hashtags.indexOf(hashtag) + 1,
                   },
                 });
+                tagArray.push(generalTag.name);
               } else {
                 let newGeneralTag = await db.GeneralTag.create({
                   name: hashtag,
@@ -418,12 +425,16 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
                     index: hashtags.indexOf(hashtag) + 1,
                   },
                 });
+                tagArray.push(newGeneralTag.name);
               }
             }
           }
         }
       }
     }
+    await communityPost.update({
+      tagArray: { name: tagArray },
+    });
     const updateCommunityPost = await db.Community.getOne(db, userId, communityPost.id);
     return res.status(200).json({
       statusCode: 200,
