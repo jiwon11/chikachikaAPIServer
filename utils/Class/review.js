@@ -21,6 +21,12 @@ const reviewIncludeAttributes = function (userId) {
       "reviewDescriptions",
     ],
     [Sequelize.literal(`IF((SELECT COUNT(*) FROM reviewBills where reviewBills.reviewId=review.id AND reviewBills.deletedAt IS NULL)>0,TRUE,FALSE)`), "verifyBills"],
+    [
+      Sequelize.literal(
+        "(SELECT JSON_ARRAYAGG((SELECT treatment_items.name FROM treatment_items where review_treatment_items.treatmentItemId = treatment_items.id ORDER BY review_treatment_items.index ASC)) FROM review_treatment_items WHERE review_treatment_items.reviewId = review.id AND review_treatment_items.deletedAt IS NULL)"
+      ),
+      "reviewTreatmentTags",
+    ],
   ];
 };
 module.exports.reviewIncludeAttributes = reviewIncludeAttributes;
@@ -108,9 +114,9 @@ module.exports.getOne = async function (db, reviewId, userId) {
         [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.updatedAt,NOW()))`), "createdDiff(second)"],
         [
           Sequelize.literal(
-            "(SELECT COUNT(*) FROM review_comments WHERE review_comments.reviewId = review.id AND review_comments.deletedAt IS null) + (SELECT COUNT(*) FROM Review_reply LEFT JOIN review_comments AS replys ON replys.id = Review_reply.replyId LEFT JOIN review_comments AS comments ON comments.id = Review_reply.commentId where comments.reviewId=review.id AND replys.deletedAt IS NULL AND comments.deletedAt IS NULL)"
+            "(SELECT GROUP_CONCAT(description ORDER BY review_contents.index ASC SEPARATOR ',') FROM review_treatment_items WHERE review_contents.reviewId = review.id AND review_contents.deletedAt IS NULL)"
           ),
-          "reviewCommentsNum",
+          "reviewDescriptions",
         ],
       ],
     },
@@ -263,7 +269,7 @@ module.exports.getKeywordSearchAll = async function (db, userId, query, clusterQ
     where: {
       [Sequelize.Op.and]: [
         {
-          userId: {
+          "$review.userId$": {
             [Sequelize.Op.not]: null,
           },
         },
@@ -271,33 +277,20 @@ module.exports.getKeywordSearchAll = async function (db, userId, query, clusterQ
         {
           [Sequelize.Op.or]: [
             {
-              ["$user.nickname$"]: {
-                [Sequelize.Op.like]: `%${query}%`,
+              "$TreatmentItems.name$": {
+                [Sequelize.Op.like]: query,
               },
             },
             {
-              ["$dental_clinic.originalName$"]: {
-                [Sequelize.Op.like]: `%${query}%`,
+              "$dental_clinic.originalName$": {
+                [Sequelize.Op.like]: query,
               },
             },
             {
-              ["$dental_clinic.city.fullCityName$"]: {
-                [Sequelize.Op.like]: `%${query}%`,
+              "$dental_clinic.city.fullCityName$": {
+                [Sequelize.Op.like]: query,
               },
             },
-            {
-              ["$TreatmentItems.name$"]: {
-                [Sequelize.Op.like]: `%${query}%`,
-              },
-            },
-            Sequelize.where(
-              Sequelize.literal(
-                "(SELECT GROUP_CONCAT(description ORDER BY review_contents.index ASC SEPARATOR ' ') FROM review_contents WHERE review_contents.reviewId = review.id AND review_contents.deletedAt IS NULL)"
-              ),
-              {
-                [Sequelize.Op.like]: `%${query}%`,
-              }
-            ),
           ],
         },
       ],
@@ -305,10 +298,48 @@ module.exports.getKeywordSearchAll = async function (db, userId, query, clusterQ
     attributes: {
       include: reviewIncludeAttributes(userId),
     },
-    include: reviewIncludeModels(db, "list"),
-    order: [orderQuery, ["TreatmentItems", db.Review_treatment_item, "index", "ASC"], ["review_contents", "index", "ASC"]],
+    include: [
+      {
+        model: db.User,
+        attributes: ["id", "nickname", "profileImg"],
+      },
+      {
+        model: db.Dental_clinic,
+        attributes: ["id", "originalName", "cityId"],
+        include: [
+          {
+            model: db.City,
+            attributes: ["id", "fullCityName", "newTownId", "sigungu"],
+          },
+        ],
+      },
+      {
+        model: db.Treatment_item,
+        as: "TreatmentItems",
+        attributes: ["id", "name"],
+        order: [["index", "ASC"]],
+        through: {
+          model: db.Review_treatment_item,
+          attributes: ["cost", "index"],
+        },
+        required: false,
+      },
+      {
+        model: db.Review_content,
+        attributes: ["id", "img_url", "index", "img_before_after", "img_width", "img_height"],
+        required: false,
+        separate: true,
+        where: {
+          img_url: {
+            [Sequelize.Op.not]: null,
+          },
+        },
+        order: [[["index", "ASC"]]],
+      },
+    ],
+    order: [orderQuery, ["TreatmentItems", db.Review_treatment_item, "index", "ASC"]],
+    subQuery: false,
     limit: limitQuery,
     offset: offsetQuery,
-    subQuery: false,
   });
 };

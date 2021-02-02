@@ -21,7 +21,6 @@ module.exports.socialUserCheck = async function socialUserCheck(event) {
       overlapSocialUser = await User.findOne({
         where: {
           email: email,
-          provider: provider,
         },
         attributes: ["id", "email", "provider"],
         include: [

@@ -82,6 +82,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
         }
       });
     }
+    tagArray = [];
     for (const hashtag of hashtags) {
       console.log(hashtag);
       let clinic = await db.Dental_clinic.findOne({
@@ -95,6 +96,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
             index: hashtags.indexOf(hashtag) + 1,
           },
         });
+        tagArray.push(clinic.name);
       } else {
         let treatment = await db.Treatment_item.findOne({
           where: {
@@ -107,6 +109,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
               index: hashtags.indexOf(hashtag) + 1,
             },
           });
+          tagArray.push(treatment.name);
         } else {
           let symptom = await db.Symptom_item.findOne({
             where: {
@@ -119,12 +122,13 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
                 index: hashtags.indexOf(hashtag) + 1,
               },
             });
+            tagArray.push(symptom.name);
           } else {
             let city = await db.City.findOne({
               where: {
                 [Sequelize.Op.or]: [
                   Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), {
-                    [Sequelize.Op.like]: `%${hashtag}%`,
+                    [Sequelize.Op.like]: `${hashtag}`,
                   }),
                 ],
               },
@@ -135,6 +139,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
                   index: hashtags.indexOf(hashtag) + 1,
                 },
               });
+              tagArray.push(city.fullCityName);
             } else {
               let generalTag = await db.GeneralTag.findOne({
                 where: {
@@ -147,6 +152,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
                     index: hashtags.indexOf(hashtag) + 1,
                   },
                 });
+                tagArray.push(generalTag.name);
               } else {
                 let newGeneralTag = await db.GeneralTag.create({
                   name: hashtag,
@@ -156,12 +162,16 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
                     index: hashtags.indexOf(hashtag) + 1,
                   },
                 });
+                tagArray.push(newGeneralTag.name);
               }
             }
           }
         }
       }
     }
+    await communityPost.update({
+      tagArray: { name: tagArray },
+    });
     return res.status(201).json({
       statusCode: 201,
       body: { statusText: "Accepted", message: "수다방 글 작성이 완료되었습니다!" },

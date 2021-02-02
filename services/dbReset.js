@@ -4,6 +4,7 @@ const { QueryTypes } = require("sequelize");
 
 const request = require("request");
 const parser = require("fast-xml-parser");
+const db = require("../utils/models");
 
 const zerofill = function (number, digit) {
   return ("00000000" + number).slice(-digit);
@@ -584,6 +585,35 @@ module.exports.fullCityName = async function fullCityName(event) {
           fullCityName: `${city.sido} ${city.sigungu} ${city.emdName}(${city.adCity})`,
         });
       }
+    }
+    return {
+      statusCode: 200,
+      body: "OK",
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
+
+module.exports.communitiesTagArray = async function communitiesTagArray(event) {
+  try {
+    const communities = await db.Community.findAll({});
+    for (const community of communities) {
+      var clinics = await community.getClinics();
+      var treatmentItems = await community.getTreatmentItems();
+      var symptomItems = await community.getSymptomItems();
+      var cityTags = await community.getCityTags({ attributes: ["fullCityName"] });
+      var generalTags = await community.getGeneralTags();
+      const tagObjects = clinics.concat(treatmentItems, symptomItems, cityTags, generalTags);
+      const tagNames = tagObjects.map((tag) => (tag.hasOwnProperty("originalName") ? tag.originalName : tag.dataValues.hasOwnProperty("fullCityName") ? tag.dataValues.fullCityName : tag.name));
+      console.log(tagNames);
+      await community.update({
+        tagArray: { name: tagNames },
+      });
     }
     return {
       statusCode: 200,
