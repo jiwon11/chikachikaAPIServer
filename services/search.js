@@ -232,7 +232,7 @@ module.exports.reviews = async function reviewSearch(event) {
           model: Review_content,
         },
       ],
-      order: [[orderQuery], ["review_contents", "index", "ASC"]],
+      order: [[orderQuery]],
       offset: offset,
       limit: limit,
     });

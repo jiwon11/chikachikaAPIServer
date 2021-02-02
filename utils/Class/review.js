@@ -2,7 +2,7 @@ const Sequelize = require("sequelize");
 
 const reviewIncludeAttributes = function (userId) {
   return [
-    [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.updatedAt,NOW()))`), "createdDiff(second)"],
+    [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.createdAt,NOW()))`), "createdDiff(second)"],
     [Sequelize.literal(`(SELECT ROUND((starRate_cost + starRate_treatment + starRate_service)/3,1))`), "AVGStarRate"],
     [
       Sequelize.literal(
@@ -43,11 +43,13 @@ const reviewIncludeModels = function (db, viewType, appendModels) {
         model: db.Review_content,
         attributes: ["id", "img_url", "index", "img_before_after", "img_width", "img_height"],
         required: false,
+        separate: true,
         where: {
           img_url: {
             [Sequelize.Op.not]: null,
           },
         },
+        order: [["index", "ASC"]],
       },
       {
         model: db.Dental_clinic,
@@ -111,7 +113,7 @@ module.exports.getOne = async function (db, reviewId, userId) {
     },
     attributes: {
       include: [
-        [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.updatedAt,NOW()))`), "createdDiff(second)"],
+        [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.createdAt,NOW()))`), "createdDiff(second)"],
         [
           Sequelize.literal(
             "(SELECT GROUP_CONCAT(description ORDER BY review_contents.index ASC SEPARATOR ',') FROM review_treatment_items WHERE review_contents.reviewId = review.id AND review_contents.deletedAt IS NULL)"
@@ -122,13 +124,13 @@ module.exports.getOne = async function (db, reviewId, userId) {
     },
     include: reviewIncludeModels(db, "detail"),
     order: [
-      ["review_contents", "index", "ASC"],
       ["TreatmentItems", db.Review_treatment_item, "index", "ASC"],
+      ["review_contents", "index", "ASC"],
     ],
   });
   if (review) {
     const reviewComments = await review.getReview_comments({
-      attributes: ["id", "description", "createdAt", "updatedAt", "userId", [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review_comment.updatedAt,NOW()))`), "createdDiff(second)"]],
+      attributes: ["id", "description", "createdAt", "updatedAt", "userId", [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review_comment.createdAt,NOW()))`), "createdDiff(second)"]],
       include: [
         {
           model: db.User,
@@ -137,7 +139,7 @@ module.exports.getOne = async function (db, reviewId, userId) {
         {
           model: db.Review_comment,
           as: "Replys",
-          attributes: ["id", "description", "createdAt", "updatedAt", "userId", [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review_comment.updatedAt,NOW()))`), "createdDiff(second)"]],
+          attributes: ["id", "description", "createdAt", "updatedAt", "userId", [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review_comment.createdAt,NOW()))`), "createdDiff(second)"]],
           include: [
             {
               model: db.User,
@@ -194,7 +196,7 @@ module.exports.getAll = async function (db, userId, order, limit, offset) {
     include: reviewIncludeModels(db, "list"),
     limit: limit,
     offset: offset,
-    order: [orderQuery, ["TreatmentItems", db.Review_treatment_item, "index", "ASC"], ["review_contents", "index", "ASC"]],
+    order: [orderQuery, ["TreatmentItems", db.Review_treatment_item, "index", "ASC"]],
   });
 };
 
@@ -213,7 +215,6 @@ module.exports.getClinicReviewsAll = async function (db, clinicId, userId, limit
     order: [
       ["createdAt", "DESC"],
       ["TreatmentItems", db.Review_treatment_item, "index", "ASC"],
-      ["review_contents", "index", "ASC"],
     ],
     limit: limitQuery,
     offset: offsetQuery,
@@ -237,7 +238,6 @@ module.exports.getUserReviewsAll = async function (db, targetUserId, userId, lim
     order: [
       ["createdAt", "DESC"],
       ["TreatmentItems", db.Review_treatment_item, "index", "ASC"],
-      ["review_contents", "index", "ASC"],
     ],
     limit: limitQuery,
     offset: offsetQuery,

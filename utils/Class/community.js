@@ -2,7 +2,7 @@ const Sequelize = require("sequelize");
 
 const communityIncludeAttributes = function (userId) {
   return [
-    [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,community.updatedAt,NOW()))`), "createdDiff(second)"],
+    [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,community.createdAt,NOW()))`), "createdDiff(second)"],
     [
       Sequelize.literal(
         "(SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = community.id AND deletedAt IS null) + (SELECT COUNT(*) FROM Community_reply LEFT JOIN community_comments AS replys ON replys.id = Community_reply.replyId LEFT JOIN community_comments AS comments ON comments.id = Community_reply.commentId where comments.communityId=community.id AND replys.deletedAt IS NULL AND comments.deletedAt IS NULL)"
@@ -44,6 +44,8 @@ const communityIncludeModels = function (db, clusterQuery, appendModels) {
     {
       model: db.Community_img,
       attributes: ["id", "img_originalname", "img_mimetype", "img_filename", "img_url", "img_size", "img_index", "img_width", "img_height"],
+      separate: true,
+      order: [["img_index", "ASC"]],
     },
     {
       model: db.Dental_clinic,
@@ -105,7 +107,6 @@ module.exports.getOne = async function (db, userId, communityPostId) {
       include: communityIncludeAttributes(userId),
     },
     include: communityIncludeModels(db),
-    order: [["community_imgs", "img_index", "ASC"]],
   });
 };
 module.exports.getAll = async function (db, userId, type, clusterQuery, order, offset, limit) {
@@ -130,7 +131,7 @@ module.exports.getAll = async function (db, userId, type, clusterQuery, order, o
       include: communityIncludeAttributes(userId),
     },
     include: communityIncludeModels(db, clusterQuery),
-    order: [orderQuery, ["community_imgs", "img_index", "ASC"]],
+    order: [orderQuery],
     offset: offset,
     limit: limit,
   });
@@ -151,10 +152,7 @@ module.exports.getUserCommunityPostAll = async function (db, type, userId, targe
       include: communityIncludeAttributes(userId),
     },
     include: communityIncludeModels(db),
-    order: [
-      [orderQuery, "DESC"],
-      ["community_imgs", "img_index", "ASC"],
-    ],
+    order: [[orderQuery, "DESC"]],
     offset: offsetQuery,
     limit: limitQuery,
   });
@@ -190,7 +188,7 @@ module.exports.getKeywordSearchAll = async function (db, type, query, userId, cl
       ],
     },
     include: communityIncludeModels(db, clusterQuery),
-    order: [orderQuery, ["community_imgs", "img_index", "ASC"]],
+    order: [orderQuery],
     limit: limitQuery,
     offset: offsetQuery,
   });
