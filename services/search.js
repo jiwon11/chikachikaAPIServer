@@ -314,11 +314,11 @@ module.exports.allTagItems = async function allTagItems(event) {
     if (purpose === "autoComplete") {
       cities = await db.City.findAll({
         where: {
-          relativeAddress: {
+          fullCityName: {
             [Sequelize.Op.like]: `%${query}%`,
           },
         },
-        attributes: ["id", "sido", "sigungu", "adCity", "emdName", "fullCityName", "relativeAddress", [Sequelize.literal("CONCAT(emdName, '(',REPLACE(sigungu,' ', '-'),')')"), "cityName"]],
+        attributes: ["id", "sido", "sigungu", "adCity", "emdName", "fullCityName", [Sequelize.literal("CONCAT(emdName, '(',REPLACE(sigungu,' ', '-'),')')"), "cityName"]],
         offset: offset,
         limit: limit,
       });
@@ -327,7 +327,7 @@ module.exports.allTagItems = async function allTagItems(event) {
         where: {
           [Sequelize.Op.or]: [
             {
-              relativeAddress: {
+              fullCityName: {
                 [Sequelize.Op.like]: `%${query}%`,
               },
             },
