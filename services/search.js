@@ -272,7 +272,7 @@ module.exports.allTagItems = async function allTagItems(event) {
           [Sequelize.Op.like]: `${query}%`,
         },
       },
-      attributes: ["id", "name", "address"],
+      attributes: ["id", "name", "originalName", "address"],
       offset: offset,
       limit: limit,
     });
