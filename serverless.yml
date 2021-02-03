@@ -683,15 +683,21 @@ functions:
   pushNotifiactionCommentTaskWorker:
     handler: services/notificationTaskWorker.comment
     events:
-      - sqs: arn:aws:sqs:ap-northeast-1:751612718299:commentNotification-${opt:stage, 'dev'}
+      - sqs: 
+          arn: arn:aws:sqs:ap-northeast-1:751612718299:commentNotification-${opt:stage, 'dev'}
+          enabled: true
   pushNotifiactionReplyTaskWorker:
     handler: services/notificationTaskWorker.reply
     events:
-      - sqs: arn:aws:sqs:ap-northeast-1:751612718299:replyNotification-${opt:stage, 'dev'}
+      - sqs: 
+          arn: arn:aws:sqs:ap-northeast-1:751612718299:replyNotification-${opt:stage, 'dev'}
+          enabled: true
   pushNotifiactionLikeTaskWorker:
     handler: services/notificationTaskWorker.like
     events:
-      - sqs: arn:aws:sqs:ap-northeast-1:751612718299:likeNotification-${opt:stage, 'dev'}
+      - sqs: 
+          arn: arn:aws:sqs:ap-northeast-1:751612718299:likeNotification-${opt:stage, 'dev'}
+          enabled: true
 resources:
   Resources:
     commentNotification:
