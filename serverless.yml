@@ -114,7 +114,6 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   allTagItems:
     handler: services/search.allTagItems
-    timeout: 45
     events:
       - http:
           path: search/allTagItems/{purpose}
