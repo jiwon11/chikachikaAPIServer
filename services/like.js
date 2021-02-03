@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { User, Review, Community, Sequelize } = require("../utils/models");
-const likeConsumer = require("../../../utils/Class/SQSconsumer").like;
+const likeConsumer = require("../utils/Class/SQSconsumer").like;
 
 module.exports.addLikeReview = async function addLikeReview(event) {
   try {
