@@ -257,7 +257,8 @@ module.exports.reviews = async function reviewSearch(event) {
   }
 };
 
-module.exports.allTagItems = async function allTagItems(event) {
+module.exports.allTagItems = async function allTagItems(event, context) {
+  context.callbackWaitsForEmptyEventLoop = false;
   try {
     const token = event.headers.Authorization;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
