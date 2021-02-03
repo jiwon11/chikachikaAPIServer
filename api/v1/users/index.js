@@ -185,10 +185,7 @@ router.get("/scraps", getUserInToken, async (req, res, next) => {
         include: communityQueryClass.communityIncludeModels(db),
         limit: limit,
         offset: offset,
-        order: [
-          [Sequelize.literal("`Scrap_Community.createdAt`"), "DESC"],
-          ["community_imgs", "img_index", "ASC"],
-        ],
+        order: [[Sequelize.literal("`Scrap_Community.createdAt`"), "DESC"]],
       });
       return res.status(200).json(userScrapCommunityPosts);
     } else {
