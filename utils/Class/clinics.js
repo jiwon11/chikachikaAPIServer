@@ -173,7 +173,7 @@ module.exports.SearchAll = async function (type, query, nowTime, day, week, toda
       weekend_non_consulation_notice,
       [
         Sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`),
-        "dinstance(km)",
+        "distance(km)",
       ],
       [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
       conclustionNow,
@@ -264,7 +264,7 @@ module.exports.SearchAll = async function (type, query, nowTime, day, week, toda
       weekend_non_consulation_notice,
       [
         Sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`),
-        "dinstance(km)",
+        "distance(km)",
       ],
       [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
       conclustionNow,

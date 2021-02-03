@@ -48,3 +48,26 @@ module.exports.reply = async function (body) {
     return error;
   }
 };
+
+module.exports.like = async function (body) {
+  try {
+    const messageBody = JSON.stringify(body);
+    let params = {
+      MessageBody: messageBody,
+      QueueUrl: `https://sqs.ap-northeast-1.amazonaws.com/751612718299/likeNotification-${process.env.stage}`,
+    };
+    const data = await sqs.sendMessage(params).promise();
+    console.info("SQS Send Message Success", data.MessageId);
+    const response = {
+      statusCode: 200,
+      body: JSON.stringify({
+        message: "Consumer PUSH successfully",
+        input: messageBody,
+      }),
+    };
+    return response;
+  } catch (error) {
+    console.info("SQS Send Message Error", error);
+    return error;
+  }
+};

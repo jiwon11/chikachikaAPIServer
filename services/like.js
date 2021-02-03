@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { User, Review, Community, Sequelize } = require("../utils/models");
+const likeConsumer = require("../../../utils/Class/SQSconsumer").like;
 
 module.exports.addLikeReview = async function addLikeReview(event) {
   try {
@@ -18,14 +19,27 @@ module.exports.addLikeReview = async function addLikeReview(event) {
             [Sequelize.Op.not]: null,
           },
         },
+        include: [
+          {
+            model: User,
+            attributes: ["id", "nickname", "fcmToken"],
+          },
+        ],
       });
       if (review) {
-        const user = await User.findOne({
-          where: {
-            id: userId,
-          },
-        });
         await user.addLikeReview(review);
+        const reviewLikeConsumerBody = {
+          targetId: review.id,
+          likeUserId: userId,
+          likeUserNickname: user.nickname,
+          targetUserId: review.user.id,
+          targetUserFcmToken: review.user.fcmToken,
+          targetType: "review",
+        };
+        const pushReviewLikeNotification = likeConsumer(reviewLikeConsumerBody);
+        if (pushReviewLikeNotification.statusCode === 200) {
+          console.log(JSON.parse(pushReviewLikeNotification.body));
+        }
         return {
           statusCode: 200,
           body: `{"statusText": "OK","message": "리뷰에 좋아요를 추가하였습니다."}`,
@@ -113,9 +127,27 @@ module.exports.addLikeCommunity = async function addLikeCommunity(event) {
             [Sequelize.Op.not]: null,
           },
         },
+        include: [
+          {
+            model: User,
+            attributes: ["id", "nickname", "fcmToken"],
+          },
+        ],
       });
       if (post) {
         await user.addLikeCommunities(post);
+        const communityLikeConsumerBody = {
+          targetId: post.id,
+          likeUserId: userId,
+          likeUserNickname: user.nickname,
+          targetUserId: post.user.id,
+          targetUserFcmToken: post.user.fcmToken,
+          targetType: "community",
+        };
+        const pushCommunityLikeNotification = likeConsumer(communityLikeConsumerBody);
+        if (pushCommunityLikeNotification.statusCode === 200) {
+          console.log(JSON.parse(pushCommunityLikeNotification.body));
+        }
         return {
           statusCode: 200,
           body: `{"statusText": "OK","message": "수다방 글에 좋아요를 추가하였습니다."}`,
