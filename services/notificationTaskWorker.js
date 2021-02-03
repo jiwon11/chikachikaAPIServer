@@ -258,7 +258,7 @@ module.exports.like = async function (event) {
           userId: targetUserId,
         },
       });
-      if (targetUser.comment === true) {
+      if (targetUser.like === true) {
         const message = {
           notification: {
             title: "",

@@ -36,7 +36,7 @@ module.exports.addLikeReview = async function addLikeReview(event) {
           targetUserFcmToken: review.user.fcmToken,
           targetType: "review",
         };
-        const pushReviewLikeNotification = likeConsumer(reviewLikeConsumerBody);
+        const pushReviewLikeNotification = await likeConsumer(reviewLikeConsumerBody);
         if (pushReviewLikeNotification.statusCode === 200) {
           console.log(JSON.parse(pushReviewLikeNotification.body));
         }
