@@ -345,11 +345,13 @@ module.exports.allTagItems = async function allTagItems(event) {
     }
     cities.forEach((city) => city.setDataValue("category", "city"));
     var mergeResults = clinics.concat(treatments, symptoms, generaltags, cities);
+    console.time("커뮤니티글 개수 집계");
     await Promise.all(
       mergeResults.map(async (result) => {
         result.dataValues.postNum = await result.countCommunties();
       })
     );
+    console.timeEnd("커뮤니티글 개수 집계");
     var sortReuslts = mergeResults.sort(function async(a, b) {
       return b.dataValues.postNum - a.dataValues.postNum;
     });
