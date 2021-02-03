@@ -144,7 +144,7 @@ module.exports.addLikeCommunity = async function addLikeCommunity(event) {
           targetUserFcmToken: post.user.fcmToken,
           targetType: "community",
         };
-        const pushCommunityLikeNotification = likeConsumer(communityLikeConsumerBody);
+        const pushCommunityLikeNotification = await likeConsumer(communityLikeConsumerBody);
         if (pushCommunityLikeNotification.statusCode === 200) {
           console.log(JSON.parse(pushCommunityLikeNotification.body));
         }
