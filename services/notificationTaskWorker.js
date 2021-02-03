@@ -229,3 +229,61 @@ module.exports.reply = async function (event) {
     };
   }
 };
+
+module.exports.like = async function (event) {
+  try {
+    const body = JSON.parse(event.Records[0].body);
+    console.log(body);
+    const { targetId, likeUserId, likeUserNickname, targetUserId, targetUserFcmToken, targetType } = body;
+    if (likeUserId !== targetUserId) {
+      if (targetType === "review") {
+        await db.Notification.create({
+          type: "Like",
+          message: `회원님의 글을 좋아합니다.`,
+          notificatedUserId: targetUserId,
+          senderId: likeUserId,
+          reviewId: targetId,
+        });
+      } else {
+        await db.Notification.create({
+          type: "Like",
+          message: `회원님의 글을 좋아합니다.`,
+          notificatedUserId: targetUserId,
+          senderId: likeUserId,
+          communityId: targetId,
+        });
+      }
+      const targetUser = await db.NotificationConfig.findOne({
+        where: {
+          userId: targetUserId,
+        },
+      });
+      if (targetUser.comment === true) {
+        const message = {
+          notification: {
+            title: "",
+            body: `${likeUserNickname}님이 회원님의 게시물을 좋아합니다.`,
+          },
+          data: { targetType: `${targetType}`, targetId: `${targetId}` },
+          token: targetUserFcmToken,
+        };
+        console.log(message);
+        const fcmResponse = await pushFcm(message);
+        console.log(fcmResponse);
+      }
+    }
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        message: "Task Worker PULL successfully",
+        input: event,
+      }),
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
