@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const db = require("../utils/models");
 const Sequelize = require("sequelize");
 const moment = require("moment");
+const communityQueryClass = require("../utils/Class/community");
 
 module.exports.treatmentItems = async function treatmentItems(event) {
   try {
@@ -273,6 +274,7 @@ module.exports.allTagItems = async function allTagItems(event) {
         },
       },
       attributes: ["id", "name", "originalName", "address"],
+      order: [["originalName", "ASC"]],
       offset: offset,
       limit: limit,
     });
@@ -284,6 +286,7 @@ module.exports.allTagItems = async function allTagItems(event) {
         },
       },
       attributes: ["id", "name"],
+      order: [["name", "ASC"]],
       offset: offset,
       limit: limit,
     });
@@ -295,6 +298,7 @@ module.exports.allTagItems = async function allTagItems(event) {
         },
       },
       attributes: ["id", "name"],
+      order: [["name", "ASC"]],
       offset: offset,
       limit: limit,
     });
@@ -306,12 +310,16 @@ module.exports.allTagItems = async function allTagItems(event) {
         },
       },
       attributes: ["id", "name"],
+      order: [["name", "ASC"]],
       offset: offset,
       limit: limit,
     });
     generaltags.forEach((generaltag) => generaltag.setDataValue("category", "general"));
     var cities;
+    var sido = [];
+    var sigungu = [];
     if (purpose === "autoComplete") {
+      // 수다방 글 작성 시, 자동완성용 API
       cities = await db.City.findAll({
         where: {
           fullCityName: {
@@ -323,41 +331,47 @@ module.exports.allTagItems = async function allTagItems(event) {
         limit: limit,
       });
     } else if (purpose === "keywordSearch") {
-      cities = await db.City.findAll({
+      // 통합검색 시, 자동완성용 API
+      if (offset === 0) {
+        sido = await db.Sido.findAll({
+          attributes: ["id", "name", "fullName"],
+          where: {
+            fullName: {
+              [Sequelize.Op.like]: `%${query}%`,
+            },
+          },
+          order: [["fullName", "ASC"]],
+        });
+      }
+      sigungu = await db.Sigungu.findAll({
+        attributes: ["id", "name", "fullName"],
         where: {
-          [Sequelize.Op.or]: [
-            {
-              fullCityName: {
-                [Sequelize.Op.like]: `%${query}%`,
-              },
-            },
-            {
-              relativeAddress: {
-                [Sequelize.Op.like]: `%${query}%`,
-              },
-            },
-          ],
+          fullName: {
+            [Sequelize.Op.like]: `%${query}%`,
+          },
         },
-        attributes: ["id", "sido", "sigungu", "adCity", "emdName", "fullCityName", "relativeAddress"],
+        offset: offset,
+        limit: limit,
+        order: [["fullName", "ASC"]],
+      });
+      cities = await db.City.findAll({
+        where: Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
+          [Sequelize.Op.like]: `%${query}%`,
+        }),
+        attributes: ["id", "emdName", "sido", "sigungu", [Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("adCity")), "fullName"]],
         offset: offset,
         limit: limit,
       });
     }
+    cities = cities.concat(sido, sigungu);
     cities.forEach((city) => city.setDataValue("category", "city"));
-    var mergeResults = clinics.concat(treatments, symptoms, generaltags, cities);
-    console.time("커뮤니티글 개수 집계");
-    await Promise.all(
-      mergeResults.map(async (result) => {
-        result.dataValues.postNum = await result.countCommunties();
-      })
-    );
-    console.timeEnd("커뮤니티글 개수 집계");
-    var sortReuslts = mergeResults.sort(function async(a, b) {
-      return b.dataValues.postNum - a.dataValues.postNum;
+    cities = cities.sort(function async(a, b) {
+      return a.dataValues.fullName < b.dataValues.fullName ? -1 : a.dataValues.fullName > b.dataValues.fullName ? 1 : 0;
     });
+    var mergeResults = cities.concat(treatments, symptoms, generaltags, clinics);
     return {
       statusCode: 200,
-      body: JSON.stringify(sortReuslts),
+      body: JSON.stringify(mergeResults),
     };
   } catch (error) {
     console.log(error);
@@ -380,12 +394,13 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
     const order = event.queryStringParameters.order;
     const region = event.queryStringParameters.region;
     const cityId = event.queryStringParameters.cityId;
-    const category = event.queryStringParameters.category;
+    const tagCategory = event.queryStringParameters.tagCategory;
+    const tagId = event.queryStringParameters.tagId;
     const [search, created] = await db.Search_record.findOrCreate({
       where: {
         userId: userId,
         query: query,
-        category: category,
+        category: tagCategory,
       },
     });
     if (!created) {
@@ -393,7 +408,7 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
         {
           userId: userId,
           query: query,
-          category: category,
+          category: tagCategory,
         },
         {
           where: {
@@ -425,8 +440,7 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
     switch (type) {
       case "community":
         const communityType = event.queryStringParameters.type === "All" ? ["Question", "FreeTalk"] : [event.queryStringParameters.type];
-        console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
-        const communityResult = await db.Community.getKeywordSearchAll(db, communityType, query, userId, clusterQuery, offset, limit, order);
+        const communityResult = await db.Community.getKeywordSearchAll(db, communityType, query, tagCategory, tagId, userId, clusterQuery, offset, limit, order);
         console.log(`${type} results Num: ${communityResult.length}`);
         return {
           statusCode: 200,
@@ -434,7 +448,7 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
         };
       case "review":
         console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
-        const reviewResult = await db.Review.getKeywordSearchAll(db, userId, query, clusterQuery, limit, offset, order);
+        const reviewResult = await db.Review.getKeywordSearchAll(db, userId, query, tagCategory, tagId, clusterQuery, limit, offset, order);
         console.log(`${type} results Num: ${reviewResult.length}`);
         return {
           statusCode: 200,
@@ -474,13 +488,12 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
       order: [["fullName", "ASC"]],
     });
     const emd = await db.City.findAll({
-      attributes: ["id", ["emdName", "name"], [Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName)"), "fullName"]],
-      where: {
-        emdName: {
-          [Sequelize.Op.like]: `%${query}%`,
-        },
-      },
-      order: [[Sequelize.literal("CONCAT(sido,' ',sigungu,' ',emdName)"), "ASC"]],
+      attributes: ["id", "emdName", "sido", "sigungu", [Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), "fullName"]],
+      where: Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
+        [Sequelize.Op.like]: `%${query}%`,
+      }),
+      group: [Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName"))],
+      order: [["fullCityName", "ASC"]],
     });
     const cities = sido.concat(sigungu, emd);
     cities.forEach((city) => city.setDataValue("category", "city"));
@@ -495,9 +508,12 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
     });
     clinics.forEach((clinic) => clinic.setDataValue("category", "clinic"));
     const mergeResults = cities.concat(clinics);
+    var sortReuslts = mergeResults.sort(function async(a, b) {
+      return a.dataValues.name < b.dataValues.name ? -1 : a.dataValues.name > b.dataValues.name ? 1 : 0;
+    });
     return {
       statusCode: 200,
-      body: JSON.stringify(mergeResults),
+      body: JSON.stringify(sortReuslts),
     };
   } catch (error) {
     console.error(error);

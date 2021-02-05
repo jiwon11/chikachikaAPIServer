@@ -224,7 +224,7 @@ router.get("/wroteCommentPosts", getUserInToken, async (req, res, next) => {
         attributes: {
           include: reviewQueryClass.reviewIncludeAttributes(userId),
         },
-        include: reviewQueryClass.reviewIncludeModels(db, "list", {
+        include: reviewQueryClass.reviewIncludeModels(db, "list", undefined, undefined, undefined, undefined, {
           model: db.Review_comment,
           include: [
             {
@@ -263,7 +263,7 @@ router.get("/wroteCommentPosts", getUserInToken, async (req, res, next) => {
         attributes: {
           include: communityQueryClass.communityIncludeAttributes(userId),
         },
-        include: communityQueryClass.communityIncludeModels(db, undefined, {
+        include: communityQueryClass.communityIncludeModels(db, undefined, undefined, undefined, {
           model: db.Community_comment,
           include: [
             {

@@ -40,7 +40,6 @@ module.exports.delRecent = async function delRecentSearch(event) {
       await Search_record.destroy({
         where: {
           userId: decoded.id,
-          category: category,
         },
       });
     }
