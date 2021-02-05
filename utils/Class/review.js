@@ -25,8 +25,16 @@ const reviewIncludeAttributes = function (userId) {
 };
 module.exports.reviewIncludeAttributes = reviewIncludeAttributes;
 
-const reviewIncludeModels = function (db, viewType, appendModels) {
+const reviewIncludeModels = function (db, viewType, query, tagCategory, tagId, clusterQuery, appendModels) {
   var includeModels;
+  var residenceClincQuery;
+  if (clusterQuery === undefined) {
+    // 함수 호출시 x에 해당하는 인수가 전달되지 않은 경우
+    residenceClincQuery = { id: { [Sequelize.Op.not]: null } };
+  } else {
+    residenceClincQuery = clusterQuery;
+  }
+  console.log("residenceClincQuery:", residenceClincQuery);
   if (viewType === "list") {
     includeModels = [
       {
@@ -47,11 +55,14 @@ const reviewIncludeModels = function (db, viewType, appendModels) {
       },
       {
         model: db.Dental_clinic,
-        attributes: ["id", "originalName"],
+        attributes: ["id", "originalName", "cityId"],
         include: [
           {
             model: db.City,
-            attributes: ["id", "fullCityName", "newTownId", "sigungu"],
+            attributes: {
+              exclude: ["geometry"],
+            },
+            where: clusterQuery,
           },
         ],
       },
@@ -68,6 +79,27 @@ const reviewIncludeModels = function (db, viewType, appendModels) {
     ];
     if (appendModels) {
       includeModels.push(appendModels);
+    }
+    if (query) {
+      console.log("query:", query, "//", "tagCategory:", tagCategory);
+      if (tagCategory === "city") {
+        let modelIdx = includeModels.findIndex((model) => model.model === db.Dental_clinic);
+        includeModels[modelIdx].include[0].where = {
+          id: tagId,
+        };
+      } else if (tagCategory === "treatment") {
+        let modelIdx = includeModels.findIndex((model) => model.as === "TreatmentItems");
+        includeModels[modelIdx].where = {
+          name: {
+            [Sequelize.Op.like]: `%${query}%`,
+          },
+        };
+      } else if (tagCategory === "clinic") {
+        let modelIdx = includeModels.findIndex((model) => model.model === db.Dental_clinic);
+        includeModels[modelIdx].where = {
+          id: tagId,
+        };
+      }
     }
   } else if (viewType === "detail") {
     includeModels = [
@@ -238,7 +270,7 @@ module.exports.getUserReviewsAll = async function (db, targetUserId, userId, lim
   });
 };
 
-module.exports.getKeywordSearchAll = async function (db, userId, query, clusterQuery, limitQuery, offsetQuery, order) {
+module.exports.getKeywordSearchAll = async function (db, userId, query, tagCategory, tagId, clusterQuery, limitQuery, offsetQuery, order) {
   var orderQuery;
   if (order === "createdAt") {
     orderQuery = ["createdAt", "DESC"];
@@ -247,92 +279,17 @@ module.exports.getKeywordSearchAll = async function (db, userId, query, clusterQ
       Sequelize.literal("(((SELECT COUNT(*) FROM Like_Review WHERE Like_Review.likedReviewId = review.id)*3)+ (SELECT COUNT(*) FROM ViewReviews WHERE ViewReviews.viewedReviewId = review.id)) DESC"),
     ];
   }
-  var residenceClincQuery;
-  if (clusterQuery === undefined) {
-    // 함수 호출시 x에 해당하는 인수가 전달되지 않은 경우
-    residenceClincQuery = { id: { [Sequelize.Op.not]: null } };
-  } else {
-    if (clusterQuery.hasOwnProperty("newTownId")) {
-      residenceClincQuery = { ["$dental_clinic.city.newTownId$"]: { [Sequelize.Op.eq]: clusterQuery.newTownId } };
-    } else {
-      residenceClincQuery = { ["$dental_clinic.city.sigungu$"]: { [Sequelize.Op.eq]: clusterQuery.sigungu } };
-    }
-  }
-  console.log("residenceClincQuery:", residenceClincQuery);
   return this.findAll({
     where: {
-      [Sequelize.Op.and]: [
-        {
-          "$review.userId$": {
-            [Sequelize.Op.not]: null,
-          },
-        },
-        residenceClincQuery,
-        {
-          [Sequelize.Op.or]: [
-            {
-              "$TreatmentItems.name$": {
-                [Sequelize.Op.like]: query,
-              },
-            },
-            {
-              "$dental_clinic.originalName$": {
-                [Sequelize.Op.like]: query,
-              },
-            },
-            {
-              "$dental_clinic.city.fullCityName$": {
-                [Sequelize.Op.like]: query,
-              },
-            },
-          ],
-        },
-      ],
+      userId: {
+        [Sequelize.Op.not]: null,
+      },
     },
     attributes: {
       include: reviewIncludeAttributes(userId),
     },
-    include: [
-      {
-        model: db.User,
-        attributes: ["id", "nickname", "profileImg"],
-      },
-      {
-        model: db.Dental_clinic,
-        attributes: ["id", "originalName", "cityId"],
-        include: [
-          {
-            model: db.City,
-            attributes: ["id", "fullCityName", "newTownId", "sigungu"],
-          },
-        ],
-      },
-      {
-        model: db.Treatment_item,
-        as: "TreatmentItems",
-        attributes: ["id", "name"],
-        order: [["index", "ASC"]],
-        through: {
-          model: db.Review_treatment_item,
-          attributes: ["cost", "index"],
-        },
-        required: false,
-      },
-      {
-        model: db.Review_content,
-        attributes: ["id", "img_url", "index", "img_before_after", "img_width", "img_height"],
-        required: false,
-        separate: true,
-        where: {
-          img_url: {
-            [Sequelize.Op.not]: null,
-          },
-        },
-        order: [[["index", "ASC"]]],
-      },
-    ],
+    include: reviewIncludeModels(db, "list", query, tagCategory, tagId, clusterQuery),
     order: [orderQuery, ["TreatmentItems", db.Review_treatment_item, "index", "ASC"]],
-    subQuery: false,
     limit: limitQuery,
     offset: offsetQuery,
   });

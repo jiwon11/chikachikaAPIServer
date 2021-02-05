@@ -96,7 +96,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
             index: hashtags.indexOf(hashtag) + 1,
           },
         });
-        tagArray.push(clinic.name);
+        tagArray.push({ name: clinic.name, category: "clinic", id: clinic.id });
       } else {
         let treatment = await db.Treatment_item.findOne({
           where: {
@@ -109,7 +109,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
               index: hashtags.indexOf(hashtag) + 1,
             },
           });
-          tagArray.push(treatment.name);
+          tagArray.push({ name: treatment.name, category: "treatment", id: treatment.id });
         } else {
           let symptom = await db.Symptom_item.findOne({
             where: {
@@ -122,7 +122,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
                 index: hashtags.indexOf(hashtag) + 1,
               },
             });
-            tagArray.push(symptom.name);
+            tagArray.push({ name: symptom.name, category: "symptom", id: symptom.id });
           } else {
             let city = await db.City.findOne({
               where: {
@@ -139,7 +139,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
                   index: hashtags.indexOf(hashtag) + 1,
                 },
               });
-              tagArray.push(city.fullCityName);
+              tagArray.push({ name: city.name, category: "city", id: city.id });
             } else {
               let generalTag = await db.GeneralTag.findOne({
                 where: {
@@ -152,7 +152,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
                     index: hashtags.indexOf(hashtag) + 1,
                   },
                 });
-                tagArray.push(generalTag.name);
+                tagArray.push({ name: generalTag.name, category: "general", id: generalTag.id });
               } else {
                 let newGeneralTag = await db.GeneralTag.create({
                   name: hashtag,
@@ -162,7 +162,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
                     index: hashtags.indexOf(hashtag) + 1,
                   },
                 });
-                tagArray.push(newGeneralTag.name);
+                tagArray.push({ name: newGeneralTag.name, category: "general", id: newGeneralTag.id });
               }
             }
           }
@@ -170,7 +170,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
       }
     }
     await communityPost.update({
-      tagArray: { name: tagArray },
+      tagArray: { tagArray: tagArray },
     });
     return res.status(201).json({
       statusCode: 201,
@@ -359,7 +359,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
             index: hashtags.indexOf(hashtag) + 1,
           },
         });
-        tagArray.push(clinic.name);
+        tagArray.push({ name: clinic.name, category: "clinic", id: clinic.id });
       } else {
         let treatment = await db.Treatment_item.findOne({
           where: {
@@ -372,7 +372,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
               index: hashtags.indexOf(hashtag) + 1,
             },
           });
-          tagArray.push(treatment.name);
+          tagArray.push({ name: treatment.name, category: "treatment", id: treatment.id });
         } else {
           let symptom = await db.Symptom_item.findOne({
             where: {
@@ -385,7 +385,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
                 index: hashtags.indexOf(hashtag) + 1,
               },
             });
-            tagArray.push(symptom.name);
+            tagArray.push({ name: symptom.name, category: "symptom", id: symptom.id });
           } else {
             let city = await db.City.findOne({
               where: {
@@ -402,7 +402,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
                   index: hashtags.indexOf(hashtag) + 1,
                 },
               });
-              tagArray.push(city.fullCityName);
+              tagArray.push({ name: city.name, category: "city", id: city.id });
             } else {
               let generalTag = await db.GeneralTag.findOne({
                 where: {
@@ -415,7 +415,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
                     index: hashtags.indexOf(hashtag) + 1,
                   },
                 });
-                tagArray.push(generalTag.name);
+                tagArray.push({ name: generalTag.name, category: "general", id: generalTag.id });
               } else {
                 let newGeneralTag = await db.GeneralTag.create({
                   name: hashtag,
@@ -425,7 +425,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
                     index: hashtags.indexOf(hashtag) + 1,
                   },
                 });
-                tagArray.push(newGeneralTag.name);
+                tagArray.push({ name: newGeneralTag.name, category: "general", id: newGeneralTag.id });
               }
             }
           }
@@ -433,7 +433,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
       }
     }
     await communityPost.update({
-      tagArray: { name: tagArray },
+      tagArray: { tagArray: tagArray },
     });
     const updateCommunityPost = await db.Community.getOne(db, userId, communityPost.id);
     return res.status(200).json({
