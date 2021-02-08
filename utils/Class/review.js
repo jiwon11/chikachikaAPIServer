@@ -83,10 +83,19 @@ const reviewIncludeModels = function (db, viewType, query, tagCategory, tagId, c
     if (query) {
       console.log("query:", query, "//", "tagCategory:", tagCategory);
       if (tagCategory === "city") {
-        let modelIdx = includeModels.findIndex((model) => model.model === db.Dental_clinic);
-        includeModels[modelIdx].include[0].where = {
-          id: tagId,
-        };
+        if (tagId === "") {
+          let modelIdx = includeModels.findIndex((model) => model.model === db.Dental_clinic);
+          includeModels[modelIdx].where = {
+            local: {
+              [Sequelize.Op.like]: `%${query}%`,
+            },
+          };
+        } else {
+          let modelIdx = includeModels.findIndex((model) => model.model === db.Dental_clinic);
+          includeModels[modelIdx].include[0].where = {
+            id: tagId,
+          };
+        }
       } else if (tagCategory === "treatment") {
         let modelIdx = includeModels.findIndex((model) => model.as === "TreatmentItems");
         includeModels[modelIdx].where = {

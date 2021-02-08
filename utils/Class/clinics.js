@@ -1,10 +1,9 @@
 const Sequelize = require("sequelize");
-const db = require("../models");
 const accuracyPointQuery = Sequelize.literal(
   `(IF(CD_Num > 0 OR SD_Num > 0 OR RE_Num > 0 OR IN_Num > 0, 1, 0))+(IF(Mon_Consulation_start_time > "00:00:00", 1, 0))+ (IF(Sat_Consulation_start_time > "00:00:00", 1, 0)) + (IF(parking_allow_num>0, 1, 0))+(IF(holiday_treatment_start_time IS NOT NULL, 1, 0))+(IF(description IS NOT NULL, 1, 0))+(IF(dentalTransparent IS TRUE, 1, 0))+(IF((SELECT COUNT(*) FROM Clinic_subjects where dentalClinicId = dental_clinic.id)>0,1,0))+(IF((SELECT COUNT(*) FROM Clinic_special_treatment where dentalClinicId = dental_clinic.id)>0,1,0))+(IF((SELECT COUNT(*) FROM dentalClinicProfileImgs where dentalClinicId = dental_clinic.id AND dentalClinicProfileImgs.deletedAt IS NOT NULL)>0,1,0))`
 );
 
-module.exports.SearchAll = async function (type, query, nowTime, day, week, todayHoliday, lat, long, limit, offset, sort, wantParking, holidayTreatment) {
+module.exports.SearchAll = async function (db, type, query, nowTime, day, week, todayHoliday, lat, long, limit, offset, sort, wantParking, holidayTreatment) {
   var orderQuery;
   if (sort === "distance") {
     orderQuery = [
@@ -197,8 +196,8 @@ module.exports.SearchAll = async function (type, query, nowTime, day, week, toda
               },
             },
             {
-              local: {
-                [Sequelize.Op.like]: `${query}%`,
+              "$city.fullCityName$": {
+                [Sequelize.Op.like]: `%${query}%`,
               },
             },
           ],
@@ -318,6 +317,12 @@ module.exports.SearchAll = async function (type, query, nowTime, day, week, toda
   return await this.findAll({
     attributes: attributesList,
     where: whereQuery,
+    include: [
+      {
+        model: db.City,
+        attributes: ["id", "fullCityName", "newTownId"],
+      },
+    ],
     order: orderQuery,
     limit: limit,
     offset: offset,

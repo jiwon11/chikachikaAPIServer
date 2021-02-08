@@ -104,9 +104,17 @@ const communityIncludeModels = function (db, clusterQuery, query = undefined, ta
     if (tagCategory === "city") {
       let modelIdx = models.findIndex((model) => model.as === "CityTags");
       console.log(modelIdx);
-      models[modelIdx].where = {
-        id: tagId,
-      };
+      if (tagId === "") {
+        models[modelIdx].where = {
+          fullCityName: {
+            [Sequelize.Op.like]: `%${query}%`,
+          },
+        };
+      } else {
+        models[modelIdx].where = {
+          id: tagId,
+        };
+      }
     } else if (tagCategory === "general") {
       let modelIdx = models.findIndex((model) => model.as === "GeneralTags");
       models[modelIdx].where = {
