@@ -501,6 +501,8 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
 module.exports.keywordClinicAutoComplete = async function keywordClinicAutoComplete(event) {
   try {
     const { query } = event.queryStringParameters;
+    const offset = Math.round(parseInt(event.queryStringParameters.offset) / 4);
+    const limit = Math.round(parseInt(event.queryStringParameters.limit) / 4);
     const sido = await db.Sido.findAll({
       attributes: ["id", "name", ["fullName", "fullAddress"]],
       where: {
@@ -509,6 +511,8 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
         },
       },
       order: [["fullName", "ASC"]],
+      offset: offset,
+      limit: limit,
     });
     sido.forEach((sido) => sido.setDataValue("isEMD", false));
     const sigungu = await db.Sigungu.findAll({
@@ -519,6 +523,8 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
         },
       },
       order: [["fullName", "ASC"]],
+      offset: offset,
+      limit: limit,
     });
     sigungu.forEach((sigungu) => sigungu.setDataValue("isEMD", false));
     const emd = await db.City.findAll({
@@ -534,6 +540,8 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
         [Sequelize.Op.like]: `%${query}%`,
       }),
       order: [["fullCityName", "ASC"]],
+      offset: offset,
+      limit: limit,
     });
     emd.forEach((emd) => emd.setDataValue("isEMD", true));
     const cities = sido.concat(sigungu, emd);
@@ -546,6 +554,8 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
         },
       },
       order: [["originalName", "ASC"]],
+      offset: offset,
+      limit: limit,
     });
     clinics.forEach((clinic) => clinic.setDataValue("category", "clinic"));
     const mergeResults = cities.concat(clinics);

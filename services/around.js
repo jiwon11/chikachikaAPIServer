@@ -5,6 +5,8 @@ const moment = require("moment");
 module.exports.clinics = async function clinics(event) {
   try {
     const { lat, long, wantParking, sort, days, time, holiday } = event.queryStringParameters;
+    const limit = parseInt(event.queryStringParameters.limit);
+    const offset = parseInt(event.queryStringParameters.offset);
     var week = {
       mon: null,
       tus: null,
@@ -37,7 +39,7 @@ module.exports.clinics = async function clinics(event) {
     });
     console.log(day, nowTime);
     console.log(todayHoliday);
-    const clinics = await db.Dental_clinic.searchAll("around", null, nowTime, day, week, todayHoliday, lat, long, 30, 0, "distance", wantParking, holiday);
+    const clinics = await db.Dental_clinic.searchAll(db, "around", null, nowTime, day, week, todayHoliday, lat, long, limit, offset, "distance", wantParking, holiday);
     console.log(clinics.length);
     let response = {
       statusCode: 200,
@@ -84,7 +86,7 @@ module.exports.redienceClinics = async function redienceClinics(event) {
         where: clusterQuery,
       });
       const cityIds = cities.map((city) => city.id);
-      const clinics = await db.Dental_clinic.searchAll("residence", cityIds, null, null, null, null, null, null, parseInt(limit), parseInt(offset), "accuracy", null, null);
+      const clinics = await db.Dental_clinic.searchAll(db, "residence", cityIds, null, null, null, null, null, null, parseInt(limit), parseInt(offset), "accuracy", null, null);
       let response = {
         statusCode: 200,
         body: JSON.stringify(clinics),
