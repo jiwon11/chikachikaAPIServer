@@ -627,3 +627,26 @@ module.exports.communitiesTagArray = async function communitiesTagArray(event) {
     };
   }
 };
+
+module.exports.clinicNameSpaceRemove = async function clinicNameSpaceRemove(event) {
+  try {
+    const clinics = await Dental_clinic.findAll();
+    for (const clinic of clinics) {
+      await clinic.update({
+        name: clinic.name.replace(/ /gi, ""),
+        originalName: clinic.originalName.replace(/ /gi, ""),
+      });
+      console.log(clinic.name);
+    }
+    return {
+      statusCode: 200,
+      body: `{"message": "OK"}`,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};

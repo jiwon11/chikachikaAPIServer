@@ -678,7 +678,7 @@ functions:
               identitySource: method.request.header.Authorization
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   dbReset:
-    handler: services/dbReset.communitiesTagArray
+    handler: services/dbReset.clinicNameSpaceRemove
     events:
       - http:
           path: dbReset
