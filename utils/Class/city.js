@@ -26,7 +26,7 @@ module.exports.searchAll = async function (type, query, currentCity, offset, lim
       ],
     };
   } else if (type === "intersect") {
-    whereQuery = Sequelize.literal(`MBRIntersects(geometry, ST_GeomFromGeoJSON('${JSON.stringify(currentCity.geometry)}',2,0)) AND cities.id != ${currentCity.id}`);
+    whereQuery = Sequelize.where(Sequelize.literal(`MBRIntersects(geometry, ST_GeomFromGeoJSON('${JSON.stringify(currentCity.geometry)}',2,0)) AND cities.id != ${currentCity.id}`));
   }
   return await this.findAll({
     attributes: cityAttributes,
