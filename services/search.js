@@ -337,11 +337,9 @@ module.exports.allTagItems = async function allTagItems(event) {
     if (purpose === "autoComplete") {
       // 수다방 글 작성 시, 자동완성용 API
       cities = await db.City.findAll({
-        where: {
-          fullCityName: {
-            [Sequelize.Op.like]: `%${query}%`,
-          },
-        },
+        where: Sequelize.where(Sequelize.literal("CONCAT(emdName, '(',REPLACE(sigungu,' ', '-'),')')"), {
+          [Sequelize.Op.like]: `${query}%`,
+        }),
         attributes: [
           "id",
           "sido",
