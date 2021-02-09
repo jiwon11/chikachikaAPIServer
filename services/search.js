@@ -279,10 +279,8 @@ module.exports.allTagItems = async function allTagItems(event) {
     const token = event.headers.Authorization;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const query = event.queryStringParameters.q;
-    const offset = Math.round(parseInt(event.queryStringParameters.offset) / 5);
-    const limit = Math.round(parseInt(event.queryStringParameters.limit) / 5);
     const purpose = event.pathParameters.purpose;
-    console.log(limit);
+    const queryLen = query.length;
     const clinics = await db.Dental_clinic.findAll({
       where: {
         name: {
@@ -291,10 +289,16 @@ module.exports.allTagItems = async function allTagItems(event) {
       },
       attributes: ["id", "name", "originalName", "address"],
       order: [["originalName", "ASC"]],
-      offset: offset,
-      limit: limit,
+      limit: 5,
     });
-    clinics.forEach((clinic) => clinic.setDataValue("category", "clinic"));
+    clinics.forEach((clinic) => {
+      if (clinic.dataValues.originalName.substr(0, queryLen) === query) {
+        clinic.setDataValue("initialLetterContained", true);
+      } else {
+        clinic.setDataValue("initialLetterContained", false);
+      }
+      clinic.setDataValue("category", "clinic");
+    });
     const treatments = await db.Treatment_item.findAll({
       where: {
         name: {
@@ -303,10 +307,16 @@ module.exports.allTagItems = async function allTagItems(event) {
       },
       attributes: ["id", "name"],
       order: [["name", "ASC"]],
-      offset: offset,
-      limit: limit,
+      limit: 3,
     });
-    treatments.forEach((treatment) => treatment.setDataValue("category", "treatment"));
+    treatments.forEach((treatment) => {
+      if (treatment.dataValues.name.substr(0, queryLen) === query) {
+        treatment.setDataValue("initialLetterContained", true);
+      } else {
+        treatment.setDataValue("initialLetterContained", false);
+      }
+      treatment.setDataValue("category", "treatment");
+    });
     const symptoms = await db.Symptom_item.findAll({
       where: {
         name: {
@@ -315,10 +325,16 @@ module.exports.allTagItems = async function allTagItems(event) {
       },
       attributes: ["id", "name"],
       order: [["name", "ASC"]],
-      offset: offset,
-      limit: limit,
+      limit: 3,
     });
-    symptoms.forEach((symptom) => symptom.setDataValue("category", "symptom"));
+    symptoms.forEach((symptom) => {
+      if (symptom.dataValues.name.substr(0, queryLen) === query) {
+        symptom.setDataValue("initialLetterContained", true);
+      } else {
+        symptom.setDataValue("initialLetterContained", false);
+      }
+      symptom.setDataValue("category", "symptom");
+    });
     const generaltags = await db.GeneralTag.findAll({
       where: {
         name: {
@@ -327,10 +343,16 @@ module.exports.allTagItems = async function allTagItems(event) {
       },
       attributes: ["id", "name"],
       order: [["name", "ASC"]],
-      offset: offset,
-      limit: limit,
+      limit: 5,
     });
-    generaltags.forEach((generaltag) => generaltag.setDataValue("category", "general"));
+    generaltags.forEach((generaltag) => {
+      if (generaltag.dataValues.name.substr(0, queryLen) === query) {
+        generaltag.setDataValue("initialLetterContained", true);
+      } else {
+        generaltag.setDataValue("initialLetterContained", false);
+      }
+      generaltag.setDataValue("category", "general");
+    });
     var cities;
     var sido = [];
     var sigungu = [];
@@ -344,28 +366,40 @@ module.exports.allTagItems = async function allTagItems(event) {
           "id",
           "sido",
           "sigungu",
-          "adCity",
           "emdName",
           [Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), "fullAddress"],
           [Sequelize.literal("CONCAT(emdName, '(',REPLACE(sigungu,' ', '-'),')')"), "cityName"],
         ],
-        offset: offset,
-        limit: limit,
+        group: Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")),
+        limit: 5,
+      });
+      cities.forEach((city) => {
+        if (city.dataValues.emdName.substr(0, queryLen) === query) {
+          city.setDataValue("initialLetterContained", true);
+        } else {
+          city.setDataValue("initialLetterContained", false);
+        }
+        city.setDataValue("isEMD", true);
       });
     } else if (purpose === "keywordSearch") {
       // 통합검색 시, 자동완성용 API
-      if (offset === 0) {
-        sido = await db.Sido.findAll({
-          attributes: ["id", "name", ["fullName", "fullAddress"]],
-          where: {
-            fullName: {
-              [Sequelize.Op.like]: `%${query}%`,
-            },
+      sido = await db.Sido.findAll({
+        attributes: ["id", "name", ["fullName", "fullAddress"]],
+        where: {
+          fullName: {
+            [Sequelize.Op.like]: `%${query}%`,
           },
-          order: [["fullName", "ASC"]],
-        });
-        sido.forEach((sido) => sido.setDataValue("isEMD", false));
-      }
+        },
+        order: [["fullName", "ASC"]],
+      });
+      sido.forEach((sido) => {
+        if (sido.dataValues.name.substr(0, queryLen) === query) {
+          sido.setDataValue("initialLetterContained", true);
+        } else {
+          sido.setDataValue("initialLetterContained", false);
+        }
+        sido.setDataValue("isEMD", false);
+      });
       sigungu = await db.Sigungu.findAll({
         attributes: ["id", "name", ["fullName", "fullAddress"]],
         where: {
@@ -373,27 +407,33 @@ module.exports.allTagItems = async function allTagItems(event) {
             [Sequelize.Op.like]: `%${query}%`,
           },
         },
-        offset: offset,
-        limit: limit,
+        limit: 5,
         order: [["fullName", "ASC"]],
       });
-      sigungu.forEach((sigungu) => sigungu.setDataValue("isEMD", false));
+      sigungu.forEach((sigungu) => {
+        if (sigungu.dataValues.name.substr(0, queryLen) === query) {
+          sigungu.setDataValue("initialLetterContained", true);
+        } else {
+          sigungu.setDataValue("initialLetterContained", false);
+        }
+        sigungu.setDataValue("isEMD", false);
+      });
       cities = await db.City.findAll({
         where: Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
           [Sequelize.Op.like]: `%${query}%`,
         }),
-        attributes: [
-          "id",
-          ["emdName", "name"],
-          "sido",
-          "sigungu",
-          [Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), "fullAddress"],
-          [Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("adCity")), "adFullAddress"],
-        ],
-        offset: offset,
-        limit: limit,
+        attributes: ["id", ["emdName", "name"], "sido", "sigungu", [Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), "fullAddress"]],
+        group: Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")),
+        limit: 5,
       });
-      cities.forEach((city) => city.setDataValue("isEMD", true));
+      cities.forEach((city) => {
+        if (city.dataValues.name.substr(0, queryLen) === query) {
+          city.setDataValue("initialLetterContained", true);
+        } else {
+          city.setDataValue("initialLetterContained", false);
+        }
+        city.setDataValue("isEMD", true);
+      });
     }
     cities = cities.concat(sido, sigungu);
     cities.forEach((city) => city.setDataValue("category", "city"));
@@ -401,6 +441,9 @@ module.exports.allTagItems = async function allTagItems(event) {
       return a.dataValues.fullName < b.dataValues.fullName ? -1 : a.dataValues.fullName > b.dataValues.fullName ? 1 : 0;
     });
     var mergeResults = cities.concat(treatments, symptoms, generaltags, clinics);
+    mergeResults = mergeResults.sort(function async(a, b) {
+      return b.dataValues.initialLetterContained - a.dataValues.initialLetterContained;
+    });
     return {
       statusCode: 200,
       body: JSON.stringify(mergeResults),
@@ -501,8 +544,7 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
 module.exports.keywordClinicAutoComplete = async function keywordClinicAutoComplete(event) {
   try {
     const { query } = event.queryStringParameters;
-    const offset = Math.round(parseInt(event.queryStringParameters.offset) / 4);
-    const limit = Math.round(parseInt(event.queryStringParameters.limit) / 4);
+    const queryLen = query.length;
     const sido = await db.Sido.findAll({
       attributes: ["id", "name", ["fullName", "fullAddress"]],
       where: {
@@ -511,10 +553,15 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
         },
       },
       order: [["fullName", "ASC"]],
-      offset: offset,
-      limit: limit,
     });
-    sido.forEach((sido) => sido.setDataValue("isEMD", false));
+    sido.forEach((sido) => {
+      if (sido.dataValues.name.substr(0, queryLen) === query) {
+        sido.setDataValue("initialLetterContained", true);
+      } else {
+        sido.setDataValue("initialLetterContained", false);
+      }
+      sido.setDataValue("isEMD", false);
+    });
     const sigungu = await db.Sigungu.findAll({
       attributes: ["id", "name", ["fullName", "fullAddress"]],
       where: {
@@ -523,10 +570,16 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
         },
       },
       order: [["fullName", "ASC"]],
-      offset: offset,
-      limit: limit,
+      limit: 10,
     });
-    sigungu.forEach((sigungu) => sigungu.setDataValue("isEMD", false));
+    sigungu.forEach((sigungu) => {
+      if (sigungu.dataValues.name.substr(0, queryLen) === query) {
+        sigungu.setDataValue("initialLetterContained", true);
+      } else {
+        sigungu.setDataValue("initialLetterContained", false);
+      }
+      sigungu.setDataValue("isEMD", false);
+    });
     const emd = await db.City.findAll({
       attributes: [
         "id",
@@ -539,13 +592,19 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
       where: Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
         [Sequelize.Op.like]: `%${query}%`,
       }),
+      group: Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")),
       order: [["fullCityName", "ASC"]],
-      offset: offset,
-      limit: limit,
+      limit: 5,
     });
-    emd.forEach((emd) => emd.setDataValue("isEMD", true));
+    emd.forEach((emd) => {
+      if (emd.dataValues.emdName.substr(0, queryLen) === query) {
+        emd.setDataValue("initialLetterContained", true);
+      } else {
+        emd.setDataValue("initialLetterContained", false);
+      }
+      emd.setDataValue("isEMD", true);
+    });
     const cities = sido.concat(sigungu, emd);
-    cities.forEach((city) => city.setDataValue("category", "city"));
     const clinics = await db.Dental_clinic.findAll({
       attributes: ["id", ["originalName", "name"], "address", "local"],
       where: {
@@ -554,13 +613,19 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
         },
       },
       order: [["originalName", "ASC"]],
-      offset: offset,
-      limit: limit,
+      limit: 3,
     });
-    clinics.forEach((clinic) => clinic.setDataValue("category", "clinic"));
+    clinics.forEach((clinic) => {
+      if (clinic.dataValues.name.substr(0, queryLen) === query) {
+        clinic.setDataValue("initialLetterContained", true);
+      } else {
+        clinic.setDataValue("initialLetterContained", false);
+      }
+      clinic.setDataValue("category", "clinic");
+    });
     const mergeResults = cities.concat(clinics);
     var sortReuslts = mergeResults.sort(function async(a, b) {
-      return a.dataValues.name < b.dataValues.name ? -1 : a.dataValues.name > b.dataValues.name ? 1 : 0;
+      return b.dataValues.initialLetterContained - a.dataValues.initialLetterContained;
     });
     return {
       statusCode: 200,

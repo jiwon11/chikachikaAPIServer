@@ -309,7 +309,6 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
       [accuracyPointQuery, "accuracyPoint"],
     ];
   }
-  console.log(whereQuery);
   return await this.findAll({
     attributes: attributesList,
     where: whereQuery,
