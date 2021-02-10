@@ -232,7 +232,12 @@ module.exports.reviews = async function reviewSearch(event) {
       include: [
         {
           model: User,
-          attributes: ["id", "nickname", "profileImg"],
+          attributes: [
+            "id",
+            "nickname",
+            "profileImg",
+            [Sequelize.literal(`CONCAT((SELECT REPLACE(profileImg,'https://s3-ap-northeast-2.amazonaws.com','https://d1lkvafdh6ugy5.cloudfront.net')),'?w=140&h=140&f=jpeg&q=100')`), "img_thumbNail"],
+          ],
         },
         {
           model: Treatment_item,
@@ -570,7 +575,7 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
         },
       },
       order: [["fullName", "ASC"]],
-      limit: 10,
+      limit: 5,
     });
     sigungu.forEach((sigungu) => {
       if (sigungu.dataValues.name.substr(0, queryLen) === query) {

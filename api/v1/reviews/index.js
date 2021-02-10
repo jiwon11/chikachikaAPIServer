@@ -132,7 +132,7 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
       paragraphs.map((paragraph) =>
         db.Review_content.create({
           img_url: paragraph.location, //`${cloudFrontUrl}/${image.key}`
-          img_name: paragraph.originalname,
+          img_name: paragraph.key,
           mime_type: paragraph.mimetype,
           img_size: paragraph.size,
           index: paragraphs.indexOf(paragraph) + 1,

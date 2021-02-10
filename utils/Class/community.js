@@ -1,5 +1,5 @@
 const Sequelize = require("sequelize");
-
+const cloudFrontUrl = "https://d1lkvafdh6ugy5.cloudfront.net/";
 const communityIncludeAttributes = function (userId) {
   return [
     [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,community.createdAt,NOW()))`), "createdDiff(second)"],
@@ -32,7 +32,12 @@ const communityIncludeModels = function (db, clusterQuery, query = undefined, ta
   var models = [
     {
       model: db.User,
-      attributes: ["id", "nickname", "profileImg"],
+      attributes: [
+        "id",
+        "nickname",
+        "profileImg",
+        [Sequelize.literal(`CONCAT((SELECT REPLACE(profileImg,'https://s3-ap-northeast-2.amazonaws.com','https://d1lkvafdh6ugy5.cloudfront.net')),'?w=140&h=140&f=jpeg&q=100')`), "img_thumbNail"],
+      ],
     },
     {
       model: db.City,
@@ -43,7 +48,18 @@ const communityIncludeModels = function (db, clusterQuery, query = undefined, ta
     },
     {
       model: db.Community_img,
-      attributes: ["id", "img_originalname", "img_mimetype", "img_filename", "img_url", "img_size", "img_index", "img_width", "img_height"],
+      attributes: [
+        "id",
+        "img_originalname",
+        "img_mimetype",
+        "img_filename",
+        [Sequelize.fn("CONCAT", `${cloudFrontUrl}`, Sequelize.col("img_filename"), "?w=248&h=248&f=jpeg&q=100"), "img_thumbNail"],
+        "img_url",
+        "img_size",
+        "img_index",
+        "img_width",
+        "img_height",
+      ],
       separate: true,
       order: [["img_index", "ASC"]],
     },

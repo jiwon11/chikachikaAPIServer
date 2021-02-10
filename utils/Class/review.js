@@ -1,8 +1,14 @@
 const Sequelize = require("sequelize");
-
+const cloudFrontUrl = "https://d1lkvafdh6ugy5.cloudfront.net/";
 const reviewIncludeAttributes = function (userId) {
   return [
     [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.createdAt,NOW()))`), "createdDiff(second)"],
+    [
+      Sequelize.literal(
+        "(SELECT GROUP_CONCAT(description ORDER BY review_contents.index ASC SEPARATOR ',') FROM review_contents WHERE review_contents.reviewId = review.id AND review_contents.deletedAt IS NULL)"
+      ),
+      "reviewDescriptions",
+    ],
     [Sequelize.literal(`(SELECT ROUND((starRate_cost + starRate_treatment + starRate_service)/3,1))`), "AVGStarRate"],
     [
       Sequelize.literal(
@@ -39,11 +45,25 @@ const reviewIncludeModels = function (db, viewType, query, tagCategory, tagId, c
     includeModels = [
       {
         model: db.User,
-        attributes: ["id", "nickname", "profileImg"],
+        attributes: [
+          "id",
+          "nickname",
+          "profileImg",
+          [Sequelize.literal(`CONCAT((SELECT REPLACE(profileImg,'https://s3-ap-northeast-2.amazonaws.com','https://d1lkvafdh6ugy5.cloudfront.net')),'?w=140&h=140&f=jpeg&q=100')`), "img_thumbNail"],
+        ],
       },
       {
         model: db.Review_content,
-        attributes: ["id", "img_url", "index", "img_before_after", "img_width", "img_height"],
+        attributes: [
+          "id",
+          "img_url",
+          "img_name",
+          [Sequelize.fn("CONCAT", `${cloudFrontUrl}`, Sequelize.col("img_name"), "?w=686&h=700&f=jpeg&q=100"), "img_thumbNail"],
+          "index",
+          "img_before_after",
+          "img_width",
+          "img_height",
+        ],
         required: false,
         separate: true,
         where: {
@@ -146,17 +166,7 @@ module.exports.getOne = async function (db, reviewId, userId) {
         [Sequelize.Op.not]: null,
       },
     },
-    attributes: {
-      include: [
-        [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,review.createdAt,NOW()))`), "createdDiff(second)"],
-        [
-          Sequelize.literal(
-            "(SELECT GROUP_CONCAT(description ORDER BY review_contents.index ASC SEPARATOR ',') FROM review_contents WHERE review_contents.reviewId = review.id AND review_contents.deletedAt IS NULL)"
-          ),
-          "reviewDescriptions",
-        ],
-      ],
-    },
+    attributes: reviewIncludeAttributes(userId),
     include: reviewIncludeModels(db, "detail"),
     order: [
       ["TreatmentItems", db.Review_treatment_item, "index", "ASC"],
@@ -169,7 +179,12 @@ module.exports.getOne = async function (db, reviewId, userId) {
       include: [
         {
           model: db.User,
-          attributes: ["id", "nickname", "profileImg"],
+          attributes: [
+            "id",
+            "nickname",
+            "profileImg",
+            [Sequelize.literal(`CONCAT((SELECT REPLACE(profileImg,'https://s3-ap-northeast-2.amazonaws.com','https://d1lkvafdh6ugy5.cloudfront.net')),'?w=140&h=140&f=jpeg&q=100')`), "img_thumbNail"],
+          ],
         },
         {
           model: db.Review_comment,
@@ -178,7 +193,15 @@ module.exports.getOne = async function (db, reviewId, userId) {
           include: [
             {
               model: db.User,
-              attributes: ["id", "nickname", "profileImg"],
+              attributes: [
+                "id",
+                "nickname",
+                "profileImg",
+                [
+                  Sequelize.literal(`CONCAT((SELECT REPLACE(profileImg,'https://s3-ap-northeast-2.amazonaws.com','https://d1lkvafdh6ugy5.cloudfront.net')),'?w=140&h=140&f=jpeg&q=100')`),
+                  "img_thumbNail",
+                ],
+              ],
             },
           ],
         },
@@ -206,7 +229,6 @@ module.exports.getOne = async function (db, reviewId, userId) {
     };
     return result;
   } else {
-    return null;
   }
 };
 
