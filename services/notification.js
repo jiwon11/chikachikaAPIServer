@@ -1,5 +1,5 @@
 const db = require("../utils/models");
-
+const Sequelize = require("sequelize");
 module.exports.getNotifications = async function getNotifications(event) {
   try {
     const userId = event.requestContext.authorizer.principalId;
@@ -26,7 +26,7 @@ module.exports.getNotifications = async function getNotifications(event) {
                 "nickname",
                 "profileImg",
                 [
-                  Sequelize.literal(`CONCAT((SELECT REPLACE(profileImg,'https://s3-ap-northeast-2.amazonaws.com','https://d1lkvafdh6ugy5.cloudfront.net')),'?w=140&h=140&f=jpeg&q=100')`),
+                  Sequelize.literal(`CONCAT((SELECT REPLACE(senders.profileImg,'https://s3-ap-northeast-2.amazonaws.com','https://d1lkvafdh6ugy5.cloudfront.net')),'?w=140&h=140&f=jpeg&q=100')`),
                   "img_thumbNail",
                 ],
               ],
