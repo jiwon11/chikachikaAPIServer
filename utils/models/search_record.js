@@ -10,6 +10,10 @@ module.exports = (sequelize, DataTypes) =>
         type: DataTypes.STRING(50),
         allowNull: false,
       },
+      route: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+      },
     },
     {
       timestamps: true,

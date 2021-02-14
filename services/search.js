@@ -101,6 +101,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
             userId: user.id,
             query: query,
             category: tagCategory,
+            route: "keywordClinicSearch",
           },
         });
         if (!created) {
@@ -109,6 +110,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
               userId: user.id,
               query: query,
               category: tagCategory,
+              route: "keywordClinicSearch",
             },
             {
               where: {
@@ -481,6 +483,7 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
         userId: userId,
         query: query,
         category: tagCategory,
+        route: "keywordSearch",
       },
     });
     if (!created) {
@@ -489,6 +492,7 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
           userId: userId,
           query: query,
           category: tagCategory,
+          route: "keywordSearch",
         },
         {
           where: {
@@ -560,6 +564,7 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
       order: [["fullName", "ASC"]],
     });
     sido.forEach((sido) => {
+      sido.setDataValue("category", "city");
       if (sido.dataValues.name.substr(0, queryLen) === query) {
         sido.setDataValue("initialLetterContained", true);
       } else {
@@ -578,6 +583,7 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
       limit: 5,
     });
     sigungu.forEach((sigungu) => {
+      sigungu.setDataValue("category", "city");
       if (sigungu.dataValues.name.substr(0, queryLen) === query) {
         sigungu.setDataValue("initialLetterContained", true);
       } else {
@@ -602,6 +608,7 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
       limit: 5,
     });
     emd.forEach((emd) => {
+      emd.setDataValue("category", "city");
       if (emd.dataValues.emdName.substr(0, queryLen) === query) {
         emd.setDataValue("initialLetterContained", true);
       } else {
