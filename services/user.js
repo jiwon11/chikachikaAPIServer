@@ -15,7 +15,7 @@ module.exports.getUserInfo = async function getUserInfo(event) {
         where: {
           id: userId,
         },
-        attributes: ["id", "nickname", "profileImg", "phoneNumber", "gender", "birthdate", "provider"],
+        attributes: ["id", "nickname", "profileImg", "phoneNumber", "gender", "birthdate", "provider", "userProfileImgKeyValue"],
         include: [
           {
             model: NotificationConfig,
