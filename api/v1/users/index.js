@@ -57,7 +57,8 @@ router.put("/", getUserInToken, userProfileUpload.none(), async (req, res, next)
     const nickname = req.body.nickname | (req.body.nickname !== "") ? req.body.nickname : undefined;
     const gender = req.body.gender | (req.body.gender !== "") ? req.body.gender : undefined;
     const birthdate = req.body.birthdate | (req.body.birthdate !== "") ? req.body.birthdate : undefined;
-    const profileImg = req.body.profileImg | (req.body.birthdate !== "") ? req.body.profileImg : undefined;
+    const profileImg = req.body.profileImg | (req.body.profileImg !== "") ? req.body.profileImg : undefined;
+    const userProfileImgKeyValue = req.body.userProfileImgKeyValue | (req.body.userProfileImgKeyValue !== "") ? req.body.userProfileImgKeyValue : undefined;
     if (nickname) {
       const uniqNickname = await db.User.findOne({
         where: {
@@ -78,6 +79,7 @@ router.put("/", getUserInToken, userProfileUpload.none(), async (req, res, next)
         gender: gender,
         birthdate: birthdate,
         profileImg: profileImg,
+        userProfileImgKeyValue: userProfileImgKeyValue,
       },
       {
         where: {

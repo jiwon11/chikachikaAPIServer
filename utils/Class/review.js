@@ -49,7 +49,8 @@ const reviewIncludeModels = function (db, viewType, query, tagCategory, tagId, c
           "id",
           "nickname",
           "profileImg",
-          [Sequelize.literal(`CONCAT((SELECT REPLACE(profileImg,'https://s3-ap-northeast-2.amazonaws.com','https://d1lkvafdh6ugy5.cloudfront.net')),'?w=140&h=140&f=jpeg&q=100')`), "img_thumbNail"],
+          "userProfileImgKeyValue",
+          [Sequelize.fn("CONCAT", `${cloudFrontUrl}`, Sequelize.col("userProfileImgKeyValue"), "?w=140&h=140&f=jpeg&q=100"), "img_thumbNail"],
         ],
       },
       {
@@ -183,10 +184,8 @@ module.exports.getOne = async function (db, reviewId, userId) {
             "id",
             "nickname",
             "profileImg",
-            [
-              Sequelize.literal(`CONCAT((SELECT REPLACE(user.profileImg,'https://s3-ap-northeast-2.amazonaws.com','https://d1lkvafdh6ugy5.cloudfront.net')),'?w=140&h=140&f=jpeg&q=100')`),
-              "img_thumbNail",
-            ],
+            "userProfileImgKeyValue",
+            [Sequelize.fn("CONCAT", `${cloudFrontUrl}`, Sequelize.col("userProfileImgKeyValue"), "?w=140&h=140&f=jpeg&q=100"), "img_thumbNail"],
           ],
         },
         {
@@ -200,10 +199,8 @@ module.exports.getOne = async function (db, reviewId, userId) {
                 "id",
                 "nickname",
                 "profileImg",
-                [
-                  Sequelize.literal(`CONCAT((SELECT REPLACE(user.profileImg,'https://s3-ap-northeast-2.amazonaws.com','https://d1lkvafdh6ugy5.cloudfront.net')),'?w=140&h=140&f=jpeg&q=100')`),
-                  "img_thumbNail",
-                ],
+                "userProfileImgKeyValue",
+                [Sequelize.fn("CONCAT", `${cloudFrontUrl}`, Sequelize.col("userProfileImgKeyValue"), "?w=140&h=140&f=jpeg&q=100"), "img_thumbNail"],
               ],
             },
           ],
