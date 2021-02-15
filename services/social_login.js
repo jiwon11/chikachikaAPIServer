@@ -122,7 +122,7 @@ module.exports.handler = async function social_login(event) {
       statusText: "Accepted",
       message: `${user.nickname}님의 회원가입이 완료되었습니다.`,
       token: token,
-      user: { userId: user.id, userNickname: user.nickname, userProfileImg: user.profileImg, userResidences: userResidences },
+      user: { userId: user.id, userNickname: user.nickname, userProfileImg: user.profileImg, userProfileImgKeyValue: user.userProfileImgKeyValue, userResidences: userResidences },
     };
     return {
       statusCode: 201,
