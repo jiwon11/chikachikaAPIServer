@@ -185,7 +185,7 @@ module.exports.getOne = async function (db, reviewId, userId) {
             "nickname",
             "profileImg",
             "userProfileImgKeyValue",
-            [Sequelize.fn("CONCAT", `${cloudFrontUrl}`, Sequelize.col("userProfileImgKeyValue"), "?w=140&h=140&f=jpeg&q=100"), "img_thumbNail"],
+            [Sequelize.fn("CONCAT", `${cloudFrontUrl}`, Sequelize.col("user.userProfileImgKeyValue"), "?w=140&h=140&f=jpeg&q=100"), "img_thumbNail"],
           ],
         },
         {
@@ -200,7 +200,7 @@ module.exports.getOne = async function (db, reviewId, userId) {
                 "nickname",
                 "profileImg",
                 "userProfileImgKeyValue",
-                [Sequelize.fn("CONCAT", `${cloudFrontUrl}`, Sequelize.col("userProfileImgKeyValue"), "?w=140&h=140&f=jpeg&q=100"), "img_thumbNail"],
+                [Sequelize.fn("CONCAT", `${cloudFrontUrl}`, Sequelize.col("user.userProfileImgKeyValue"), "?w=140&h=140&f=jpeg&q=100"), "img_thumbNail"],
               ],
             },
           ],
