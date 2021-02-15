@@ -36,9 +36,9 @@ module.exports.handler = async function signInUser(event) {
       const token = jwt.sign({ id: user.dataValues.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
       let responseBody = `{"token": "${token}","statusText": "Accepted","message": "사용자 토큰이 발급되었습니다.", "user":{"userId": "${user.id}", "userNickname":"${
         user.nickname
-      }", "userProfileImg":"${user.profileImg}", "userPhoneNumber":"${user.phoneNumber}", "userGender":"${user.gender}", "userBirthdate":"${user.birthdate}", "userProvider":"${
-        user.provider
-      }","userResidences": ${JSON.stringify(user.Residences)}}}`;
+      }", "userProfileImg":"${user.profileImg}", "userProfileImgKeyValue":"${user.userProfileImgKeyValue}","userPhoneNumber":"${user.phoneNumber}", "userGender":"${user.gender}", "userBirthdate":"${
+        user.birthdate
+      }", "userProvider":"${user.provider}","userResidences": ${JSON.stringify(user.Residences)}}}`;
       return {
         statusCode: 200,
         body: responseBody,

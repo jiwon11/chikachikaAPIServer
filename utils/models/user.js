@@ -54,6 +54,10 @@ module.exports = (sequelize, DataTypes) =>
         type: DataTypes.BOOLEAN,
         allowNull: false,
       },
+      userProfileImgKeyValue: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
     },
     {
       timestamps: true,
