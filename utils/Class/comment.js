@@ -20,7 +20,10 @@ module.exports.getAll = async function (db, type, targetId) {
             "id",
             "nickname",
             "profileImg",
-            [Sequelize.literal(`CONCAT((SELECT REPLACE(profileImg,'https://s3-ap-northeast-2.amazonaws.com','https://d1lkvafdh6ugy5.cloudfront.net')),'?w=140&h=140&f=jpeg&q=100')`), "img_thumbNail"],
+            [
+              Sequelize.literal(`CONCAT((SELECT REPLACE(user.profileImg,'https://s3-ap-northeast-2.amazonaws.com','https://d1lkvafdh6ugy5.cloudfront.net')),'?w=140&h=140&f=jpeg&q=100')`),
+              "img_thumbNail",
+            ],
           ],
         },
         {
@@ -46,7 +49,7 @@ module.exports.getAll = async function (db, type, targetId) {
                 "nickname",
                 "profileImg",
                 [
-                  Sequelize.literal(`CONCAT((SELECT REPLACE(profileImg,'https://s3-ap-northeast-2.amazonaws.com','https://d1lkvafdh6ugy5.cloudfront.net')),'?w=140&h=140&f=jpeg&q=100')`),
+                  Sequelize.literal(`CONCAT((SELECT REPLACE(user.profileImg,'https://s3-ap-northeast-2.amazonaws.com','https://d1lkvafdh6ugy5.cloudfront.net')),'?w=140&h=140&f=jpeg&q=100')`),
                   "img_thumbNail",
                 ],
               ],
@@ -73,7 +76,10 @@ module.exports.getAll = async function (db, type, targetId) {
             "id",
             "nickname",
             "profileImg",
-            [Sequelize.literal(`CONCAT((SELECT REPLACE(profileImg,'https://s3-ap-northeast-2.amazonaws.com','https://d1lkvafdh6ugy5.cloudfront.net')),'?w=140&h=140&f=jpeg&q=100')`), "img_thumbNail"],
+            [
+              Sequelize.literal(`CONCAT((SELECT REPLACE(user.profileImg,'https://s3-ap-northeast-2.amazonaws.com','https://d1lkvafdh6ugy5.cloudfront.net')),'?w=140&h=140&f=jpeg&q=100')`),
+              "img_thumbNail",
+            ],
           ],
         },
         {
@@ -98,7 +104,7 @@ module.exports.getAll = async function (db, type, targetId) {
                 "nickname",
                 "profileImg",
                 [
-                  Sequelize.literal(`CONCAT((SELECT REPLACE(profileImg,'https://s3-ap-northeast-2.amazonaws.com','https://d1lkvafdh6ugy5.cloudfront.net')),'?w=140&h=140&f=jpeg&q=100')`),
+                  Sequelize.literal(`CONCAT((SELECT REPLACE(user.profileImg,'https://s3-ap-northeast-2.amazonaws.com','https://d1lkvafdh6ugy5.cloudfront.net')),'?w=140&h=140&f=jpeg&q=100')`),
                   "img_thumbNail",
                 ],
               ],
