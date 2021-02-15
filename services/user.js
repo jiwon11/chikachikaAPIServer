@@ -1,6 +1,7 @@
 const { City, User, NewTown, Dental_clinic, NotificationConfig } = require("../utils/models");
 const Sequelize = require("sequelize");
 const jwt = require("jsonwebtoken");
+const cloudFrontUrl = "https://d1lkvafdh6ugy5.cloudfront.net/";
 
 module.exports.getUserInfo = async function getUserInfo(event) {
   try {
@@ -15,7 +16,17 @@ module.exports.getUserInfo = async function getUserInfo(event) {
         where: {
           id: userId,
         },
-        attributes: ["id", "nickname", "profileImg", "phoneNumber", "gender", "birthdate", "provider", "userProfileImgKeyValue"],
+        attributes: [
+          "id",
+          "nickname",
+          "profileImg",
+          "phoneNumber",
+          "gender",
+          "birthdate",
+          "provider",
+          "userProfileImgKeyValue",
+          [Sequelize.fn("CONCAT", `${cloudFrontUrl}`, Sequelize.col("userProfileImgKeyValue"), "?w=140&h=140&f=jpeg&q=100"), "img_thumbNail"],
+        ],
         include: [
           {
             model: NotificationConfig,

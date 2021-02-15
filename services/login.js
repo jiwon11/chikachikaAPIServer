@@ -1,6 +1,7 @@
 const { verifyPhoneNumberFunc } = require("../utils/verify");
 const { User, NotificationConfig, City } = require("../utils/models");
 const jwt = require("jsonwebtoken");
+const cloudFrontUrl = "https://d1lkvafdh6ugy5.cloudfront.net/";
 
 /**
  ### 핸드폰 번호 인증을 통해 로그인(로컬)을 진행하는 함수
@@ -34,14 +35,21 @@ module.exports.handler = async function signInUser(event) {
         fcmToken: fcmToken,
       });
       const token = jwt.sign({ id: user.dataValues.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
-      let responseBody = `{"token": "${token}","statusText": "Accepted","message": "사용자 토큰이 발급되었습니다.", "user":{"userId": "${user.id}", "userNickname":"${
-        user.nickname
-      }", "userProfileImg":"${user.profileImg}", "userProfileImgKeyValue":"${user.userProfileImgKeyValue}","userPhoneNumber":"${user.phoneNumber}", "userGender":"${user.gender}", "userBirthdate":"${
-        user.birthdate
-      }", "userProvider":"${user.provider}","userResidences": ${JSON.stringify(user.Residences)}}}`;
+      let responseBody = {
+        statusText: "Accepted",
+        message: "사용자 토큰이 발급되었습니다.",
+        token: token,
+        user: {
+          userId: user.id,
+          userNickname: user.nickname,
+          userProfileImg: user.profileImg,
+          img_thumbNail: user.userProfileImgKeyValue === null ? null : `${cloudFrontUrl}${user.userProfileImgKeyValue}?w=140&h=140&f=jpeg&q=100`,
+          userResidences: user.Residences,
+        },
+      };
       return {
         statusCode: 200,
-        body: responseBody,
+        body: JSON.stringify(responseBody),
       };
     } else {
       let responseBody = `{"statusText": "Unaccepted","message": "인증번호가 틀립니다."}`;
