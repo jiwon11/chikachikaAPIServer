@@ -1,5 +1,6 @@
 const Sequelize = require("sequelize");
 const { QueryTypes } = require("sequelize");
+const cloudFrontUrl = "https://d1lkvafdh6ugy5.cloudfront.net/";
 
 module.exports.getAll = async function (db, type, targetId) {
   var comments;
