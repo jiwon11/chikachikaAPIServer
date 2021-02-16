@@ -323,5 +323,6 @@ module.exports.getKeywordSearchAll = async function (db, userId, query, tagCateg
     order: [orderQuery, ["TreatmentItems", db.Review_treatment_item, "index", "ASC"]],
     limit: limitQuery,
     offset: offsetQuery,
+    subQuery: false,
   });
 };
