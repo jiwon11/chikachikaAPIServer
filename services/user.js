@@ -89,6 +89,7 @@ module.exports.getUserProfile = async function getUserProfile(event) {
           "nickname",
           "profileImg",
           [Sequelize.literal(`IF(user.id="${userId}",true, false)`), "self"],
+          [Sequelize.literal(`(SELECT COUNT(*) FROM appointments where userId="${userId}" AND deletedAt IS NULL)`), "appointmentsNum"],
           [Sequelize.literal(`(SELECT COUNT(*) FROM UserScrapClinics where userId="${userId}")`), "scrapClinicsNum"],
         ];
       } else {

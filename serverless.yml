@@ -690,6 +690,32 @@ functions:
               # in our case the HTTP Authorization header
               identitySource: method.request.header.Authorization
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  postAppointment:
+    handler: services/appointment.postAppointment
+    events:
+      - http:
+          path: appointment
+          method: post
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  getAppointment:
+    handler: services/appointment.getAppointment
+    events:
+      - http:
+          path: appointment
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   dbReset:
     handler: services/dbReset.clinicNameSpaceRemove
     events:
