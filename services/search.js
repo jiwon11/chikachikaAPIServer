@@ -514,6 +514,7 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
             newTownId: userResidence.newTownId,
           }
         : {
+            sido: userResidence.sido,
             sigungu: userResidence.sigungu,
           };
     } else if (region !== "all") {

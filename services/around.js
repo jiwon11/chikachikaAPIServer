@@ -78,6 +78,7 @@ module.exports.redienceClinics = async function redienceClinics(event) {
             newTownId: userResidences[0].newTownId,
           }
         : {
+            sido: userResidences[0].sido,
             sigungu: userResidences[0].sigungu,
           };
       console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
