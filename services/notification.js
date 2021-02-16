@@ -1,5 +1,7 @@
 const db = require("../utils/models");
 const Sequelize = require("sequelize");
+const cloudFrontUrl = "https://d1lkvafdh6ugy5.cloudfront.net/";
+
 module.exports.getNotifications = async function getNotifications(event) {
   try {
     const userId = event.requestContext.authorizer.principalId;
