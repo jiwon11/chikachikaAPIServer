@@ -83,9 +83,10 @@ const reviewIncludeModels = function (db, viewType, query, tagCategory, tagId, c
             attributes: {
               exclude: ["geometry"],
             },
-            where: clusterQuery,
+            where: residenceClincQuery,
           },
         ],
+        required: true,
       },
       {
         model: db.Treatment_item,
@@ -319,7 +320,7 @@ module.exports.getKeywordSearchAll = async function (db, userId, query, tagCateg
     attributes: {
       include: reviewIncludeAttributes(userId),
     },
-    include: reviewIncludeModels(db, "list", query, tagCategory, tagId, clusterQuery),
+    include: reviewIncludeModels(db, "list", query, tagCategory, tagId, clusterQuery, undefined),
     order: [orderQuery, ["TreatmentItems", db.Review_treatment_item, "index", "ASC"]],
     limit: limitQuery,
     offset: offsetQuery,

@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const { User, City, Residence, sequelize } = require("../utils/models");
+const { User, City, Residence, sequelize, Dental_clinic, Review } = require("../utils/models");
 const Sequelize = require("sequelize");
 
 module.exports.searchCities = async function searchCities(event) {
@@ -31,6 +31,55 @@ module.exports.citiesBycurrentLocation = async function citiesBycurrentLocation(
     const results = {
       currentCity: currentCity,
       intersectCities: intersectCities,
+    };
+    return {
+      statusCode: 200,
+      body: JSON.stringify(results),
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
+
+module.exports.residenceClinicsAndReviews = async function residenceClinicsAndReviews(event) {
+  try {
+    const cityId = event.queryStringParameters.cityId;
+    const residenceCity = await City.findOne({
+      where: {
+        id: cityId,
+      },
+      attributes: ["sido", "sigungu", "emdName"],
+    });
+    const residenceLegalCity = await City.findAll({
+      where: {
+        sido: residenceCity.sido,
+        sigungu: residenceCity.sigungu,
+        emdName: residenceCity.emdName,
+      },
+      attributes: {
+        exclude: ["geometry"],
+      },
+    });
+    const residenceLegalCityIds = residenceLegalCity.map((city) => city.id);
+    console.log(`residenceLegalCityIds: ${residenceLegalCityIds}`);
+    const residenceClinics = await Dental_clinic.findAll({
+      where: {
+        cityId: residenceLegalCityIds,
+      },
+    });
+    const residenceClinicIds = residenceClinics.map((clinic) => clinic.id);
+    const residenceReviews = await Review.findAll({
+      where: {
+        dentalClinicId: residenceClinicIds,
+      },
+    });
+    const results = {
+      residenceClinicsNum: residenceClinics.length,
+      residenceReviewsNum: residenceReviews.length,
     };
     return {
       statusCode: 200,
