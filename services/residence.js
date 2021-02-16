@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const { User, City, Residence, sequelize, Dental_clinic, Review } = require("../utils/models");
+const { User, City, Residence, Dental_clinic, Review } = require("../utils/models");
 const Sequelize = require("sequelize");
 
 module.exports.searchCities = async function searchCities(event) {
@@ -52,7 +52,7 @@ module.exports.residenceClinicsAndReviews = async function residenceClinicsAndRe
       where: {
         id: cityId,
       },
-      attributes: ["sido", "sigungu", "emdName"],
+      attributes: ["sido", "sigungu", "emdName", "newTownId"],
     });
     const residenceLegalCity = await City.findAll({
       where: {
@@ -65,17 +65,38 @@ module.exports.residenceClinicsAndReviews = async function residenceClinicsAndRe
       },
     });
     const residenceLegalCityIds = residenceLegalCity.map((city) => city.id);
-    console.log(`residenceLegalCityIds: ${residenceLegalCityIds}`);
+    console.log(JSON.stringify(residenceCity));
     const residenceClinics = await Dental_clinic.findAll({
       where: {
         cityId: residenceLegalCityIds,
       },
     });
-    const residenceClinicIds = residenceClinics.map((clinic) => clinic.id);
+    const clusterQuery = residenceCity.newTownId
+      ? {
+          newTownId: residenceCity.newTownId,
+        }
+      : {
+          sido: residenceCity.sido,
+          sigungu: residenceCity.sigungu,
+        };
+    console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
     const residenceReviews = await Review.findAll({
-      where: {
-        dentalClinicId: residenceClinicIds,
-      },
+      include: [
+        {
+          model: Dental_clinic,
+          attributes: ["id", "originalName", "cityId"],
+          include: [
+            {
+              model: City,
+              attributes: {
+                exclude: ["geometry"],
+              },
+              where: clusterQuery,
+            },
+          ],
+          required: true,
+        },
+      ],
     });
     const results = {
       residenceClinicsNum: residenceClinics.length,

@@ -206,6 +206,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
             newTownId: userResidence.newTownId,
           }
         : {
+            sido: userResidence.sido,
             sigungu: userResidence.sigungu,
           };
     } else if (region !== "all") {
