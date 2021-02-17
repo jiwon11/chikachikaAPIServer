@@ -479,28 +479,31 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
     const cityId = event.queryStringParameters.cityId;
     const tagCategory = event.queryStringParameters.tagCategory;
     const tagId = event.queryStringParameters.tagId;
-    const [search, created] = await db.Search_record.findOrCreate({
-      where: {
-        userId: userId,
-        query: query,
-        category: tagCategory,
-        route: "keywordSearch",
-      },
-    });
-    if (!created) {
-      await db.Search_record.update(
-        {
+    const unifiedSearch = event.queryStringParameters.unifiedSearch;
+    if (unifiedSearch === "true") {
+      const [search, created] = await db.Search_record.findOrCreate({
+        where: {
           userId: userId,
           query: query,
           category: tagCategory,
           route: "keywordSearch",
         },
-        {
-          where: {
-            id: search.id,
+      });
+      if (!created) {
+        await db.Search_record.update(
+          {
+            userId: userId,
+            query: query,
+            category: tagCategory,
+            route: "keywordSearch",
           },
-        }
-      );
+          {
+            where: {
+              id: search.id,
+            },
+          }
+        );
+      }
     }
     var clusterQuery;
     if (region === "residence") {
