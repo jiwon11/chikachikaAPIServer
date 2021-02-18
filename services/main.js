@@ -13,7 +13,13 @@ module.exports.residenceClinicReviews = async function residenceClinicReviews(ev
         date: today,
       },
     });
-    const residenceClincReviews = await db.Dental_clinic.NewestReviewsInResidence(db, cityId, day, nowTime, todayHoliday, lat, long);
+    const emdCity = await db.City.findOne({
+      attributes: ["id", "sido", "sigungu", "emdName"],
+      where: {
+        id: cityId,
+      },
+    });
+    const residenceClincReviews = await db.Dental_clinic.NewestReviewsInResidence(db, emdCity, day, nowTime, todayHoliday, lat, long);
     return {
       statusCode: 200,
       body: JSON.stringify(residenceClincReviews),
