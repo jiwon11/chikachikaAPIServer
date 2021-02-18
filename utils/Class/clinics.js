@@ -396,6 +396,7 @@ module.exports.NewestReviewsInResidence = async function (db, emdCity, day, nowT
           "totalCost",
           "dentalClinicId",
           "certifiedBill",
+          "createdAt",
           [Sequelize.literal(`(SELECT ROUND((starRate_cost + starRate_treatment + starRate_service)/3,1))`), "AVGStarRate"],
           [Sequelize.literal(`IF((SELECT COUNT(*) FROM reviewBills where reviewBills.reviewId=reviews.id AND reviewBills.deletedAt IS NULL)>0,TRUE,FALSE)`), "verifyBills"],
         ],
