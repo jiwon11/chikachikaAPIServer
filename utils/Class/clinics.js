@@ -396,7 +396,7 @@ module.exports.NewestReviewsInResidence = async function (db, emdCity, day, nowT
           "totalCost",
           "dentalClinicId",
           [Sequelize.literal(`(SELECT ROUND((starRate_cost + starRate_treatment + starRate_service)/3,1))`), "AVGStarRate"],
-          [Sequelize.literal(`IF((SELECT COUNT(*) FROM reviewBills where reviewBills.reviewId=id AND reviewBills.deletedAt IS NULL)>0,TRUE,FALSE)`), "verifyBills"],
+          [Sequelize.literal(`IF((SELECT COUNT(*) FROM reviewBills where reviewBills.reviewId=reviews.id AND reviewBills.deletedAt IS NULL)>0,TRUE,FALSE)`), "verifyBills"],
         ],
         required: true,
         include: [
@@ -426,7 +426,7 @@ module.exports.NewestReviewsInResidence = async function (db, emdCity, day, nowT
       Sequelize.literal(
         `(SELECT ROUND(((SELECT AVG(starRate_cost) FROM reviews where reviews.dentalClinicId = dental_clinic.id)+(SELECT AVG(starRate_treatment) FROM reviews where reviews.dentalClinicId = dental_clinic.id)+(SELECT AVG(starRate_service) FROM reviews where reviews.dentalClinicId = dental_clinic.id))/3,1)) DESC`
       ),
-      Sequelize.literal(`IF((SELECT COUNT(*) FROM reviewBills where reviewBills.reviewId=id AND reviewBills.deletedAt IS NULL)>0,TRUE,FALSE) DESC`),
+      Sequelize.literal(`IF((SELECT COUNT(*) FROM reviewBills where reviewBills.reviewId=reviews.id AND reviewBills.deletedAt IS NULL)>0,TRUE,FALSE) DESC`),
       Sequelize.literal(`(SELECT ROUND((starRate_cost + starRate_treatment + starRate_service)/3,1)) DESC`),
     ],
     subQuery: false,
