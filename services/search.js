@@ -480,31 +480,6 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
     const tagCategory = event.queryStringParameters.tagCategory;
     const tagId = event.queryStringParameters.tagId;
     const unifiedSearch = event.queryStringParameters.unifiedSearch;
-    if (unifiedSearch === "true") {
-      const [search, created] = await db.Search_record.findOrCreate({
-        where: {
-          userId: userId,
-          query: query,
-          category: tagCategory,
-          route: "keywordSearch",
-        },
-      });
-      if (!created) {
-        await db.Search_record.update(
-          {
-            userId: userId,
-            query: query,
-            category: tagCategory,
-            route: "keywordSearch",
-          },
-          {
-            where: {
-              id: search.id,
-            },
-          }
-        );
-      }
-    }
     var clusterQuery;
     if (region === "residence") {
       var userResidence = await db.City.findOne({
@@ -527,6 +502,32 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
       };
     }
     switch (type) {
+      case "all":
+        if (unifiedSearch === "true") {
+          const [search, created] = await db.Search_record.findOrCreate({
+            where: {
+              userId: userId,
+              query: query,
+              category: tagCategory,
+              route: "keywordSearch",
+            },
+          });
+          if (!created) {
+            await db.Search_record.update(
+              {
+                userId: userId,
+                query: query,
+                category: tagCategory,
+                route: "keywordSearch",
+              },
+              {
+                where: {
+                  id: search.id,
+                },
+              }
+            );
+          }
+        }
       case "community":
         const communityType = event.queryStringParameters.type === "All" ? ["Question", "FreeTalk"] : [event.queryStringParameters.type];
         const communityResult = await db.Community.getKeywordSearchAll(db, communityType, query, tagCategory, tagId, userId, clusterQuery, offset, limit, order);
