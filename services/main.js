@@ -1,7 +1,7 @@
 const db = require("../utils/models");
 const moment = require("moment");
 
-module.exports.residenceClincReviews = async function residenceClincReviews(event) {
+module.exports.residenceClinicReviews = async function residenceClinicReviews(event) {
   try {
     const { cityId, lat, long } = event.queryStringParameters;
     var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
