@@ -350,7 +350,7 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
   });
 };
 
-module.exports.NewestReviewsInResidence = async function (db, cityId, day, nowTime, todayHoliday, lat, long) {
+module.exports.NewestReviewsInResidence = async function (db, emdCity, day, nowTime, todayHoliday, lat, long) {
   const conclustionAndLunchTime = conclustionAndLunchTimeCalFunc(day, nowTime, todayHoliday, undefined);
   return await this.findAll({
     attributes: [
@@ -379,6 +379,16 @@ module.exports.NewestReviewsInResidence = async function (db, cityId, day, nowTi
       //[accuracyPointQuery, "accuracyPoint"],
     ],
     include: [
+      {
+        model: db.City,
+        required: true,
+        attributes: ["id", "sido", "sigungu", "emdName"],
+        where: {
+          sido: emdCity.sido,
+          sigungu: emdCity.sigungu,
+          emdName: emdCity.emdName,
+        },
+      },
       {
         model: db.Review,
         attributes: [
@@ -411,9 +421,6 @@ module.exports.NewestReviewsInResidence = async function (db, cityId, day, nowTi
         ],
       },
     ],
-    where: {
-      cityId: cityId,
-    },
     order: [
       Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL) DESC`),
       Sequelize.literal(
