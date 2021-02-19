@@ -221,6 +221,8 @@ functions:
               - name: request.querystring.days
               - name: request.querystring.time
               - name: request.querystring.holiday
+              - name: request.querystring.maplat
+              - name: request.querystring.maplong
           authorizer:
               name: verify-token
               # this tells the lambda where to take the information from,
