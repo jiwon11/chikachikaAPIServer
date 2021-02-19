@@ -10,7 +10,7 @@ module.exports.updateNotificationConfig = async function updateNotificationConfi
       },
     });
     if (user) {
-      console.log(event.body);
+      console.log("event.body: ", event.body);
       const requestBody = JSON.parse(event.body);
       const likeValue = requestBody.like;
       const commentValue = requestBody.comment;
