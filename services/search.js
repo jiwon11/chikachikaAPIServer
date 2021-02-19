@@ -161,14 +161,9 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
       const today = moment().tz(process.env.TZ);
       const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
       const day = weekDay[today.day()];
-      const todayHoliday = await db.Korea_holiday.findAll({
-        where: {
-          date: today,
-        },
-      });
       console.log(day, nowTime);
       console.log(todayHoliday);
-      const clinics = await db.Dental_clinic.searchAll(db, "keyword", query, nowTime, day, week, todayHoliday, lat, long, limit, offset, sort, wantParking, holiday);
+      const clinics = await db.Dental_clinic.searchAll(db, "keyword", query, nowTime, day, week, lat, long, limit, offset, sort, wantParking, holiday);
       let response = {
         statusCode: 200,
         body: JSON.stringify(clinics),
@@ -479,6 +474,8 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
     const cityId = event.queryStringParameters.cityId;
     const tagCategory = event.queryStringParameters.tagCategory;
     const tagId = event.queryStringParameters.tagId;
+    const lat = event.queryStringParameters.lat;
+    const long = event.queryStringParameters.long;
     const unifiedSearch = event.queryStringParameters.unifiedSearch;
     var clusterQuery;
     if (region === "residence") {
@@ -543,6 +540,14 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
         return {
           statusCode: 200,
           body: JSON.stringify(reviewResult),
+        };
+      case "clinic":
+        console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
+        const clinicResult = await db.Dental_clinic.getKeywordSearchAll(db, lat, long, query, tagCategory, tagId, clusterQuery, limit, offset, order);
+        console.log(`${type} results Num: ${clinicResult.length}`);
+        return {
+          statusCode: 200,
+          body: JSON.stringify(clinicResult),
         };
       default:
         break;

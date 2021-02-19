@@ -1,7 +1,7 @@
 const db = require("../utils/models");
 const Sequelize = require("sequelize");
 const moment = require("moment");
-
+require("moment/locale/ko");
 module.exports.postAppointment = async function postAppointment(event) {
   try {
     const userId = event.requestContext.authorizer.principalId;
@@ -57,12 +57,13 @@ module.exports.getAppointment = async function getAppointment(event) {
         ],
       });
       var week = ["일", "월", "화", "수", "목", "금", "토"];
+      moment.locale("ko");
       const mapAppointmentClincs = appointmentClincs.map((clinic) => ({
         id: clinic.id,
         originalName: clinic.originalName,
         date: clinic.appointment.createdAt.split(" ")[0],
         day: week[new Date(clinic.appointment.createdAt.split(" ")[0]).getDay()],
-        time: clinic.appointment.createdAt.split(" ")[1],
+        time: moment(new Date(clinic.appointment.createdAt)).format("LTS"),
         createdAt: clinic.appointment.createdAt,
         dentalClinicProfileImgs: clinic.dentalClinicProfileImgs,
       }));

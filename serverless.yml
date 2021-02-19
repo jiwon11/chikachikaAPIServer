@@ -743,7 +743,7 @@ functions:
               identitySource: method.request.header.Authorization
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   dbReset:
-    handler: services/dbReset.clinicNameSpaceRemove
+    handler: services/dbReset.sidoSigungu
     events:
       - http:
           path: dbReset
