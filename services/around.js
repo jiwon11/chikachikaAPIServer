@@ -81,7 +81,7 @@ module.exports.redienceClinics = async function redienceClinics(event) {
         where: clusterQuery,
       });
       const cityIds = cities.map((city) => city.id);
-      const clinics = await db.Dental_clinic.searchAll(db, "residence", cityIds, null, null, null, null, null, parseInt(limit), parseInt(offset), "accuracy", null, null);
+      const clinics = await db.Dental_clinic.searchAll(db, "residence", cityIds, null, null, null, null, null, null, null, parseInt(limit), parseInt(offset), "accuracy", null, null);
       let response = {
         statusCode: 200,
         body: JSON.stringify(clinics),
