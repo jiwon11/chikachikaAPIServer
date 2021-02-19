@@ -4,7 +4,7 @@ const Sequelize = require("sequelize");
 const moment = require("moment");
 module.exports.clinics = async function clinics(event) {
   try {
-    const { lat, long, wantParking, sort, days, time, holiday } = event.queryStringParameters;
+    const { userlat, userlong, lat, long, wantParking, sort, days, time, holiday } = event.queryStringParameters;
     const limit = parseInt(event.queryStringParameters.limit);
     const offset = parseInt(event.queryStringParameters.offset);
     var week = {
@@ -33,7 +33,7 @@ module.exports.clinics = async function clinics(event) {
     const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
     const day = weekDay[today.day()];
     console.log(day, nowTime);
-    const clinics = await db.Dental_clinic.searchAll(db, "around", null, nowTime, day, week, lat, long, limit, offset, "distance", wantParking, holiday);
+    const clinics = await db.Dental_clinic.searchAll(db, "around", null, nowTime, day, week, userlat, userlong, lat, long, limit, offset, "distance", wantParking, holiday);
     console.log(clinics.length);
     let response = {
       statusCode: 200,
