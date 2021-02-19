@@ -1,5 +1,11 @@
 const Sequelize = require("sequelize");
 const cloudFrontUrl = "https://d1lkvafdh6ugy5.cloudfront.net/";
+const moment = require("moment");
+
+var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
+const today = moment().tz(process.env.TZ);
+const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
+const day = weekDay[today.day()];
 
 const conclustionAndLunchTimeCalFunc = function (day, nowTime, todayHoliday, holidayTreatment) {
   var TOLTimeAttrStart;
@@ -82,6 +88,62 @@ const conclustionAndLunchTimeCalFunc = function (day, nowTime, todayHoliday, hol
     lunchTimeNow,
     holidayTreatmentQuery,
   };
+};
+const clinicIncludeModels = function (db, query, tagCategory, tagId, clusterQuery) {
+  var includeModels;
+  var residenceQuery;
+  if (clusterQuery === undefined) {
+    // 함수 호출시 x에 해당하는 인수가 전달되지 않은 경우
+    residenceQuery = { id: { [Sequelize.Op.not]: null } };
+  } else {
+    residenceQuery = clusterQuery;
+  }
+  includeModels = [
+    {
+      model: db.City,
+      attributes: ["id", "fullCityName", "newTownId"],
+      where: [residenceQuery],
+    },
+    {
+      model: db.Review,
+      include: [
+        {
+          model: db.Treatment_item,
+          as: "TreatmentItems",
+          attributes: ["id", "name"],
+        },
+      ],
+    },
+    {
+      model: db.DentalClinicProfileImg,
+      limit: 1,
+      order: [["represent", "DESC"]],
+    },
+  ];
+  console.log("query:", query, "//", "tagCategory:", tagCategory);
+  if (tagCategory === "city") {
+    let modelIdx = includeModels.findIndex((model) => model.model === db.City);
+    includeModels[modelIdx].where.push({
+      [Sequelize.Op.or]: [
+        {
+          fullCityName: {
+            [Sequelize.Op.like]: `%${query}%`,
+          },
+        },
+        {
+          id: tagId,
+        },
+      ],
+    });
+  } else if (tagCategory === "treatment") {
+    let modelIdx = includeModels.findIndex((model) => model.model === db.Review);
+    includeModels[modelIdx].include[0].where = {
+      name: {
+        [Sequelize.Op.like]: `%${query}%`,
+      },
+    };
+  }
+  return includeModels;
 };
 
 const accuracyPointQuery = Sequelize.literal(
@@ -433,4 +495,89 @@ module.exports.NewestReviewsInResidence = async function (db, emdCity, day, nowT
     ],
     subQuery: false,
   });
+};
+
+module.exports.getKeywordSearchAll = async function (db, lat, long, query, tagCategory, tagId, clusterQuery, limit, offset, order) {
+  console.log(clusterQuery);
+  var orderQuery;
+  if (order === "distance") {
+    orderQuery = [
+      [Sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`), "ASC"],
+    ];
+  } else if (order === "accuracy") {
+    orderQuery = [
+      [Sequelize.literal(`IF(telNumber IS NOT NULL,1,0)`), "ASC"],
+      [accuracyPointQuery, "DESC"],
+      ["name", "ASC"],
+    ];
+  }
+  const todayHoliday = await db.Korea_holiday.findAll({
+    where: {
+      date: today,
+    },
+  });
+  const conclustionAndLunchTime = conclustionAndLunchTimeCalFunc(day, nowTime, todayHoliday, undefined);
+  const attributesList = [
+    "id",
+    "name",
+    "originalName",
+    "local",
+    //"address",
+    "telNumber",
+    "website",
+    "geographLong",
+    "geographLat",
+    "holiday_treatment_start_time",
+    "holiday_treatment_end_time",
+    conclustionAndLunchTime.startTime,
+    conclustionAndLunchTime.endTime,
+    conclustionAndLunchTime.TOLTimeAttrStart,
+    conclustionAndLunchTime.TOLTimeAttrEnd,
+    conclustionAndLunchTime.TOLTimeConfident,
+    conclustionAndLunchTime.confidentConsulationTime,
+    conclustionAndLunchTime.weekend_non_consulation_notice,
+    [
+      Sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`),
+      "distance(km)",
+    ],
+    [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
+    conclustionAndLunchTime.conclustionNow,
+    conclustionAndLunchTime.lunchTimeNow,
+    [
+      Sequelize.literal(
+        `(SELECT ROUND(((SELECT AVG(starRate_cost) FROM reviews where reviews.dentalClinicId = dental_clinic.id)+(SELECT AVG(starRate_treatment) FROM reviews where reviews.dentalClinicId = dental_clinic.id)+(SELECT AVG(starRate_service) FROM reviews where reviews.dentalClinicId = dental_clinic.id))/3,1))`
+      ),
+      "reviewAVGStarRate",
+    ],
+    [accuracyPointQuery, "accuracyPoint"],
+  ];
+  const includeModels = clinicIncludeModels(db, query, tagCategory, tagId, clusterQuery);
+  var whereQuery;
+  if (tagCategory === "clinic") {
+    whereQuery = {
+      originalName: {
+        [Sequelize.Op.like]: `%${query}%`,
+      },
+    };
+  } else if (tagCategory === "general") {
+    whereQuery = {
+      originalName: {
+        [Sequelize.Op.like]: `%${query}%`,
+      },
+    };
+  }
+  var results = await this.findAll({
+    attributes: attributesList,
+    where: whereQuery,
+    include: includeModels,
+    order: orderQuery,
+    limit: limit,
+    offset: offset,
+  });
+  results = JSON.parse(JSON.stringify(results));
+  results.forEach((result) => {
+    delete result.city;
+    delete result.reviews;
+  });
+  return results;
 };

@@ -188,5 +188,6 @@ module.exports = (sequelize, DataTypes) => {
   );
   dentalClinic.searchAll = clinicQueryClass.SearchAll;
   dentalClinic.NewestReviewsInResidence = clinicQueryClass.NewestReviewsInResidence;
+  dentalClinic.getKeywordSearchAll = clinicQueryClass.getKeywordSearchAll;
   return dentalClinic;
 };

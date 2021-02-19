@@ -479,6 +479,8 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
     const cityId = event.queryStringParameters.cityId;
     const tagCategory = event.queryStringParameters.tagCategory;
     const tagId = event.queryStringParameters.tagId;
+    const lat = event.queryStringParameters.lat;
+    const long = event.queryStringParameters.long;
     const unifiedSearch = event.queryStringParameters.unifiedSearch;
     var clusterQuery;
     if (region === "residence") {
@@ -543,6 +545,14 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
         return {
           statusCode: 200,
           body: JSON.stringify(reviewResult),
+        };
+      case "clinic":
+        console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
+        const clinicResult = await db.Dental_clinic.getKeywordSearchAll(db, lat, long, query, tagCategory, tagId, clusterQuery, limit, offset, order);
+        console.log(`${type} results Num: ${clinicResult.length}`);
+        return {
+          statusCode: 200,
+          body: JSON.stringify(clinicResult),
         };
       default:
         break;
