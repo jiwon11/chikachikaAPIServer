@@ -24,7 +24,7 @@ const communityIncludeAttributes = function (userId) {
 };
 module.exports.communityIncludeAttributes = communityIncludeAttributes;
 
-const communityIncludeModels = function (db, clusterQuery, query = undefined, tagCategory = undefined, tagId = undefined, appendModels = undefined) {
+const communityIncludeModels = function (db, clusterQuery, query, tagCategory, tagId, appendModels) {
   if (clusterQuery === undefined) {
     // 함수 호출시 x에 해당하는 인수가 전달되지 않은 경우
     clusterQuery = { createdAt: { [Sequelize.Op.not]: null } };
@@ -61,8 +61,8 @@ const communityIncludeModels = function (db, clusterQuery, query = undefined, ta
         "img_width",
         "img_height",
       ],
-      separate: true,
       order: [["img_index", "ASC"]],
+      separate: true,
     },
     {
       model: db.Dental_clinic,

@@ -133,10 +133,7 @@ router.get("/likes", getUserInToken, async (req, res, next) => {
         include: communityQueryClass.communityIncludeModels(db),
         limit: limit,
         offset: offset,
-        order: [
-          [Sequelize.literal("`Like_Community.createdAt`"), "DESC"],
-          ["community_imgs", "img_index", "ASC"],
-        ],
+        order: [[Sequelize.literal("`Like_Community.createdAt`"), "DESC"]],
       });
       return res.status(200).json(userLikeCommunityPosts);
     } else {
@@ -265,8 +262,9 @@ router.get("/wroteCommentPosts", getUserInToken, async (req, res, next) => {
         attributes: {
           include: communityQueryClass.communityIncludeAttributes(userId),
         },
-        include: communityQueryClass.communityIncludeModels(db, undefined, undefined, undefined, {
+        include: communityQueryClass.communityIncludeModels(db, undefined, undefined, undefined, undefined, {
           model: db.Community_comment,
+          attributes: ["id", "userId", "createdAt"],
           include: [
             {
               model: db.Community_comment,
@@ -292,6 +290,7 @@ router.get("/wroteCommentPosts", getUserInToken, async (req, res, next) => {
       });
     }
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       statusCode: 500,
       body: { statusText: "Server Error", message: error.message },
