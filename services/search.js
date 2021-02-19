@@ -162,7 +162,6 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
       const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
       const day = weekDay[today.day()];
       console.log(day, nowTime);
-      console.log(todayHoliday);
       const clinics = await db.Dental_clinic.searchAll(db, "keyword", query, nowTime, day, week, lat, long, limit, offset, sort, wantParking, holiday);
       let response = {
         statusCode: 200,
