@@ -156,16 +156,11 @@ const accuracyPointQuery = Sequelize.literal(
   `(IF(CD_Num > 0 OR SD_Num > 0 OR RE_Num > 0 OR IN_Num > 0, 1, 0))+(IF(Mon_Consulation_start_time > "00:00:00", 1, 0))+ (IF(Sat_Consulation_start_time > "00:00:00", 1, 0)) + (IF(parking_allow_num>0, 1, 0))+(IF(holiday_treatment_start_time IS NOT NULL, 1, 0))+(IF(description IS NOT NULL, 1, 0))+(IF(dentalTransparent IS TRUE, 1, 0))+(IF((SELECT COUNT(*) FROM Clinic_subjects where dentalClinicId = dental_clinic.id)>0,1,0))+(IF((SELECT COUNT(*) FROM Clinic_special_treatment where dentalClinicId = dental_clinic.id)>0,1,0))+(IF((SELECT COUNT(*) FROM dentalClinicProfileImgs where dentalClinicId = dental_clinic.id AND dentalClinicProfileImgs.deletedAt IS NOT NULL)>0,1,0))`
 );
 
-module.exports.SearchAll = async function (db, type, query, nowTime, day, week, userlat, userlong, lat, long, limit, offset, sort, wantParking, holidayTreatment) {
+module.exports.SearchAll = async function (db, type, query, nowTime, day, week, lat, long, maplat, maplong, limit, offset, sort, wantParking, holidayTreatment) {
   var orderQuery;
   if (sort === "distance") {
     orderQuery = [
-      [
-        Sequelize.literal(
-          `ROUND((6371*acos(cos(radians(${userlat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${userlong}))+sin(radians(${userlat}))*sin(radians(geographLat)))),2)`
-        ),
-        "ASC",
-      ],
+      [Sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`), "ASC"],
     ];
   } else if (sort === "accuracy") {
     orderQuery = [
@@ -199,7 +194,7 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
     const radius = 0.7;
     whereQuery = {
       [Sequelize.Op.all]: Sequelize.literal(
-        `(6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat))))<=${radius}`
+        `(6371*acos(cos(radians(${maplat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${maplong}))+sin(radians(${maplat}))*sin(radians(geographLat))))<=${radius}`
       ),
       parking_allow_num: parkingQuery,
       holiday_treatment_start_time: conclustionAndLunchTime.holidayTreatmentQuery,
@@ -260,9 +255,7 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
       conclustionAndLunchTime.confidentConsulationTime,
       conclustionAndLunchTime.weekend_non_consulation_notice,
       [
-        Sequelize.literal(
-          `ROUND((6371*acos(cos(radians(${userlat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${userlong}))+sin(radians(${userlat}))*sin(radians(geographLat)))),2)`
-        ),
+        Sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`),
         "distance(km)",
       ],
       [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
