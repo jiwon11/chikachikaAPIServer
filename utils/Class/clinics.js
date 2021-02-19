@@ -6,7 +6,13 @@ var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
 const today = moment().tz(process.env.TZ);
 const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
 const day = weekDay[today.day()];
-
+const todayHolidayFunc = async function (db, today) {
+  return await db.Korea_holiday.findAll({
+    where: {
+      date: today,
+    },
+  });
+};
 const conclustionAndLunchTimeCalFunc = function (day, nowTime, todayHoliday, holidayTreatment) {
   var TOLTimeAttrStart;
   var TOLTimeAttrEnd;
@@ -150,7 +156,7 @@ const accuracyPointQuery = Sequelize.literal(
   `(IF(CD_Num > 0 OR SD_Num > 0 OR RE_Num > 0 OR IN_Num > 0, 1, 0))+(IF(Mon_Consulation_start_time > "00:00:00", 1, 0))+ (IF(Sat_Consulation_start_time > "00:00:00", 1, 0)) + (IF(parking_allow_num>0, 1, 0))+(IF(holiday_treatment_start_time IS NOT NULL, 1, 0))+(IF(description IS NOT NULL, 1, 0))+(IF(dentalTransparent IS TRUE, 1, 0))+(IF((SELECT COUNT(*) FROM Clinic_subjects where dentalClinicId = dental_clinic.id)>0,1,0))+(IF((SELECT COUNT(*) FROM Clinic_special_treatment where dentalClinicId = dental_clinic.id)>0,1,0))+(IF((SELECT COUNT(*) FROM dentalClinicProfileImgs where dentalClinicId = dental_clinic.id AND dentalClinicProfileImgs.deletedAt IS NOT NULL)>0,1,0))`
 );
 
-module.exports.SearchAll = async function (db, type, query, nowTime, day, week, todayHoliday, lat, long, limit, offset, sort, wantParking, holidayTreatment) {
+module.exports.SearchAll = async function (db, type, query, nowTime, day, week, lat, long, limit, offset, sort, wantParking, holidayTreatment) {
   var orderQuery;
   if (sort === "distance") {
     orderQuery = [
@@ -180,8 +186,8 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
       };
     }
   }
+  const todayHoliday = await todayHolidayFunc(db, today);
   const conclustionAndLunchTime = conclustionAndLunchTimeCalFunc(day, nowTime, todayHoliday, holidayTreatment);
-  console.log(conclustionAndLunchTime);
   var whereQuery;
   var attributesList;
   if (type === "around") {
@@ -412,7 +418,8 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
   });
 };
 
-module.exports.NewestReviewsInResidence = async function (db, emdCity, day, nowTime, todayHoliday, lat, long) {
+module.exports.NewestReviewsInResidence = async function (db, emdCity, day, nowTime, lat, long) {
+  const todayHoliday = await todayHolidayFunc(db, today);
   const conclustionAndLunchTime = conclustionAndLunchTimeCalFunc(day, nowTime, todayHoliday, undefined);
   return await this.findAll({
     attributes: [
@@ -511,11 +518,7 @@ module.exports.getKeywordSearchAll = async function (db, lat, long, query, tagCa
       ["name", "ASC"],
     ];
   }
-  const todayHoliday = await db.Korea_holiday.findAll({
-    where: {
-      date: today,
-    },
-  });
+  const todayHoliday = await todayHolidayFunc(db, today);
   const conclustionAndLunchTime = conclustionAndLunchTimeCalFunc(day, nowTime, todayHoliday, undefined);
   const attributesList = [
     "id",

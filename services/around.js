@@ -32,14 +32,9 @@ module.exports.clinics = async function clinics(event) {
     const today = moment().tz(process.env.TZ);
     const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
     const day = weekDay[today.day()];
-    const todayHoliday = await db.Korea_holiday.findAll({
-      where: {
-        date: today,
-      },
-    });
     console.log(day, nowTime);
     console.log(todayHoliday);
-    const clinics = await db.Dental_clinic.searchAll(db, "around", null, nowTime, day, week, todayHoliday, lat, long, limit, offset, "distance", wantParking, holiday);
+    const clinics = await db.Dental_clinic.searchAll(db, "around", null, nowTime, day, week, lat, long, limit, offset, "distance", wantParking, holiday);
     console.log(clinics.length);
     let response = {
       statusCode: 200,
@@ -87,7 +82,7 @@ module.exports.redienceClinics = async function redienceClinics(event) {
         where: clusterQuery,
       });
       const cityIds = cities.map((city) => city.id);
-      const clinics = await db.Dental_clinic.searchAll(db, "residence", cityIds, null, null, null, null, null, null, parseInt(limit), parseInt(offset), "accuracy", null, null);
+      const clinics = await db.Dental_clinic.searchAll(db, "residence", cityIds, null, null, null, null, null, parseInt(limit), parseInt(offset), "accuracy", null, null);
       let response = {
         statusCode: 200,
         body: JSON.stringify(clinics),

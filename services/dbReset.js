@@ -551,13 +551,20 @@ module.exports.sidoSigungu = async function sidoSigungu(event) {
   try {
     const sigungus = await City.findAll({
       attributes: ["sido", "sigungu"],
-      group: ["sigungu"],
     });
     for (const sigungu of sigungus) {
-      await Sigungu.create({
-        name: sigungu.sigungu,
-        fullName: `${sigungu.sido} ${sigungu.sigungu}`,
+      const existSigungu = await Sigungu.findAll({
+        where: {
+          fullName: `${sigungu.sido} ${sigungu.sigungu}`,
+        },
       });
+      if (existSigungu.length === 0) {
+        await Sigungu.create({
+          name: sigungu.sigungu,
+          fullName: `${sigungu.sido} ${sigungu.sigungu}`,
+        });
+        console.log(`${sigungu.sido} ${sigungu.sigungu}`);
+      }
     }
     return {
       statusCode: 200,

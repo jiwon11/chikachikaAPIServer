@@ -161,14 +161,9 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
       const today = moment().tz(process.env.TZ);
       const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
       const day = weekDay[today.day()];
-      const todayHoliday = await db.Korea_holiday.findAll({
-        where: {
-          date: today,
-        },
-      });
       console.log(day, nowTime);
       console.log(todayHoliday);
-      const clinics = await db.Dental_clinic.searchAll(db, "keyword", query, nowTime, day, week, todayHoliday, lat, long, limit, offset, sort, wantParking, holiday);
+      const clinics = await db.Dental_clinic.searchAll(db, "keyword", query, nowTime, day, week, lat, long, limit, offset, sort, wantParking, holiday);
       let response = {
         statusCode: 200,
         body: JSON.stringify(clinics),

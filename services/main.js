@@ -8,18 +8,13 @@ module.exports.residenceClinicReviews = async function residenceClinicReviews(ev
     const today = moment().tz(process.env.TZ);
     const day = weekDay[today.day()];
     const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
-    const todayHoliday = await db.Korea_holiday.findAll({
-      where: {
-        date: today,
-      },
-    });
     const emdCity = await db.City.findOne({
       attributes: ["id", "sido", "sigungu", "emdName"],
       where: {
         id: cityId,
       },
     });
-    const residenceClincReviews = await db.Dental_clinic.NewestReviewsInResidence(db, emdCity, day, nowTime, todayHoliday, lat, long);
+    const residenceClincReviews = await db.Dental_clinic.NewestReviewsInResidence(db, emdCity, day, nowTime, lat, long);
     return {
       statusCode: 200,
       body: JSON.stringify(residenceClincReviews),
