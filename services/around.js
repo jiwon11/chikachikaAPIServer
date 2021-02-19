@@ -5,6 +5,7 @@ const moment = require("moment");
 module.exports.clinics = async function clinics(event) {
   try {
     const { lat, long, maplat, maplong, wantParking, sort, days, time, holiday } = event.queryStringParameters;
+    console.log(JSON.stringify(event.queryStringParameters));
     const limit = parseInt(event.queryStringParameters.limit);
     const offset = parseInt(event.queryStringParameters.offset);
     var week = {
