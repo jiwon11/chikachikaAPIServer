@@ -15,29 +15,25 @@ module.exports.updateNotificationConfig = async function updateNotificationConfi
       const likeValue = requestBody.like;
       const commentValue = requestBody.comment;
       const eventValue = requestBody.event;
-      if (user) {
-        await NotificationConfig.update(
-          {
-            like: likeValue === "true",
-            comment: commentValue === "true",
-            event: eventValue === "true",
+      console.log(likeValue === "true");
+      console.log(commentValue === "true");
+      console.log(eventValue === "true");
+      await NotificationConfig.update(
+        {
+          like: likeValue === "true",
+          comment: commentValue === "true",
+          event: eventValue === "true",
+        },
+        {
+          where: {
+            userId: user.id,
           },
-          {
-            where: {
-              userId: user.id,
-            },
-          }
-        );
-        return {
-          statusCode: 200,
-          body: `{"statusText": "OK", "message": "${user.nickname}님의 알림설정을 수정하였습니다."}`,
-        };
-      } else {
-        return {
-          statusCode: 401,
-          body: `{"statusText": "Unauthorized","message": "사용자를 찾을 수 없습니다."}`,
-        };
-      }
+        }
+      );
+      return {
+        statusCode: 200,
+        body: `{"statusText": "OK", "message": "${user.nickname}님의 알림설정을 수정하였습니다."}`,
+      };
     } else {
       return {
         statusCode: 401,
