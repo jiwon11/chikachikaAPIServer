@@ -509,6 +509,7 @@ db.Search_record.belongsTo(db.User);
 db.User.hasOne(db.NotificationConfig, {
   foreignKey: "userId",
   sourceKey: "id",
+  onDelete: "CASCADE",
 });
 db.NotificationConfig.belongsTo(db.User, {
   foreignKey: "userId",

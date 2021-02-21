@@ -84,3 +84,33 @@ module.exports.getAppointment = async function getAppointment(event) {
     };
   }
 };
+
+module.exports.removeAppointment = async function removeAppointment(event) {
+  try {
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await db.User.findOne({
+      where: {
+        id: userId,
+      },
+    });
+    if (user) {
+      const clinicId = event.queryStringParameters.clinicId;
+      const clinic = await db.Dental_clinic.findOne({
+        where: {
+          id: clinicId,
+        },
+      });
+      await user.removeAppointmentClinics(clinic);
+    }
+    return {
+      statusCode: 204,
+      body: `{"statusText": "DELETE","message": "전화 예약 기록을 정상적으로 삭제하였습니다."}`,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
