@@ -1,3 +1,4 @@
+const Sequelize = require("sequelize");
 module.exports = (sequelize, DataTypes) =>
   sequelize.define(
     "user",
@@ -11,7 +12,6 @@ module.exports = (sequelize, DataTypes) =>
       email: {
         type: DataTypes.STRING(50),
         allowNull: true,
-        unique: true,
       },
       password: {
         type: DataTypes.STRING(100),
@@ -20,7 +20,6 @@ module.exports = (sequelize, DataTypes) =>
       nickname: {
         type: DataTypes.STRING(20),
         allowNull: false,
-        unique: true,
       },
       birthdate: {
         type: DataTypes.DATEONLY,
@@ -79,27 +78,23 @@ module.exports = (sequelize, DataTypes) =>
           const review_comments = await instance.getReview_comments();
           for (const review_comment of review_comments) {
             await review_comment.destroy();
+            const replys = await review_comment.getReplys();
+            for (const reply of replys) {
+              await reply.destroy();
+            }
           }
+          await sequelize.query(`DELETE FROM Review_reply WHERE targetUserId = '${instance.id}';`);
           console.log("after destroy: user's Review_comment destroyed");
-          /*
-          const review_comment_replys = await instance.getReview_comment_replys();
-          for (const review_comment_reply of review_comment_replys) {
-            await review_comment_reply.destroy();
-          }
-          console.log("after destroy: user's Review_comment_replys destroyed");
-          */
           const community_comments = await instance.getCommunity_comments();
           for (const community_comment of community_comments) {
             await community_comment.destroy();
+            const replys = await community_comment.getReplys();
+            for (const reply of replys) {
+              await reply.destroy();
+            }
           }
+          await sequelize.query(`DELETE FROM Community_reply WHERE targetUserId = '${instance.id}';`);
           console.log("after destroy: user's Community_comments destroyed");
-          /*
-          const community_comment_replys = await instance.getCommunity_comment_replys();
-          for (const community_comment_reply of community_comment_replys) {
-            await community_comment_reply.destroy();
-          }
-          console.log("after destroy: user's Community_comment_replys destroyed");
-          */
           const reports = await instance.getReports();
           for (const report of reports) {
             await report.destroy();

@@ -152,7 +152,6 @@ module.exports.deleteUser = async function deleteUser(event) {
         where: {
           id: userId,
         },
-        //force: true,
         individualHooks: true,
       });
       return {
