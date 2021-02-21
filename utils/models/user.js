@@ -68,16 +68,86 @@ module.exports = (sequelize, DataTypes) =>
         beforeDestroy: async function (instance, options) {
           const reviews = await instance.getReviews();
           for (const review of reviews) {
-            review.userId = null;
-            await review.save();
+            await review.destroy();
           }
           console.log("after destroy: user's Reviews destroyed");
           const communituies = await instance.getCommunities();
           for (const community of communituies) {
-            community.userId = null;
-            await community.save();
+            await community.destroy();
           }
-          console.log("after destroy: user's Cummunity destroyed");
+          console.log("after destroy: user's Community destroyed");
+          const review_comments = await instance.getReview_comments();
+          for (const review_comment of review_comments) {
+            await review_comment.destroy();
+          }
+          console.log("after destroy: user's Review_comment destroyed");
+          /*
+          const review_comment_replys = await instance.getReview_comment_replys();
+          for (const review_comment_reply of review_comment_replys) {
+            await review_comment_reply.destroy();
+          }
+          console.log("after destroy: user's Review_comment_replys destroyed");
+          */
+          const community_comments = await instance.getCommunity_comments();
+          for (const community_comment of community_comments) {
+            await community_comment.destroy();
+          }
+          console.log("after destroy: user's Community_comments destroyed");
+          /*
+          const community_comment_replys = await instance.getCommunity_comment_replys();
+          for (const community_comment_reply of community_comment_replys) {
+            await community_comment_reply.destroy();
+          }
+          console.log("after destroy: user's Community_comment_replys destroyed");
+          */
+          const reports = await instance.getReports();
+          for (const report of reports) {
+            await report.destroy();
+          }
+          console.log("after destroy: user's Reports destroyed");
+          const search_records = await instance.getSearch_records();
+          for (const search_record of search_records) {
+            await search_record.destroy();
+          }
+          console.log("after destroy: user's Search_records destroyed");
+          const notifications = await instance.getNotifications();
+          for (const notification of notifications) {
+            await notification.destroy();
+          }
+          console.log("after destroy: user's Notifications destroyed");
+          const notificationConfig = await instance.getNotificationConfig();
+          await notificationConfig.destroy();
+          console.log("after destroy: user's NotificationConfig destroyed");
+          const appointmentClinics = instance.getAppointmentClinics();
+          await instance.removeAppointmentClinics(appointmentClinics);
+          console.log("after destroy: user's appointmentClinics destroyed");
+          const scrapClinics = await instance.getScrapClinics();
+          await instance.removeScrapClinics(scrapClinics);
+          console.log("after destroy: user's ScrapClinics destroyed");
+          const ScrapReviews = await instance.getScrapReviews();
+          await instance.removeScrapReviews(ScrapReviews);
+          console.log("after destroy: user's ScrapReviews destroyed");
+          const LikeReviews = await instance.getLikeReviews();
+          await instance.removeLikeReviews(LikeReviews);
+          console.log("after destroy: user's LikeReviews destroyed");
+          const ViewedReviews = await instance.getViewedReviews();
+          await instance.removeViewedReviews(ViewedReviews);
+          console.log("after destroy: user's ViewedReviews destroyed");
+          const LikeCommunities = await instance.getLikeCommunities();
+          await instance.removeLikeCommunities(LikeCommunities);
+          console.log("after destroy: user's LikeCommunities destroyed");
+          const ViewedCommunities = await instance.getViewedCommunities();
+          await instance.removeViewedCommunities(ViewedCommunities);
+          console.log("after destroy: user's ViewedCommunities destroyed");
+          const ScrapCommunities = await instance.getScrapCommunities();
+          await instance.removeScrapCommunities(ScrapCommunities);
+          console.log("after destroy: user's ScrapCommunities destroyed");
+          const ReportedClinics = await instance.getReportedClinics();
+          await instance.removeReportedClinics(ReportedClinics);
+          console.log("after destroy: user's ReportedClinics destroyed");
+          const Residences = await instance.getResidences();
+          await instance.removeResidences(Residences);
+          console.log("after destroy: user's Residences destroyed");
         },
       },
     }

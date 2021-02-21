@@ -141,6 +141,7 @@ module.exports.getUserProfile = async function getUserProfile(event) {
 module.exports.deleteUser = async function deleteUser(event) {
   try {
     const userId = event.requestContext.authorizer.principalId;
+    console.log(userId);
     const user = await User.findOne({
       where: {
         id: userId,
@@ -151,7 +152,7 @@ module.exports.deleteUser = async function deleteUser(event) {
         where: {
           id: userId,
         },
-        force: true,
+        //force: true,
         individualHooks: true,
       });
       return {
