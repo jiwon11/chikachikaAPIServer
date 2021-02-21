@@ -47,7 +47,7 @@ module.exports.getAppointment = async function getAppointment(event) {
     });
     if (user) {
       var appointmentClincs = await user.getAppointmentClinics({
-        attributes: ["id", "originalName"],
+        attributes: ["id", "originalName", "telNumber"],
         include: [
           {
             model: db.DentalClinicProfileImg,
@@ -61,6 +61,7 @@ module.exports.getAppointment = async function getAppointment(event) {
       const mapAppointmentClincs = appointmentClincs.map((clinic) => ({
         id: clinic.id,
         originalName: clinic.originalName,
+        telNumber: clinic.telNumber,
         date: clinic.appointment.createdAt.split(" ")[0],
         day: week[new Date(clinic.appointment.createdAt.split(" ")[0]).getDay()],
         time: moment(new Date(clinic.appointment.createdAt)).format("LTS"),

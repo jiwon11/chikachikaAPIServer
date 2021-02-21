@@ -193,9 +193,10 @@ db.Review_comment.belongsTo(db.Review_comment, {
   through: db.Review_comment_reply,
   onDelete: "CASCADE",
 });
-db.Review_comment_reply.belongsTo(db.User, {
+db.User.hasMany(db.Review_comment_reply, {
   foreignKey: "targetUserId",
 });
+db.Review_comment_reply.belongsTo(db.User);
 /*리뷰 콘텐츠와 리뷰 관계형 -좋아요*/
 db.User.belongsToMany(db.Review, {
   foreignKey: "likerId",
@@ -356,9 +357,10 @@ db.Community_comment.belongsTo(db.Community_comment, {
   through: db.Community_comment_reply,
   onDelete: "CASCADE",
 });
-db.Community_comment_reply.belongsTo(db.User, {
+db.User.hasMany(db.Community_comment_reply, {
   foreignKey: "targetUserId",
 });
+db.Community_comment_reply.belongsTo(db.User);
 /* 진료 항목과 커뮤니티글 관계형*/
 db.Community.belongsToMany(db.Treatment_item, {
   foreignKey: "communityId",
@@ -485,7 +487,7 @@ db.Report.belongsTo(db.Community);
 /*병원 신고 관계형*/
 db.User.belongsToMany(db.Dental_clinic, {
   foreignKey: "reporterId",
-  as: "ReportedClinic",
+  as: "ReportedClinics",
   through: db.Clinic_report,
   onDelete: "CASCADE",
 });
@@ -512,16 +514,19 @@ db.NotificationConfig.belongsTo(db.User, {
   foreignKey: "userId",
   targetKey: "id",
 });
-
-db.Notification.belongsTo(db.User, {
+db.User.hasMany(db.Notification, {
   foreignKey: "notificatedUserId",
   onDelete: "CASCADE",
-  as: "notificatedUsers",
 });
 db.Notification.belongsTo(db.User, {
+  as: "notificatedUser",
+});
+db.User.hasMany(db.Notification, {
   foreignKey: "senderId",
   onDelete: "CASCADE",
-  as: "senders",
+});
+db.Notification.belongsTo(db.User, {
+  as: "sender",
 });
 db.Notification.belongsTo(db.Review, {
   foreignKey: "reviewId",
