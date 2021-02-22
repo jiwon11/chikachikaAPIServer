@@ -657,7 +657,7 @@ functions:
     handler: services/notification.getNotifications
     events:
       - http:
-          path: notifications/{type}
+          path: notifications
           method: get
           cors: true
           authorizer:

@@ -5,7 +5,6 @@ const cloudFrontUrl = "https://d1lkvafdh6ugy5.cloudfront.net/";
 module.exports.getNotifications = async function getNotifications(event) {
   try {
     const userId = event.requestContext.authorizer.principalId;
-    const type = event.pathParameters.type; //Comment,Like,Event
     const user = await db.User.findOne({
       where: {
         id: userId,
@@ -13,28 +12,26 @@ module.exports.getNotifications = async function getNotifications(event) {
     });
     if (user) {
       var notifications;
-      if (type !== "Event") {
-        notifications = await db.Notification.findAll({
-          where: {
-            notificatedUserId: userId,
-            type: type,
+      notifications = await db.Notification.findAll({
+        where: {
+          notificatedUserId: userId,
+          type: ["Comment", "Like"],
+        },
+        include: [
+          {
+            model: db.User,
+            as: "sender",
+            attributes: [
+              "id",
+              "nickname",
+              "profileImg",
+              "userProfileImgKeyValue",
+              [Sequelize.fn("CONCAT", `${cloudFrontUrl}`, Sequelize.col("sender.userProfileImgKeyValue"), "?w=140&h=140&f=jpeg&q=100"), "img_thumbNail"],
+            ],
           },
-          include: [
-            {
-              model: db.User,
-              as: "sender",
-              attributes: [
-                "id",
-                "nickname",
-                "profileImg",
-                "userProfileImgKeyValue",
-                [Sequelize.fn("CONCAT", `${cloudFrontUrl}`, Sequelize.col("sender.userProfileImgKeyValue"), "?w=140&h=140&f=jpeg&q=100"), "img_thumbNail"],
-              ],
-            },
-          ],
-          order: [["createdAt", "DESC"]],
-        });
-      }
+        ],
+        order: [["createdAt", "DESC"]],
+      });
       return {
         statusCode: 200,
         body: JSON.stringify(notifications),
