@@ -191,7 +191,7 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
   var whereQuery;
   var attributesList;
   if (type === "around") {
-    const radius = 0.7;
+    const radius = 2;
     whereQuery = {
       [Sequelize.Op.all]: Sequelize.literal(
         `(6371*acos(cos(radians(${maplat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${maplong}))+sin(radians(${maplat}))*sin(radians(geographLat))))<=${radius}`
