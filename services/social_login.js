@@ -116,7 +116,7 @@ module.exports.handler = async function social_login(event) {
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
     const userResidences = await user.getResidences({
       attributes: ["id", "sido", "sigungu", "emdName"],
-      joinTableAttributes: [],
+      joinTableAttributes: ["now"],
     });
     let responseBody = {
       statusText: "Accepted",
