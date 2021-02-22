@@ -75,17 +75,17 @@ module.exports = (sequelize, DataTypes) =>
             await community.destroy();
           }
           console.log("after destroy: user's Community destroyed");
+          await sequelize.query(`DELETE FROM Review_reply WHERE targetUserId = '${instance.id}';`);
           const review_comments = await instance.getReview_comments();
           for (const review_comment of review_comments) {
             await review_comment.destroy();
           }
-          await sequelize.query(`DELETE FROM Review_reply WHERE targetUserId = '${instance.id}';`);
           console.log("after destroy: user's Review_comment destroyed");
+          await sequelize.query(`DELETE FROM Community_reply WHERE targetUserId = '${instance.id}';`);
           const community_comments = await instance.getCommunity_comments();
           for (const community_comment of community_comments) {
             await community_comment.destroy();
           }
-          await sequelize.query(`DELETE FROM Community_reply WHERE targetUserId = '${instance.id}';`);
           console.log("after destroy: user's Community_comments destroyed");
           const reports = await instance.getReports();
           for (const report of reports) {
