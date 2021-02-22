@@ -362,8 +362,11 @@ db.Community_comment.belongsTo(db.Community_comment, {
 });
 db.User.hasMany(db.Community_comment_reply, {
   foreignKey: "targetUserId",
+  onDelete: "CASCADE",
 });
-db.Community_comment_reply.belongsTo(db.User);
+db.Community_comment_reply.belongsTo(db.User, {
+  as: "targetUser",
+});
 /* 진료 항목과 커뮤니티글 관계형*/
 db.Community.belongsToMany(db.Treatment_item, {
   foreignKey: "communityId",
