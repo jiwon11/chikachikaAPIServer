@@ -195,8 +195,11 @@ db.Review_comment.belongsTo(db.Review_comment, {
 });
 db.User.hasMany(db.Review_comment_reply, {
   foreignKey: "targetUserId",
+  onDelete: "CASCADE",
 });
-db.Review_comment_reply.belongsTo(db.User);
+db.Review_comment_reply.belongsTo(db.User, {
+  as: "targetUser",
+});
 /*리뷰 콘텐츠와 리뷰 관계형 -좋아요*/
 db.User.belongsToMany(db.Review, {
   foreignKey: "likerId",
