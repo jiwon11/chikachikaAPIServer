@@ -160,7 +160,10 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
   var orderQuery;
   if (sort === "distance") {
     orderQuery = [
-      [Sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`), "ASC"],
+      [
+        Sequelize.literal(`ROUND((6371*acos(cos(radians(${maplat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${maplong}))+sin(radians(${maplat}))*sin(radians(geographLat)))),2)`),
+        "ASC",
+      ],
     ];
   } else if (sort === "accuracy") {
     orderQuery = [
