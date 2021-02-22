@@ -53,3 +53,98 @@ module.exports.postClinicReport = async function postClinicReport(event) {
     };
   }
 };
+
+module.exports.reports = async function reports(event) {
+  try {
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await db.User.findOne({
+      where: {
+        id: userId,
+      },
+    });
+    if (user) {
+      const body = JSON.parse(event.body);
+      var resonEx = body.reason.replace(/\[/g, "").replace(/\]/g, "").replace(/\'/g, "");
+      const targetType = event.queryStringParameters.targetType;
+      const targetId = event.queryStringParameters.targetId;
+      if (targetType === "user") {
+        const targetUser = await db.User.findOne({
+          where: {
+            id: targetId,
+          },
+        });
+        if (targetUser) {
+          await db.Report.create({
+            reason: resonEx,
+            message: body.message,
+            reporterId: user.id,
+            userId: targetId,
+          });
+        } else {
+          return {
+            statusCode: 404,
+            body: `{"statusText": "Not Found","message": "요청한 사용자를 찾을 수 없습니다."}`,
+          };
+        }
+      } else if (targetType === "review") {
+        const targetReview = await db.Review.findOne({
+          where: {
+            id: targetId,
+          },
+        });
+        if (targetReview) {
+          await db.Report.create({
+            reason: resonEx,
+            message: body.message,
+            reporterId: user.id,
+            reviewId: targetId,
+          });
+        } else {
+          return {
+            statusCode: 404,
+            body: `{"statusText": "Not Found","message": "요청한 리뷰를 찾을 수 없습니다."}`,
+          };
+        }
+      } else if (targetType === "community") {
+        const targetPost = await db.Community.findOne({
+          where: {
+            id: targetId,
+          },
+        });
+        if (targetPost) {
+          await db.Report.create({
+            reason: resonEx,
+            message: body.message,
+            reporterId: user.id,
+            communityId: targetId,
+          });
+        } else {
+          return {
+            statusCode: 404,
+            body: `{"statusText": "Not Found","message": "요청한 수다방 글을 찾을 수 없습니다."}`,
+          };
+        }
+      } else {
+        return {
+          statusCode: 400,
+          body: `{ "statusText": "Bad Request", "message": "유효하지 않는 쿼리 파라미터입니다." }`,
+        };
+      }
+      return {
+        statusCode: 200,
+        body: `{"statusText": "OK","message": "신고 내용이 접수되었습니다."}`,
+      };
+    } else {
+      return {
+        statusCode: 401,
+        body: `{"statusText": "Unauthorized","message": "사용자를 찾을 수 없습니다."}`,
+      };
+    }
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
