@@ -22,13 +22,13 @@ module.exports.getNotifications = async function getNotifications(event) {
           include: [
             {
               model: db.User,
-              as: "senders",
+              as: "sender",
               attributes: [
                 "id",
                 "nickname",
                 "profileImg",
                 "userProfileImgKeyValue",
-                [Sequelize.fn("CONCAT", `${cloudFrontUrl}`, Sequelize.col("senders.userProfileImgKeyValue"), "?w=140&h=140&f=jpeg&q=100"), "img_thumbNail"],
+                [Sequelize.fn("CONCAT", `${cloudFrontUrl}`, Sequelize.col("sender.userProfileImgKeyValue"), "?w=140&h=140&f=jpeg&q=100"), "img_thumbNail"],
               ],
             },
           ],
