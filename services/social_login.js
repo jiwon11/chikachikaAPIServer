@@ -29,10 +29,8 @@ module.exports.socialUserCheck = async function socialUserCheck(event) {
           {
             model: City,
             as: "Residences",
-            attributes: ["id", "sido", "sigungu", "emdName"],
-            through: {
-              attributes: [],
-            },
+            attributes: ["id", "sido", "sigungu", "emdName", "now"],
+            joinTableAttributes: ["now"],
           },
         ],
       });
