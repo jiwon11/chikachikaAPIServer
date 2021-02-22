@@ -4,6 +4,7 @@ const cloudFrontUrl = "https://d1lkvafdh6ugy5.cloudfront.net/";
 
 module.exports.socialUserCheck = async function socialUserCheck(event) {
   try {
+    console.log(event.body);
     const body = JSON.parse(event.body);
     const provider = body.provider;
     const email = body.email;
