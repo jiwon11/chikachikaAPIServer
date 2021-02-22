@@ -23,7 +23,7 @@ module.exports.handler = async function signInUser(event) {
           as: "Residences",
           attributes: ["id", "sido", "sigungu", "emdName"],
           through: {
-            attributes: [],
+            attributes: ["now"],
           },
         },
       ],
