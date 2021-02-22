@@ -88,7 +88,7 @@ module.exports.handler = async function registerUser(event) {
     });
     const userResidences = await user.getResidences({
       attributes: ["id", "sido", "sigungu", "emdName"],
-      joinTableAttributes: [],
+      joinTableAttributes: ["now"],
     });
     const jwtToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
     let responseBody = {
