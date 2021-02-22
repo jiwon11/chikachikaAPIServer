@@ -172,7 +172,7 @@ module.exports.reply = async function (event) {
         });
       }
     }
-    if (postTargetUserId !== postTargetUserId) {
+    if (postTargetUserId !== writeCommentUserId) {
       const postTargetUser = await db.NotificationConfig.findOne({
         where: {
           userId: postTargetUserId,
