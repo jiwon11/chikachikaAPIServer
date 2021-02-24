@@ -303,6 +303,13 @@ module.exports.report = async function (event) {
       return response;
     });
     console.log(slackResponse);
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        message: "Task Worker PULL successfully",
+        input: event,
+      }),
+    };
   } catch (error) {
     console.error(error);
     return {
