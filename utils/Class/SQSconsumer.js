@@ -77,7 +77,7 @@ module.exports.report = async function (body) {
     const messageBody = JSON.stringify(body);
     let params = {
       MessageBody: messageBody,
-      QueueUrl: `https://sqs.ap-northeast-1.amazonaws.com/751612718299/reportNotification`,
+      QueueUrl: `https://sqs.ap-northeast-1.amazonaws.com/751612718299/reportNotification-${process.env.stage}`,
     };
     const data = await sqs.sendMessage(params).promise();
     console.info("SQS Send Message Success", data.MessageId);
