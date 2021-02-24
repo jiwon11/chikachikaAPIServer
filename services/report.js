@@ -74,6 +74,13 @@ module.exports.postClinicReport = async function postClinicReport(event) {
                 type: "section",
                 text: {
                   type: "mrkdwn",
+                  text: `*내용* : ${body.message}`,
+                },
+              },
+              {
+                type: "section",
+                text: {
+                  type: "mrkdwn",
                   text: `*병원 이름* : ${clinic.originalName} , *병원 ID* : ${clinic.id}`,
                 },
               },
