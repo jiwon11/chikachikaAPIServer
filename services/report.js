@@ -1,16 +1,6 @@
 const db = require("../utils/models");
 const reportConsumer = require("../utils/Class/SQSconsumer").report;
 
-const slackSend = async (message) => {
-  slack.webhook(message, function (err, response) {
-    if (err) {
-      return err;
-    }
-    console.log(response);
-    return response;
-  });
-};
-
 module.exports.postClinicReport = async function postClinicReport(event) {
   try {
     const userId = event.requestContext.authorizer.principalId;
