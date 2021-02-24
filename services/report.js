@@ -5,16 +5,12 @@ const slack = new Slack();
 slack.setWebhook(webhookUri);
 
 const slackSend = async (message) => {
-  try {
-    slack.webhook(message, function (err, response) {
-      if (err) {
-        return err;
-      }
-      console.log(response);
-    });
-  } catch (error) {
-    return error;
-  }
+  slack.webhook(message, function (err, response) {
+    if (err) {
+      return err;
+    }
+    return response;
+  });
 };
 
 module.exports.postClinicReport = async function postClinicReport(event) {
@@ -100,7 +96,8 @@ module.exports.postClinicReport = async function postClinicReport(event) {
           });
         });
       }
-      await slackSend(message);
+      const slackResponse = await slackSend(message);
+      console.log(slackResponse);
       console.log(images.length);
       return {
         statusCode: 200,
@@ -244,7 +241,8 @@ module.exports.reports = async function reports(event) {
           },
         ],
       };
-      await slackSend(message);
+      const slackResponse = await slackSend(message);
+      console.log(slackResponse);
       return {
         statusCode: 200,
         body: `{"statusText": "OK","message": "신고 내용이 접수되었습니다."}`,
