@@ -99,7 +99,6 @@ const clinicIncludeModels = function (db, query, tagCategory, tagId, clusterQuer
   var includeModels;
   var residenceQuery;
   if (clusterQuery === undefined) {
-    // 함수 호출시 x에 해당하는 인수가 전달되지 않은 경우
     residenceQuery = { id: { [Sequelize.Op.not]: null } };
   } else {
     residenceQuery = clusterQuery;
