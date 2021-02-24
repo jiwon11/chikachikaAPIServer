@@ -2,6 +2,7 @@ const db = require("../utils/models");
 const AWS = require("aws-sdk");
 const S3 = new AWS.S3();
 const firebase = require("firebase-admin");
+const Slack = require("slack-node");
 
 AWS.config.update({
   accessKeyId: process.env.AWS_Access_Key_ID,
@@ -279,6 +280,29 @@ module.exports.like = async function (event) {
         input: event,
       }),
     };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
+
+module.exports.report = async function (event) {
+  try {
+    const webhookUri = "https://hooks.slack.com/services/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";
+    const slack = new Slack();
+    slack.setWebhook(webhookUri);
+    const body = JSON.parse(event.Records[0].body);
+    console.log(body);
+    const slackResponse = slack.webhook(body, function (err, response) {
+      if (err) {
+        return err;
+      }
+      return response;
+    });
+    console.log(slackResponse);
   } catch (error) {
     console.error(error);
     return {
