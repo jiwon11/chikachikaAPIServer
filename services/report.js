@@ -1,8 +1,5 @@
 const db = require("../utils/models");
-const Slack = require("slack-node");
-const webhookUri = "https://hooks.slack.com/services/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";
-const slack = new Slack();
-slack.setWebhook(webhookUri);
+const reportConsumer = require("../utils/Class/SQSconsumer").report;
 
 const slackSend = async (message) => {
   slack.webhook(message, function (err, response) {
@@ -104,9 +101,10 @@ module.exports.postClinicReport = async function postClinicReport(event) {
           });
         });
       }
-      console.log(JSON.stringify(message));
-      const slackResponse = await slackSend(message);
-      console.log(slackResponse);
+      const reportNotification = await reportConsumer(message);
+      if (reportNotification.statusCode === 200) {
+        console.log(JSON.parse(reportNotification.body));
+      }
       console.log(images.length);
       return {
         statusCode: 200,
@@ -250,8 +248,10 @@ module.exports.reports = async function reports(event) {
           },
         ],
       };
-      const slackResponse = await slackSend(message);
-      console.log(slackResponse);
+      const reportNotification = await reportConsumer(message);
+      if (reportNotification.statusCode === 200) {
+        console.log(JSON.parse(reportNotification.body));
+      }
       return {
         statusCode: 200,
         body: `{"statusText": "OK","message": "신고 내용이 접수되었습니다."}`,
