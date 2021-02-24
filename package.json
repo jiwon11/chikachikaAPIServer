@@ -41,6 +41,7 @@
     "serverless-plugin-cloudwatch-dashboard": "^1.2.0",
     "serverless-plugin-ifelse": "^1.0.6",
     "serverless-webpack": "^5.3.5",
+    "slack-node": "^0.1.8",
     "webpack": "^5.16.0",
     "xml-js": "^1.6.11"
   },
