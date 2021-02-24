@@ -223,6 +223,8 @@ functions:
               - name: request.querystring.holiday
               - name: request.querystring.maplat
               - name: request.querystring.maplong
+              - name: request.querystring.limit
+              - name: request.querystring.offset
           authorizer:
               name: verify-token
               # this tells the lambda where to take the information from,
