@@ -55,14 +55,14 @@ module.exports.postClinicReport = async function postClinicReport(event) {
       const message = {
         attachments: [
           {
-            fallback: `${clinic.originalname}에 대한 새로운 수정 요청이 접수 되었습니다.`,
+            fallback: `${clinic.originalName}에 대한 새로운 수정 요청이 접수 되었습니다.`,
             color: "#D00000",
             blocks: [
               {
                 type: "header",
                 text: {
                   type: "plain_text",
-                  text: `${clinic.originalname}에 대한 새로운 수정 요청이 접수 되었습니다.`,
+                  text: `${clinic.originalName}에 대한 새로운 수정 요청이 접수 되었습니다.`,
                   emoji: true,
                 },
               },
@@ -77,7 +77,7 @@ module.exports.postClinicReport = async function postClinicReport(event) {
                 type: "section",
                 text: {
                   type: "mrkdwn",
-                  text: `*병원 이름* : ${clinic.originalname} , *병원 ID* : ${clinic.id}`,
+                  text: `*병원 이름* : ${clinic.originalName} , *병원 ID* : ${clinic.id}`,
                 },
               },
               {
