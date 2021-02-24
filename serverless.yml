@@ -819,10 +819,6 @@ resources:
       Type: "AWS::SQS::Queue"
       Properties:
         QueueName: eventNotification-${self:provider.stage}
-    reporttNotification:
-      Type: "AWS::SQS::Queue"
-      Properties:
-        QueueName: reportNotification
 plugins:
   - serverless-offline
   - serverless-apigw-binary
