@@ -35,7 +35,6 @@ const reviewIncludeModels = function (db, viewType, query, tagCategory, tagId, c
   var includeModels;
   var residenceClincQuery;
   if (clusterQuery === undefined) {
-    // 함수 호출시 x에 해당하는 인수가 전달되지 않은 경우
     residenceClincQuery = { id: { [Sequelize.Op.not]: null } };
   } else {
     residenceClincQuery = clusterQuery;
