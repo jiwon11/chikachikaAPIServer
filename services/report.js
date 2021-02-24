@@ -9,6 +9,7 @@ const slackSend = async (message) => {
     if (err) {
       return err;
     }
+    console.log(response);
     return response;
   });
 };
@@ -91,11 +92,12 @@ module.exports.postClinicReport = async function postClinicReport(event) {
         images.forEach((image) => {
           message.attachments[0].blocks.push({
             type: "image",
-            image_url: image.location,
+            image_url: image.img_url,
             alt_text: "inspiration",
           });
         });
       }
+      console.log(JSON.stringify(message));
       const slackResponse = await slackSend(message);
       console.log(slackResponse);
       console.log(images.length);
