@@ -30,7 +30,7 @@ module.exports.postClinicReport = async function postClinicReport(event) {
       const body = JSON.parse(event.body);
       const bodyImages = body.images;
       var resonEx = body.reason.replace(/\[/g, "").replace(/\]/g, "").replace(/\'/g, "");
-      const clinic = await db.findOne({ where: { id: clinicId } });
+      const clinic = await db.Dental_clinic.findOne({ where: { id: clinicId } });
       const clinicReport = await db.Clinic_report.create({
         reason: resonEx,
         message: body.message,
