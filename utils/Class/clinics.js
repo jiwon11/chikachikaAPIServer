@@ -244,6 +244,7 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
       "originalName",
       "local",
       "address",
+      [Sequelize.literal(`SUBSTRING_INDEX(address, ' ', 4)`), "modifiedAddress"],
       "telNumber",
       "website",
       "geographLong",
@@ -335,6 +336,7 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
       "originalName",
       "local",
       "address",
+      [Sequelize.literal(`SUBSTRING_INDEX(address, ' ', 4)`), "modifiedAddress"],
       "telNumber",
       "website",
       "geographLong",
@@ -382,6 +384,7 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
       "id",
       //"name",
       "originalName",
+      [Sequelize.literal(`SUBSTRING_INDEX(address, ' ', 4)`), "modifiedAddress"],
       "local",
       "address",
       "dentalTransparent",
@@ -429,7 +432,7 @@ module.exports.NewestReviewsInResidence = async function (db, emdCity, day, nowT
       "id",
       "originalName",
       //"dentalTransparent",
-      [Sequelize.literal(`SUBSTRING_INDEX(address, ' ', 5)`), "modifiedAddress"],
+      [Sequelize.literal(`SUBSTRING_INDEX(address, ' ', 4)`), "modifiedAddress"],
       //conclustionAndLunchTime.startTime,
       //conclustionAndLunchTime.endTime,
       //conclustionAndLunchTime.TOLTimeAttrStart,
@@ -529,6 +532,7 @@ module.exports.getKeywordSearchAll = async function (db, lat, long, query, tagCa
     "originalName",
     "local",
     //"address",
+    [Sequelize.literal(`SUBSTRING_INDEX(address, ' ', 4)`), "modifiedAddress"],
     "telNumber",
     "website",
     "geographLong",
@@ -561,9 +565,7 @@ module.exports.getKeywordSearchAll = async function (db, lat, long, query, tagCa
   var whereQuery;
   if (tagCategory === "clinic") {
     whereQuery = {
-      originalName: {
-        [Sequelize.Op.like]: `%${query}%`,
-      },
+      id: tagId,
     };
   } else if (tagCategory === "general") {
     whereQuery = {
