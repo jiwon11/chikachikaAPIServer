@@ -5,9 +5,17 @@ module.exports.getRecent = async function getRecentSearch(event) {
   try {
     const token = event.headers.Authorization;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const unified = event.queryStringParameters.unifiedSearch;
+    var route;
+    if (unified === "false") {
+      route = "keywordClinicSearch";
+    } else {
+      route = "keywordSearch";
+    }
     const recentSearch = await Search_record.findAll({
       where: {
         userId: decoded.id,
+        route: route,
       },
       attributes: ["id", "query", "category", "updatedAt"],
       order: [["updatedAt", "DESC"]],
