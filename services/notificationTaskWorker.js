@@ -291,7 +291,7 @@ module.exports.like = async function (event) {
 
 module.exports.report = async function (event) {
   try {
-    console.log(typeof event.Records[0].body.messageBody);
+    console.log("reports message body :", event.Records[0].body);
     const webhookUri = event.Records[0].body.webhookUri;
     const body = JSON.parse(event.Records[0].body.messageBody);
     const slackResponse = await p({
