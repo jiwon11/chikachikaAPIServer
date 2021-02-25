@@ -479,81 +479,93 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
     const lat = event.queryStringParameters.lat;
     const long = event.queryStringParameters.long;
     const unifiedSearch = event.queryStringParameters.unifiedSearch;
-    var clusterQuery;
-    if (region === "residence") {
-      var userResidence = await db.City.findOne({
-        where: {
-          id: cityId,
-        },
-      });
-      clusterQuery = userResidence.newTownId
-        ? {
-            newTownId: userResidence.newTownId,
-          }
-        : {
-            sido: userResidence.sido,
-            sigungu: userResidence.sigungu,
-          };
-    } else if (region !== "all") {
-      return {
-        statusCode: 400,
-        body: { statusText: "Bad Request", message: "유효하지 않는 쿼리입니다." },
-      };
-    }
-    if (unifiedSearch === "true") {
-      if (iq !== "") {
-        const [search, created] = await db.Search_record.findOrCreate({
+    const user = await db.User.findOne({
+      where: {
+        id: userId,
+      },
+    });
+    if (user) {
+      var clusterQuery;
+      if (region === "residence") {
+        var userResidence = await db.City.findOne({
           where: {
-            userId: user.id,
-            query: iq,
-            category: tagCategory,
-            route: "keywordClinicSearch",
+            id: cityId,
           },
         });
-        if (!created) {
-          await db.Search_record.update(
-            {
+        clusterQuery = userResidence.newTownId
+          ? {
+              newTownId: userResidence.newTownId,
+            }
+          : {
+              sido: userResidence.sido,
+              sigungu: userResidence.sigungu,
+            };
+      } else if (region !== "all") {
+        return {
+          statusCode: 400,
+          body: { statusText: "Bad Request", message: "유효하지 않는 쿼리입니다." },
+        };
+      }
+      if (unifiedSearch === "true") {
+        if (iq !== "") {
+          const [search, created] = await db.Search_record.findOrCreate({
+            where: {
               userId: user.id,
               query: iq,
               category: tagCategory,
               route: "keywordClinicSearch",
             },
-            {
-              where: {
-                id: search.id,
+          });
+          if (!created) {
+            await db.Search_record.update(
+              {
+                userId: user.id,
+                query: iq,
+                category: tagCategory,
+                route: "keywordClinicSearch",
               },
-            }
-          );
+              {
+                where: {
+                  id: search.id,
+                },
+              }
+            );
+          }
         }
       }
-    }
-    switch (type) {
-      case "community":
-        const communityType = event.queryStringParameters.type === "All" ? ["Question", "FreeTalk"] : [event.queryStringParameters.type];
-        const communityResult = await db.Community.getKeywordSearchAll(db, communityType, sq, tagCategory, tagId, userId, clusterQuery, offset, limit, order);
-        console.log(`${type} results Num: ${communityResult.length}`);
-        return {
-          statusCode: 200,
-          body: JSON.stringify(communityResult),
-        };
-      case "review":
-        console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
-        const reviewResult = await db.Review.getKeywordSearchAll(db, userId, sq, tagCategory, tagId, clusterQuery, limit, offset, order);
-        console.log(`${type} results Num: ${reviewResult.length}`);
-        return {
-          statusCode: 200,
-          body: JSON.stringify(reviewResult),
-        };
-      case "clinic":
-        console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
-        const clinicResult = await db.Dental_clinic.getKeywordSearchAll(db, lat, long, sq, tagCategory, tagId, clusterQuery, limit, offset, order);
-        console.log(`${type} results Num: ${clinicResult.length}`);
-        return {
-          statusCode: 200,
-          body: JSON.stringify(clinicResult),
-        };
-      default:
-        break;
+      switch (type) {
+        case "community":
+          const communityType = event.queryStringParameters.type === "All" ? ["Question", "FreeTalk"] : [event.queryStringParameters.type];
+          const communityResult = await db.Community.getKeywordSearchAll(db, communityType, sq, tagCategory, tagId, userId, clusterQuery, offset, limit, order);
+          console.log(`${type} results Num: ${communityResult.length}`);
+          return {
+            statusCode: 200,
+            body: JSON.stringify(communityResult),
+          };
+        case "review":
+          console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
+          const reviewResult = await db.Review.getKeywordSearchAll(db, userId, sq, tagCategory, tagId, clusterQuery, limit, offset, order);
+          console.log(`${type} results Num: ${reviewResult.length}`);
+          return {
+            statusCode: 200,
+            body: JSON.stringify(reviewResult),
+          };
+        case "clinic":
+          console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
+          const clinicResult = await db.Dental_clinic.getKeywordSearchAll(db, lat, long, sq, tagCategory, tagId, clusterQuery, limit, offset, order);
+          console.log(`${type} results Num: ${clinicResult.length}`);
+          return {
+            statusCode: 200,
+            body: JSON.stringify(clinicResult),
+          };
+        default:
+          break;
+      }
+    } else {
+      return {
+        statusCode: 401,
+        body: `{"statusText": "Unauthorized","message": "사용자를 찾을 수 없습니다."}`,
+      };
     }
   } catch (error) {
     console.log(error);
