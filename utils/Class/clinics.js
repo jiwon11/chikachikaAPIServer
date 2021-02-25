@@ -258,7 +258,9 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
       conclustionAndLunchTime.confidentConsulationTime,
       conclustionAndLunchTime.weekend_non_consulation_notice,
       [
-        Sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`),
+        Sequelize.literal(
+          `(SELECT IF(geographLat != '' ,ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2), -1))`
+        ),
         "distance(km)",
       ],
       [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
@@ -350,7 +352,9 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
       conclustionAndLunchTime.confidentConsulationTime,
       conclustionAndLunchTime.weekend_non_consulation_notice,
       [
-        Sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`),
+        Sequelize.literal(
+          `(SELECT IF(geographLat != '' ,ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2), -1))`
+        ),
         "distance(km)",
       ],
       [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
@@ -440,7 +444,9 @@ module.exports.NewestReviewsInResidence = async function (db, emdCity, day, nowT
       //conclustionAndLunchTime.confidentConsulationTime,
       //conclustionAndLunchTime.weekend_non_consulation_notice,
       [
-        Sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`),
+        Sequelize.literal(
+          `(SELECT IF(geographLat != '' ,ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2), -1))`
+        ),
         "distance(km)",
       ],
       [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
@@ -546,7 +552,9 @@ module.exports.getKeywordSearchAll = async function (db, lat, long, query, tagCa
     conclustionAndLunchTime.confidentConsulationTime,
     conclustionAndLunchTime.weekend_non_consulation_notice,
     [
-      Sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`),
+      Sequelize.literal(
+        `(SELECT IF(geographLat != '' ,ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2), -1))`
+      ),
       "distance(km)",
     ],
     [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
