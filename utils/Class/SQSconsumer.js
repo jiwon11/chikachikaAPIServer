@@ -74,10 +74,15 @@ module.exports.like = async function (body) {
 
 module.exports.report = async function (body) {
   try {
-    const messageBody = JSON.stringify(body);
+    const messageBody = JSON.stringify(body.slackBody);
+    const messageGroupId = body.group;
+    const messageDeduplicationId = `${body.id}`;
+    console.log(messageGroupId);
     let params = {
       MessageBody: messageBody,
       QueueUrl: `https://sqs.ap-northeast-1.amazonaws.com/751612718299/reportNotification-${process.env.stage}.fifo`,
+      MessageGroupId: messageGroupId,
+      MessageDeduplicationId: messageDeduplicationId,
     };
     const data = await sqs.sendMessage(params).promise();
     console.info("SQS Send Message Success", data.MessageId);
