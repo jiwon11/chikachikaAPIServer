@@ -299,13 +299,14 @@ module.exports.report = async function (event) {
       method: "POST",
       data: body,
     });
-    console.log(slackResponse);
+    const response = {
+      message: "Task Worker PULL successfully",
+      input: event,
+    };
+    console.log(response);
     return {
       statusCode: 200,
-      body: JSON.stringify({
-        message: "Task Worker PULL successfully",
-        input: event,
-      }),
+      body: JSON.stringify(response),
     };
   } catch (error) {
     console.error(error);
