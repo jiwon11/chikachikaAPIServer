@@ -91,7 +91,15 @@ module.exports.postClinicReport = async function postClinicReport(event) {
           });
         });
       }
-      const reportNotification = await reportConsumer(message);
+      const reportMessage = {
+        slackBody: {
+          messageBody: message,
+          webhookUri: "https://hooks.slack.com/services/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",
+        },
+        group: `clinicReport`,
+        id: clinicReport.id,
+      };
+      const reportNotification = await reportConsumer(reportMessage);
       if (reportNotification.statusCode === 200) {
         console.log(JSON.parse(reportNotification.body));
       }
@@ -130,8 +138,10 @@ module.exports.reports = async function reports(event) {
       const targetId = event.queryStringParameters.targetId;
       var targetTypeKor;
       var reportId;
+      var webhookUri;
       if (targetType === "user") {
         targetTypeKor = "사용자";
+        webhookUri = "https://hooks.slack.com/services/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";
         const targetUser = await db.User.findOne({
           where: {
             id: targetId,
@@ -153,6 +163,7 @@ module.exports.reports = async function reports(event) {
         }
       } else if (targetType === "review") {
         targetTypeKor = "리뷰";
+        webhookUri = "https://hooks.slack.com/services/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";
         const targetReview = await db.Review.findOne({
           where: {
             id: targetId,
@@ -174,6 +185,7 @@ module.exports.reports = async function reports(event) {
         }
       } else if (targetType === "community") {
         targetTypeKor = "수다방 글";
+        webhookUri = "https://hooks.slack.com/services/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";
         const targetPost = await db.Community.findOne({
           where: {
             id: targetId,
@@ -238,7 +250,15 @@ module.exports.reports = async function reports(event) {
           },
         ],
       };
-      const reportNotification = await reportConsumer(message);
+      const reportMessage = {
+        slackBody: {
+          messageBody: message,
+          webhookUri: webhookUri,
+        },
+        group: targetType,
+        id: reportId.id,
+      };
+      const reportNotification = await reportConsumer(reportMessage);
       if (reportNotification.statusCode === 200) {
         console.log(JSON.parse(reportNotification.body));
       }
