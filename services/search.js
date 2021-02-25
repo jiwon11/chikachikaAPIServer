@@ -96,28 +96,30 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
         };
       }
       if (user) {
-        const [search, created] = await db.Search_record.findOrCreate({
-          where: {
-            userId: user.id,
-            query: iq,
-            category: tagCategory,
-            route: "keywordClinicSearch",
-          },
-        });
-        if (!created) {
-          await db.Search_record.update(
-            {
+        if (iq !== "") {
+          const [search, created] = await db.Search_record.findOrCreate({
+            where: {
               userId: user.id,
               query: iq,
               category: tagCategory,
               route: "keywordClinicSearch",
             },
-            {
-              where: {
-                id: search.id,
+          });
+          if (!created) {
+            await db.Search_record.update(
+              {
+                userId: user.id,
+                query: iq,
+                category: tagCategory,
+                route: "keywordClinicSearch",
               },
-            }
-          );
+              {
+                where: {
+                  id: search.id,
+                },
+              }
+            );
+          }
         }
       } else {
         return {
@@ -498,33 +500,34 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
         body: { statusText: "Bad Request", message: "유효하지 않는 쿼리입니다." },
       };
     }
-    switch (type) {
-      case "all":
-        if (unifiedSearch === "true") {
-          const [search, created] = await db.Search_record.findOrCreate({
-            where: {
-              userId: userId,
+    if (unifiedSearch === "true") {
+      if (iq !== "") {
+        const [search, created] = await db.Search_record.findOrCreate({
+          where: {
+            userId: user.id,
+            query: iq,
+            category: tagCategory,
+            route: "keywordClinicSearch",
+          },
+        });
+        if (!created) {
+          await db.Search_record.update(
+            {
+              userId: user.id,
               query: iq,
               category: tagCategory,
-              route: "keywordSearch",
+              route: "keywordClinicSearch",
             },
-          });
-          if (!created) {
-            await db.Search_record.update(
-              {
-                userId: userId,
-                query: iq,
-                category: tagCategory,
-                route: "keywordSearch",
+            {
+              where: {
+                id: search.id,
               },
-              {
-                where: {
-                  id: search.id,
-                },
-              }
-            );
-          }
+            }
+          );
         }
+      }
+    }
+    switch (type) {
       case "community":
         const communityType = event.queryStringParameters.type === "All" ? ["Question", "FreeTalk"] : [event.queryStringParameters.type];
         const communityResult = await db.Community.getKeywordSearchAll(db, communityType, sq, tagCategory, tagId, userId, clusterQuery, offset, limit, order);
