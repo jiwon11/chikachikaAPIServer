@@ -86,10 +86,10 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
       },
     });
     if (user) {
-      const { lat, long, query, sort, days, time, wantParking, holiday, tagCategory } = event.queryStringParameters;
+      const { lat, long, sq, iq, sort, days, time, wantParking, holiday, tagCategory } = event.queryStringParameters;
       const limit = parseInt(event.queryStringParameters.limit);
       const offset = parseInt(event.queryStringParameters.offset);
-      if (!query) {
+      if (!sq) {
         return {
           statusCode: 400,
           body: `{"statusText": "Bad Request","message": "검색어를 입력해주새요."}`,
@@ -99,7 +99,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
         const [search, created] = await db.Search_record.findOrCreate({
           where: {
             userId: user.id,
-            query: query,
+            query: iq,
             category: tagCategory,
             route: "keywordClinicSearch",
           },
@@ -108,7 +108,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
           await db.Search_record.update(
             {
               userId: user.id,
-              query: query,
+              query: iq,
               category: tagCategory,
               route: "keywordClinicSearch",
             },
@@ -162,7 +162,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
       const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
       const day = weekDay[today.day()];
       console.log(day, nowTime);
-      const clinics = await db.Dental_clinic.searchAll(db, "keyword", query, nowTime, day, week, lat, long, null, null, limit, offset, sort, wantParking, holiday);
+      const clinics = await db.Dental_clinic.searchAll(db, "keyword", sq, nowTime, day, week, lat, long, null, null, limit, offset, sort, wantParking, holiday);
       let response = {
         statusCode: 200,
         body: JSON.stringify(clinics),
@@ -465,7 +465,8 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const type = event.pathParameters.type;
     const userId = decoded.id;
-    const query = event.queryStringParameters.query;
+    const sq = event.queryStringParameters.sq;
+    const iq = event.queryStringParameters.iq;
     const limit = parseInt(event.queryStringParameters.limit);
     const offset = parseInt(event.queryStringParameters.offset);
     const order = event.queryStringParameters.order;
@@ -503,7 +504,7 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
           const [search, created] = await db.Search_record.findOrCreate({
             where: {
               userId: userId,
-              query: query,
+              query: iq,
               category: tagCategory,
               route: "keywordSearch",
             },
@@ -512,7 +513,7 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
             await db.Search_record.update(
               {
                 userId: userId,
-                query: query,
+                query: iq,
                 category: tagCategory,
                 route: "keywordSearch",
               },
@@ -526,7 +527,7 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
         }
       case "community":
         const communityType = event.queryStringParameters.type === "All" ? ["Question", "FreeTalk"] : [event.queryStringParameters.type];
-        const communityResult = await db.Community.getKeywordSearchAll(db, communityType, query, tagCategory, tagId, userId, clusterQuery, offset, limit, order);
+        const communityResult = await db.Community.getKeywordSearchAll(db, communityType, sq, tagCategory, tagId, userId, clusterQuery, offset, limit, order);
         console.log(`${type} results Num: ${communityResult.length}`);
         return {
           statusCode: 200,
@@ -534,7 +535,7 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
         };
       case "review":
         console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
-        const reviewResult = await db.Review.getKeywordSearchAll(db, userId, query, tagCategory, tagId, clusterQuery, limit, offset, order);
+        const reviewResult = await db.Review.getKeywordSearchAll(db, userId, sq, tagCategory, tagId, clusterQuery, limit, offset, order);
         console.log(`${type} results Num: ${reviewResult.length}`);
         return {
           statusCode: 200,
@@ -542,7 +543,7 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
         };
       case "clinic":
         console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
-        const clinicResult = await db.Dental_clinic.getKeywordSearchAll(db, lat, long, query, tagCategory, tagId, clusterQuery, limit, offset, order);
+        const clinicResult = await db.Dental_clinic.getKeywordSearchAll(db, lat, long, sq, tagCategory, tagId, clusterQuery, limit, offset, order);
         console.log(`${type} results Num: ${clinicResult.length}`);
         return {
           statusCode: 200,
