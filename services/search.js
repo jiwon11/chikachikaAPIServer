@@ -628,7 +628,7 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
     });
     const cities = sido.concat(sigungu, emd);
     const clinics = await db.Dental_clinic.findAll({
-      attributes: ["id", ["originalName", "name"], "address", "local"],
+      attributes: ["id", "name", "originalName", "address", "local"],
       where: {
         originalName: {
           [Sequelize.Op.like]: `%${query}%`,

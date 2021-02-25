@@ -140,6 +140,13 @@ const reviewIncludeModels = function (db, viewType, query, tagCategory, tagId, c
       {
         model: db.Dental_clinic,
         attributes: ["name", "address", "originalName"],
+        include: [
+          {
+            model: db.DentalClinicProfileImg,
+            limit: 1,
+            order: [["represent", "DESC"]],
+          },
+        ],
       },
       {
         model: db.Review_content,
