@@ -824,7 +824,8 @@ resources:
     reportNotification:
       Type: "AWS::SQS::Queue"
       Properties:
-        QueueName: reportNotification-${self:provider.stage}
+        QueueName: reportNotification-${self:provider.stage}.fifo
+        FifoQueue: true
 plugins:
   - serverless-offline
   - serverless-apigw-binary
