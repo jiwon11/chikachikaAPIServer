@@ -2,7 +2,11 @@ module.exports = (sequelize, DataTypes) =>
   sequelize.define(
     "search_record",
     {
-      query: {
+      searchQuery: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+      },
+      inputQuery: {
         type: DataTypes.STRING(50),
         allowNull: false,
       },
