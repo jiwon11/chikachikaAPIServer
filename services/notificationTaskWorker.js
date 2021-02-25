@@ -291,9 +291,10 @@ module.exports.like = async function (event) {
 
 module.exports.report = async function (event) {
   try {
-    const webhookUri = event.Records[0].body.webhookUri;
-    const body = JSON.parse(event.Records[0].body.messageBody);
-    console.log(body);
+    const reportMessage = JSON.parse(event.Records[0].body);
+    const webhookUri = reportMessage.webhookUri;
+    const body = reportMessage.messageBody;
+    console.log();
     const slackResponse = await p({
       url: webhookUri,
       method: "POST",

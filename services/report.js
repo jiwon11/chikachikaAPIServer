@@ -256,7 +256,7 @@ module.exports.reports = async function reports(event) {
           webhookUri: webhookUri,
         },
         group: targetType,
-        id: reportId.id,
+        id: reportId,
       };
       const reportNotification = await reportConsumer(reportMessage);
       if (reportNotification.statusCode === 200) {
