@@ -13,6 +13,9 @@ module.exports.getNotifications = async function getNotifications(event) {
     if (user) {
       var notifications;
       notifications = await db.Notification.findAll({
+        attributes: {
+          include: [[Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,notification.createdAt,NOW()))`), "createdDiff(second)"]],
+        },
         where: {
           notificatedUserId: userId,
           type: ["Comment", "Like"],
