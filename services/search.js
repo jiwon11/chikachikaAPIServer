@@ -604,7 +604,7 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
     const emd = await db.City.findAll({
       attributes: [
         "id",
-        "emdName",
+        ["emdName", "name"],
         "sido",
         "sigungu",
         [Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), "fullAddress"],
@@ -619,7 +619,7 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
     });
     emd.forEach((emd) => {
       emd.setDataValue("category", "city");
-      if (emd.dataValues.emdName.substr(0, queryLen) === query) {
+      if (emd.dataValues.name.substr(0, queryLen) === query) {
         emd.setDataValue("initialLetterContained", true);
       } else {
         emd.setDataValue("initialLetterContained", false);
