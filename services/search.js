@@ -86,6 +86,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
       },
     });
     if (user) {
+      console.log(event.queryStringParameters);
       const { lat, long, sq, iq, sort, days, time, wantParking, holiday, tagCategory } = event.queryStringParameters;
       const limit = parseInt(event.queryStringParameters.limit);
       const offset = parseInt(event.queryStringParameters.offset);
@@ -655,7 +656,7 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
         },
       },
       order: [["originalName", "ASC"]],
-      limit: 3,
+      limit: 5,
     });
     clinics.forEach((clinic) => {
       if (clinic.dataValues.name.substr(0, queryLen) === query) {

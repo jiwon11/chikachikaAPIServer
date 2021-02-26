@@ -161,6 +161,9 @@ const reviewIncludeModels = function (db, viewType, query, tagCategory, tagId, c
         },
       },
     ];
+    if (appendModels) {
+      includeModels.push(appendModels);
+    }
   }
   return includeModels;
 };
