@@ -324,7 +324,7 @@ module.exports.billsVerify = async function billsVerify(event) {
   try {
     const message = JSON.parse(event.Records[0].body);
     const reviewId = message.reviewId;
-    const review = await this.findOne({
+    const review = await db.Review.findOne({
       where: {
         id: reviewId,
         userId: {
