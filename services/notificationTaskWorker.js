@@ -332,7 +332,9 @@ module.exports.billsVerify = async function billsVerify(event) {
         },
       },
       attributes: { include: reviewQueryClass.reviewIncludeAttributes("") },
-      include: reviewQueryClass.reviewIncludeModels(db, "detail"),
+      include: reviewQueryClass.reviewIncludeModels(db, "detail", null, null, null, {
+        model: db.ReviewBills,
+      }),
       order: [
         ["TreatmentItems", db.Review_treatment_item, "index", "ASC"],
         ["review_contents", "index", "ASC"],
@@ -386,6 +388,11 @@ module.exports.billsVerify = async function billsVerify(event) {
                 type: "mrkdwn",
                 text: `*작성자 닉네임* : ${review.user.nickname}, , *작성자 ID* : ${review.dataValues.userId}`,
               },
+            },
+            {
+              type: "image",
+              image_url: review.reviewBills.img_url,
+              alt_text: "inspiration",
             },
           ],
         },
