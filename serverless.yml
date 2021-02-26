@@ -822,23 +822,53 @@ resources:
       Type: "AWS::SQS::Queue"
       Properties:
         QueueName: commentNotification-${self:provider.stage}
+        MessageRetentionPeriod: 600
+        RedrivePolicy:
+          deadLetterTargetArn:
+            Fn::GetAtt:
+            - deleteSQSMessage
+            - Arn
     replyNotification:
       Type: "AWS::SQS::Queue"
       Properties:
         QueueName: replyNotification-${self:provider.stage}
+        MessageRetentionPeriod: 600
+        RedrivePolicy:
+          deadLetterTargetArn:
+            Fn::GetAtt:
+            - deleteSQSMessage
+            - Arn
     likeNotification:
       Type: "AWS::SQS::Queue"
       Properties:
         QueueName: likeNotification-${self:provider.stage}
+        MessageRetentionPeriod: 600
+        RedrivePolicy:
+          deadLetterTargetArn:
+            Fn::GetAtt:
+            - deleteSQSMessage
+            - Arn
     eventNotification:
       Type: "AWS::SQS::Queue"
       Properties:
         QueueName: eventNotification-${self:provider.stage}
+        MessageRetentionPeriod: 600
+        RedrivePolicy:
+          deadLetterTargetArn:
+            Fn::GetAtt:
+            - deleteSQSMessage
+            - Arn
     reportNotification:
       Type: "AWS::SQS::Queue"
       Properties:
         QueueName: reportNotification-${self:provider.stage}.fifo
         FifoQueue: true
+        MessageRetentionPeriod: 600
+        RedrivePolicy:
+          deadLetterTargetArn:
+            Fn::GetAtt:
+            - deleteSQSMessage
+            - Arn
     billsVerify:
       Type: "AWS::SQS::Queue"
       Properties:
@@ -846,6 +876,12 @@ resources:
         FifoQueue: true
         ContentBasedDeduplication: true
         ReceiveMessageWaitTimeSeconds: 20
+        MessageRetentionPeriod: 600
+        RedrivePolicy:
+          deadLetterTargetArn:
+            Fn::GetAtt:
+            - deleteSQSMessage
+            - Arn
     deleteSQSMessage:
       Type: "AWS::SQS::Queue"
       Properties:
