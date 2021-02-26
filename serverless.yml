@@ -877,7 +877,7 @@ resources:
         RedrivePolicy:
           deadLetterTargetArn:
             "Fn::GetAtt":
-            - ReceiverDeadLetterQueue
+            - FifoReceiverDeadLetterQueue
             - Arn
           maxReceiveCount: 1
     billsVerify:
@@ -891,7 +891,7 @@ resources:
         RedrivePolicy:
           deadLetterTargetArn:
             "Fn::GetAtt":
-            - ReceiverDeadLetterQueue
+            - FifoReceiverDeadLetterQueue
             - Arn
           maxReceiveCount: 1
     ReceiverDeadLetterQueue:
