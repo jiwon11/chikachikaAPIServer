@@ -189,7 +189,8 @@ functions:
             cacheKeyParameters:
               - name: request.querystring.lat
               - name: request.querystring.long
-              - name: request.querystring.query
+              - name: request.querystring.iq
+              - name: request.querystring.sq
               - name: request.querystring.sort
               - name: request.querystring.days
               - name: request.querystring.time
@@ -837,6 +838,8 @@ resources:
       Properties:
         QueueName: billsVerify-${self:provider.stage}.fifo
         FifoQueue: true
+        ContentBasedDeduplication: true
+        ReceiveMessageWaitTimeSeconds: 20
 plugins:
   - serverless-offline
   - serverless-apigw-binary
