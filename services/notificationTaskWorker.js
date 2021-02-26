@@ -338,6 +338,7 @@ module.exports.billsVerify = async function billsVerify(event) {
         ["review_contents", "index", "ASC"],
       ],
     });
+    console.log(review);
     const slackMessage = {
       attachments: [
         {
