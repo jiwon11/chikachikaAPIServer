@@ -431,3 +431,24 @@ module.exports.billsVerify = async function billsVerify(event) {
     };
   }
 };
+
+module.exports.deleteSQSMessage = async function deleteSQSMessage(event) {
+  try {
+    console.log(event);
+    var params = {
+      QueueUrl: "STRING_VALUE" /* required */,
+      ReceiptHandle: "STRING_VALUE" /* required */,
+    };
+    sqs.deleteMessage(params, function (err, data) {
+      if (err) console.log(err, err.stack);
+      // an error occurred
+      else console.log(data); // successful response
+    });
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
