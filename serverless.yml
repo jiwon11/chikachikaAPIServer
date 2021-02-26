@@ -814,7 +814,13 @@ functions:
     handler: services/notificationTaskWorker.deleteSQSMessage
     events:
       - sqs: 
-          arn: arn:aws:sqs:ap-northeast-1:751612718299:deleteSQSMessage-${self:provider.stage}
+          arn: arn:aws:sqs:ap-northeast-1:751612718299:ReceiverDeadLetterQueue-${self:provider.stage}
+          enabled: true
+  deleteFifoSQSMessageTaskWorker:
+    handler: services/notificationTaskWorker.deleteFifoSQSMessage
+    events:
+      - sqs: 
+          arn: arn:aws:sqs:ap-northeast-1:751612718299:FifoReceiverDeadLetterQueue-${self:provider.stage}.fifo
           enabled: true
 resources:
   Resources:
@@ -825,9 +831,10 @@ resources:
         MessageRetentionPeriod: 600
         RedrivePolicy:
           deadLetterTargetArn:
-            Fn::GetAtt:
-            - deleteSQSMessage
+            "Fn::GetAtt":
+            - ReceiverDeadLetterQueue
             - Arn
+          maxReceiveCount: 1
     replyNotification:
       Type: "AWS::SQS::Queue"
       Properties:
@@ -835,9 +842,10 @@ resources:
         MessageRetentionPeriod: 600
         RedrivePolicy:
           deadLetterTargetArn:
-            Fn::GetAtt:
-            - deleteSQSMessage
+            "Fn::GetAtt":
+            - ReceiverDeadLetterQueue
             - Arn
+          maxReceiveCount: 1
     likeNotification:
       Type: "AWS::SQS::Queue"
       Properties:
@@ -845,9 +853,10 @@ resources:
         MessageRetentionPeriod: 600
         RedrivePolicy:
           deadLetterTargetArn:
-            Fn::GetAtt:
-            - deleteSQSMessage
+            "Fn::GetAtt":
+            - ReceiverDeadLetterQueue
             - Arn
+          maxReceiveCount: 1
     eventNotification:
       Type: "AWS::SQS::Queue"
       Properties:
@@ -855,9 +864,10 @@ resources:
         MessageRetentionPeriod: 600
         RedrivePolicy:
           deadLetterTargetArn:
-            Fn::GetAtt:
-            - deleteSQSMessage
+            "Fn::GetAtt":
+            - ReceiverDeadLetterQueue
             - Arn
+          maxReceiveCount: 1
     reportNotification:
       Type: "AWS::SQS::Queue"
       Properties:
@@ -866,9 +876,10 @@ resources:
         MessageRetentionPeriod: 600
         RedrivePolicy:
           deadLetterTargetArn:
-            Fn::GetAtt:
-            - deleteSQSMessage
+            "Fn::GetAtt":
+            - FifoReceiverDeadLetterQueue
             - Arn
+          maxReceiveCount: 1
     billsVerify:
       Type: "AWS::SQS::Queue"
       Properties:
@@ -879,13 +890,21 @@ resources:
         MessageRetentionPeriod: 600
         RedrivePolicy:
           deadLetterTargetArn:
-            Fn::GetAtt:
-            - deleteSQSMessage
+            "Fn::GetAtt":
+            - FifoReceiverDeadLetterQueue
             - Arn
-    deleteSQSMessage:
+          maxReceiveCount: 1
+    ReceiverDeadLetterQueue:
       Type: "AWS::SQS::Queue"
       Properties:
-        QueueName: deleteSQSMessage-${self:provider.stage}
+        QueueName: ReceiverDeadLetterQueue-${self:provider.stage}
+        ReceiveMessageWaitTimeSeconds: 20
+    FifoReceiverDeadLetterQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: FifoReceiverDeadLetterQueue-${self:provider.stage}.fifo
+        FifoQueue: true
+        ContentBasedDeduplication: true
         ReceiveMessageWaitTimeSeconds: 20
 plugins:
   - serverless-offline
