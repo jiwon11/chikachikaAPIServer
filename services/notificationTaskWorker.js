@@ -4,6 +4,7 @@ const S3 = new AWS.S3();
 const firebase = require("firebase-admin");
 const p = require("phin");
 const reviewQueryClass = require("../utils/Class/review");
+const Sequelize = require("sequelize");
 
 AWS.config.update({
   accessKeyId: process.env.AWS_Access_Key_ID,
