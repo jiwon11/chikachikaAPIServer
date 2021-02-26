@@ -517,7 +517,7 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
               inputQuery: iq,
               searchQuery: sq,
               category: tagCategory,
-              route: "keywordClinicSearch",
+              route: "keywordSearch",
             },
           });
           if (!created) {
@@ -527,7 +527,7 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
                 inputQuery: iq,
                 searchQuery: sq,
                 category: tagCategory,
-                route: "keywordClinicSearch",
+                route: "keywordSearch",
               },
               {
                 where: {
