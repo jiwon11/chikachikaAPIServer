@@ -17,7 +17,7 @@ module.exports.getRecent = async function getRecentSearch(event) {
         userId: decoded.id,
         route: route,
       },
-      attributes: ["id", "query", "category", "updatedAt"],
+      attributes: ["id", "searchQuery", "inputQuery", "category", "updatedAt"],
       order: [["updatedAt", "DESC"]],
     });
     return {

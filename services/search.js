@@ -100,7 +100,8 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
           const [search, created] = await db.Search_record.findOrCreate({
             where: {
               userId: user.id,
-              query: iq,
+              inputQuery: iq,
+              searchQuery: sq,
               category: tagCategory,
               route: "keywordClinicSearch",
             },
@@ -109,7 +110,8 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
             await db.Search_record.update(
               {
                 userId: user.id,
-                query: iq,
+                inputQuery: iq,
+                searchQuery: sq,
                 category: tagCategory,
                 route: "keywordClinicSearch",
               },
@@ -511,7 +513,8 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
           const [search, created] = await db.Search_record.findOrCreate({
             where: {
               userId: user.id,
-              query: iq,
+              inputQuery: iq,
+              searchQuery: sq,
               category: tagCategory,
               route: "keywordClinicSearch",
             },
@@ -520,7 +523,8 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
             await db.Search_record.update(
               {
                 userId: user.id,
-                query: iq,
+                inputQuery: iq,
+                searchQuery: sq,
                 category: tagCategory,
                 route: "keywordClinicSearch",
               },
