@@ -340,7 +340,6 @@ module.exports.billsVerify = async function billsVerify(event) {
         ["review_contents", "index", "ASC"],
       ],
     });
-    console.log(review);
     const slackMessage = {
       attachments: [
         {
@@ -392,7 +391,7 @@ module.exports.billsVerify = async function billsVerify(event) {
             },
             {
               type: "image",
-              image_url: review.reviewBills.img_url,
+              image_url: review.reviewBills[0].dataValues.img_url,
               alt_text: "inspiration",
             },
           ],
@@ -417,7 +416,7 @@ module.exports.billsVerify = async function billsVerify(event) {
     });
     const response = {
       message: "Task Worker PULL successfully",
-      input: event,
+      input: JSON.stringify(event),
     };
     console.log(response);
     return {
