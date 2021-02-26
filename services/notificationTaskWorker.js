@@ -338,7 +338,6 @@ module.exports.billsVerify = async function billsVerify(event) {
         ["review_contents", "index", "ASC"],
       ],
     });
-    console.log(review);
     const slackMessage = {
       attachments: [
         {
@@ -357,21 +356,35 @@ module.exports.billsVerify = async function billsVerify(event) {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: `*내용* : ${review.reviewDescriptions}`,
+                text: `*가격 별점* : ${review.dataValues.starRate_cost}, *서비스 별점* : ${review.dataValues.starRate_service}, *치료 별점* : ${review.dataValues.starRate_treatment} \n *치료일자* : ${review.dataValues.treatmentDate} \n *총금액* : ${review.dataValues.totalCost}`,
               },
             },
             {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: `*병원 이름* : ${review.dental_clinic.originalName}`,
+                text: `*치료항목* : ${review.dataValues.reviewTreatmentTags}`,
               },
             },
             {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: `*작성자 닉네임* : ${review.user.nickname}`,
+                text: `*내용* : ${review.dataValues.reviewDescriptions}`,
+              },
+            },
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `*병원 이름* : ${review.dental_clinic.originalName}, *병원 ID* : ${review.dataValues.dentalClinicId}`,
+              },
+            },
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `*작성자 닉네임* : ${review.user.nickname}, , *작성자 ID* : ${review.dataValues.userId}`,
               },
             },
           ],
