@@ -825,9 +825,10 @@ resources:
         MessageRetentionPeriod: 600
         RedrivePolicy:
           deadLetterTargetArn:
-            Fn::GetAtt:
-            - deleteSQSMessage
+            "Fn::GetAtt":
+            - ReceiverDeadLetterQueue
             - Arn
+          maxReceiveCount: 1
     replyNotification:
       Type: "AWS::SQS::Queue"
       Properties:
@@ -835,9 +836,10 @@ resources:
         MessageRetentionPeriod: 600
         RedrivePolicy:
           deadLetterTargetArn:
-            Fn::GetAtt:
-            - deleteSQSMessage
+            "Fn::GetAtt":
+            - ReceiverDeadLetterQueue
             - Arn
+          maxReceiveCount: 1
     likeNotification:
       Type: "AWS::SQS::Queue"
       Properties:
@@ -845,9 +847,10 @@ resources:
         MessageRetentionPeriod: 600
         RedrivePolicy:
           deadLetterTargetArn:
-            Fn::GetAtt:
-            - deleteSQSMessage
+            "Fn::GetAtt":
+            - ReceiverDeadLetterQueue
             - Arn
+          maxReceiveCount: 1
     eventNotification:
       Type: "AWS::SQS::Queue"
       Properties:
@@ -855,9 +858,10 @@ resources:
         MessageRetentionPeriod: 600
         RedrivePolicy:
           deadLetterTargetArn:
-            Fn::GetAtt:
-            - deleteSQSMessage
+            "Fn::GetAtt":
+            - ReceiverDeadLetterQueue
             - Arn
+          maxReceiveCount: 1
     reportNotification:
       Type: "AWS::SQS::Queue"
       Properties:
@@ -866,9 +870,10 @@ resources:
         MessageRetentionPeriod: 600
         RedrivePolicy:
           deadLetterTargetArn:
-            Fn::GetAtt:
-            - deleteSQSMessage
+            "Fn::GetAtt":
+            - ReceiverDeadLetterQueue
             - Arn
+          maxReceiveCount: 1
     billsVerify:
       Type: "AWS::SQS::Queue"
       Properties:
@@ -879,10 +884,11 @@ resources:
         MessageRetentionPeriod: 600
         RedrivePolicy:
           deadLetterTargetArn:
-            Fn::GetAtt:
-            - deleteSQSMessage
+            "Fn::GetAtt":
+            - ReceiverDeadLetterQueue
             - Arn
-    deleteSQSMessage:
+          maxReceiveCount: 1
+    ReceiverDeadLetterQueue:
       Type: "AWS::SQS::Queue"
       Properties:
         QueueName: deleteSQSMessage-${self:provider.stage}
