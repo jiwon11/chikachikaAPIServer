@@ -108,7 +108,7 @@ module.exports.billsVerify = async function billsVerify(body) {
     console.log(messageBody);
     let params = {
       MessageBody: messageBody,
-      QueueUrl: `https://sqs.ap-northeast-1.amazonaws.com/751612718299/billsVerifyNotification-${process.env.stage}.fifo`,
+      QueueUrl: `https://sqs.ap-northeast-1.amazonaws.com/751612718299/billsVerify-${process.env.stage}.fifo`,
       MessageGroupId: messageGroupId,
       MessageDeduplicationId: messageDeduplicationId,
     };

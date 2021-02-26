@@ -655,7 +655,7 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
         },
       },
       order: [["originalName", "ASC"]],
-      limit: 3,
+      limit: 5,
     });
     clinics.forEach((clinic) => {
       if (clinic.dataValues.name.substr(0, queryLen) === query) {
