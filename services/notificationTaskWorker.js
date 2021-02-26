@@ -332,7 +332,7 @@ module.exports.billsVerify = async function billsVerify(event) {
         },
       },
       attributes: { include: reviewQueryClass.reviewIncludeAttributes("") },
-      include: reviewQueryClass.reviewIncludeModels(db, "detail", null, null, null, {
+      include: reviewQueryClass.reviewIncludeModels(db, "detail", null, null, null, null, {
         model: db.ReviewBills,
       }),
       order: [
@@ -340,6 +340,7 @@ module.exports.billsVerify = async function billsVerify(event) {
         ["review_contents", "index", "ASC"],
       ],
     });
+    console.log(review);
     const slackMessage = {
       attachments: [
         {
