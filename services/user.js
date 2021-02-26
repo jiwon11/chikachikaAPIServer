@@ -95,7 +95,14 @@ module.exports.getUserProfile = async function getUserProfile(event) {
           [Sequelize.literal(`(SELECT COUNT(*) FROM UserScrapClinics where userId="${userId}")`), "scrapClinicsNum"],
         ];
       } else {
-        attributes = ["id", "nickname", "profileImg", [Sequelize.literal(`IF(user.id="${userId}",true, false)`), "self"]];
+        attributes = [
+          "id",
+          "nickname",
+          "profileImg",
+          [Sequelize.literal(`IF(user.id="${userId}",true, false)`), "self"],
+          [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where userId="${userId}" AND deletedAt IS NULL)`), "reviewsNum"],
+          [Sequelize.literal(`(SELECT COUNT(*) FROM communities where userId="${userId}" AND deletedAt IS NULL)`), "communitiesNum"],
+        ];
       }
       const userProfile = await User.findOne({
         where: {
