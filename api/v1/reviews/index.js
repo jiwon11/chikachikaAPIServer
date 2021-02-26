@@ -9,6 +9,7 @@ const { getUserInToken } = require("../middlewares");
 const db = require("../../../utils/models");
 const moment = require("moment");
 const router = express.Router();
+const billsVerifyConsumer = require("../../../utils/Class/SQSconsumer").billsVerify;
 
 const cloudFrontUrl = "";
 
@@ -154,6 +155,15 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
         img_size: bills.size,
         reviewId: review.id,
       });
+      const reportMessage = {
+        reviewId: review.id,
+        group: `billsVerifyReview-${review.id}`,
+        id: review.id,
+      };
+      const billsVerifyNotification = await billsVerifyConsumer(reportMessage);
+      if (billsVerifyNotification.statusCode === 200) {
+        console.log(JSON.parse(billsVerifyNotification.body));
+      }
     }
     return res.status(201).json({
       statusCode: 201,

@@ -99,3 +99,34 @@ module.exports.report = async function (body) {
     return error;
   }
 };
+
+module.exports.billsVerify = async function billsVerify(body) {
+  try {
+    const messageBody = JSON.stringify({ reviewId: body.reviewId });
+    const messageGroupId = body.group;
+    const messageDeduplicationId = `${body.id}`;
+    console.log(messageBody);
+    let params = {
+      MessageBody: messageBody,
+      QueueUrl: `https://sqs.ap-northeast-1.amazonaws.com/751612718299/billsVerifyNotification-${process.env.stage}.fifo`,
+      MessageGroupId: messageGroupId,
+      MessageDeduplicationId: messageDeduplicationId,
+    };
+    const data = await sqs.sendMessage(params).promise();
+    console.info("SQS Send Message Success", data.MessageId);
+    const response = {
+      statusCode: 200,
+      body: JSON.stringify({
+        message: "Consumer PUSH successfully",
+        input: messageBody,
+      }),
+    };
+    return response;
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};

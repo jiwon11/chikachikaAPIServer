@@ -3,6 +3,7 @@ const AWS = require("aws-sdk");
 const S3 = new AWS.S3();
 const firebase = require("firebase-admin");
 const p = require("phin");
+const reviewQueryClass = require("../utils/Class/review");
 
 AWS.config.update({
   accessKeyId: process.env.AWS_Access_Key_ID,
@@ -299,6 +300,97 @@ module.exports.report = async function (event) {
       url: webhookUri,
       method: "POST",
       data: body,
+    });
+    const response = {
+      message: "Task Worker PULL successfully",
+      input: event,
+    };
+    console.log(response);
+    return {
+      statusCode: 200,
+      body: JSON.stringify(response),
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
+
+module.exports.billsVerify = async function billsVerify(event) {
+  try {
+    const message = JSON.parse(event.Records[0].body);
+    const reviewId = message.reviewId;
+    const review = await this.findOne({
+      where: {
+        id: reviewId,
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
+      },
+      attributes: { include: reviewQueryClass.reviewIncludeAttributes("") },
+      include: reviewQueryClass.reviewIncludeModels(db, "detail"),
+      order: [
+        ["TreatmentItems", db.Review_treatment_item, "index", "ASC"],
+        ["review_contents", "index", "ASC"],
+      ],
+    });
+    const slackMessage = {
+      attachments: [
+        {
+          fallback: `새로운 영수증 리뷰 인증 요청이 접수 되었습니다.`,
+          color: "#D00000",
+          blocks: [
+            {
+              type: "header",
+              text: {
+                type: "plain_text",
+                text: `새로운 영수증 리뷰 인증 요청이 접수 되었습니다.`,
+                emoji: true,
+              },
+            },
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `*내용* : ${review.reviewDescriptions}`,
+              },
+            },
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `*병원 이름* : ${review.dental_clinic.originalName}`,
+              },
+            },
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `*작성자 닉네임* : ${review.user.nickname}`,
+              },
+            },
+          ],
+        },
+      ],
+    };
+    if (review.review_contents.length > 0) {
+      review.review_contents.forEach((review_content) => {
+        if (review_content.img_url !== null) {
+          slackMessage.attachments[0].blocks.push({
+            type: "image",
+            image_url: review_content.img_url,
+            alt_text: "inspiration",
+          });
+        }
+      });
+    }
+    const slackResponse = await p({
+      url: "https://hooks.slack.com/services/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",
+      method: "POST",
+      data: slackMessage,
     });
     const response = {
       message: "Task Worker PULL successfully",
