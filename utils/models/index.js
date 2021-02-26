@@ -586,6 +586,10 @@ db.City.hasMany(db.Community, {
 });
 db.Community.belongsTo(db.City);
 
+db.Review.hasMany(db.ReviewBills, {
+  foreignKey: "reviewId",
+  onDelete: "CASCADE",
+});
 db.ReviewBills.belongsTo(db.Review);
 
 db.Dental_clinic.hasMany(db.DentalClinicProfileImg, {
