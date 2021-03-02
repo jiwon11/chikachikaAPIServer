@@ -48,7 +48,7 @@ module.exports.postRecentSearch = async function postRecentSearch(event) {
       } else {
         return {
           statusCode: 400,
-          body: { statusText: "Bad Request", message: "유효하지 않는 쿼리입니다." },
+          body: `{"statusText": "Bad Request", "message": "유효하지 않는 쿼리입니다." }`,
         };
       }
     } else {
