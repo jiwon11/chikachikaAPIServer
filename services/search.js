@@ -481,7 +481,6 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
     const tagId = event.queryStringParameters.tagId;
     const lat = event.queryStringParameters.lat;
     const long = event.queryStringParameters.long;
-    const unifiedSearch = event.queryStringParameters.unifiedSearch;
     const user = await db.User.findOne({
       where: {
         id: userId,
@@ -508,35 +507,6 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
           statusCode: 400,
           body: { statusText: "Bad Request", message: "유효하지 않는 쿼리입니다." },
         };
-      }
-      if (unifiedSearch === "true") {
-        if (iq !== "") {
-          const [search, created] = await db.Search_record.findOrCreate({
-            where: {
-              userId: user.id,
-              inputQuery: iq,
-              searchQuery: sq,
-              category: tagCategory,
-              route: "keywordSearch",
-            },
-          });
-          if (!created) {
-            await db.Search_record.update(
-              {
-                userId: user.id,
-                inputQuery: iq,
-                searchQuery: sq,
-                category: tagCategory,
-                route: "keywordSearch",
-              },
-              {
-                where: {
-                  id: search.id,
-                },
-              }
-            );
-          }
-        }
       }
       switch (type) {
         case "community":
