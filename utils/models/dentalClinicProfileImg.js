@@ -24,6 +24,11 @@ module.exports = (sequelize, DataTypes) =>
       img_height: {
         type: DataTypes.INTEGER(11),
       },
+      represent: {
+        type: DataTypes.BOOLEAN,
+        required: true,
+        defaltValue: false,
+      },
     },
     {
       timestamps: true,

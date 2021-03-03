@@ -1,9 +1,11 @@
-const dev = {
+require("dotenv").config();
+const env = process.env;
+const development = {
   database: "chikachika_db_dev",
   port: 3306,
-  host: process.env.DB_Host,
-  username: process.env.DB_Username,
-  password: process.env.DB_Password,
+  host: env.DB_Host,
+  username: env.DB_Username,
+  password: env.DB_Password,
   dialect: "mysql",
   logging: false,
   timezone: "+09:00",
@@ -42,7 +44,7 @@ const test = {
   charset: "utf8mb4",
   collate: "utf8mb4_unicode_ci",
 };
-const prod = {
+const production = {
   database: "chikachika_db_prod",
   port: 3306,
   host: process.env.DB_Host,
@@ -87,7 +89,7 @@ const prod = {
 };
 
 module.exports = {
-  dev,
-  prod,
+  development,
+  production,
   test,
 };
