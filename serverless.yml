@@ -37,17 +37,15 @@ provider:
     binaryMediaTypes:
       - 'multipart/form-data'
       - 'image/*'
-  iam:
-    role:
-      statements:
-        - Effect: "Allow"
-          Action:
-            - "s3:GetObject"
-          Resource: "arn:aws:s3:::chikachika-review-images/*"
-        - Effect: Allow
-          Action:
-            - sqs:*
-          Resource: arn:aws:sqs:*:*:*
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "s3:GetObject"
+      Resource: "arn:aws:s3:::chikachika-review-images/*"
+    - Effect: Allow
+      Action:
+        - sqs:*
+      Resource: arn:aws:sqs:*:*:*
   environment:
     JWT_SECRET: ${param:JWT_SECRET}
     NCP_access_token: ${param:NCP_access_token}
