@@ -296,7 +296,8 @@ module.exports.report = async function (event) {
     const reportMessage = JSON.parse(event.Records[0].body);
     const webhookUri = reportMessage.webhookUri;
     const body = reportMessage.messageBody;
-    console.log();
+    console.log(webhookUri);
+    console.log(body);
     const slackResponse = await p({
       url: webhookUri,
       method: "POST",

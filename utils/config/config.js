@@ -1,6 +1,6 @@
 const dev = {
   database: "chikachika_db_dev",
-  port: process.env.DB_Port,
+  port: 3306,
   host: process.env.DB_Host,
   username: process.env.DB_Username,
   password: process.env.DB_Password,
@@ -22,7 +22,7 @@ const dev = {
 };
 const test = {
   database: "chikachika_db_test",
-  port: process.env.DB_Port,
+  port: 3306,
   host: process.env.DB_Host,
   username: process.env.DB_Username,
   password: process.env.DB_Password,
@@ -44,7 +44,7 @@ const test = {
 };
 const prod = {
   database: "chikachika_db_prod",
-  port: process.env.DB_Port,
+  port: 3306,
   host: process.env.DB_Host,
   username: process.env.DB_Username,
   password: process.env.DB_Password,
