@@ -2,8 +2,10 @@ app: chikachika
 service: chikachika-API-serverless
 org: jiwon112
 
+useDotenv: true
+
 custom:
-  secrets: ${file(secrets.json)}
+  #secrets: ${file(secrets.json)}
   apigwBinary:
     types:           #list of mime-types 
        - 'multipart/form-data'
@@ -56,13 +58,12 @@ provider:
     AWS_Secret_Access_Key: ${param:AWS_Secret_Access_Key}
     TZ: ${param:TZ}
     stage: ${self:provider.stage}
-    fcmBucketName: ${param:fcmBucketName, self:custom.secrets.fcmBucketName}
-    fcmkey: ${param:fcmkey, self:custom.secrets.fcmkey}
-    FbDBURL: ${param:fcmkey, self:custom.secrets.FbDBURL}
-    DB_Host: ${param:DB_Host, self:custom.secrets.DB_Host}
-    DB_Port: ${param:DB_Port, self:custom.secrets.DB_Port}
-    DB_Password: ${param:DB_Password, self:custom.secrets.DB_Password}
-    DB_Username: ${param:DB_Username, self:custom.secrets.DB_Username}
+    fcmBucketName: ${param:fcmBucketName}
+    fcmkey: ${param:fcmkey}
+    FbDBURL: ${param:fcmkey}
+    DB_Host: ${param:DB_Host}
+    DB_Password: ${param:DB_Password}
+    DB_Username: ${param:DB_Username}
   memorySize: 1024 # optional, in MB, default: 1024
   timeout: 6 # optional, in seconds, default: 6
   versionFunctions: false # optional, default: true
