@@ -2,6 +2,7 @@ app: chikachika
 service: chikachika-API-serverless
 org: jiwon112
 
+configValidationMode: off
 custom:
   secrets: ${file(secrets.json)}
   apigwBinary:
