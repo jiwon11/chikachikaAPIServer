@@ -17,8 +17,7 @@ custom:
     ttlInSeconds: 300 # defaults to the maximum allowed: 3600
   prune:
     automatic: true
-    includeLayers: true
-    number: 3
+    number: 1
 dashboard:
   lambda:
     enabled: true
