@@ -2,6 +2,8 @@ app: chikachika
 service: chikachika-API-serverless
 org: jiwon112
 
+variablesResolutionMode: 20210219
+
 custom:
   secrets: ${file(secrets.json)}
   apigwBinary:
