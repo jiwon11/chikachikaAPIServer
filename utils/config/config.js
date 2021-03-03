@@ -1,9 +1,9 @@
-const development = {
+const dev = {
   database: "chikachika_db_dev",
-  port: null,
-  host: "database-1.c2g4zseshvri.ap-northeast-2.rds.amazonaws.com",
-  username: "admin",
-  password: "jeewon0109!",
+  port: process.env.DB_Port,
+  host: process.env.DB_Host,
+  username: process.env.DB_Username,
+  password: process.env.DB_Password,
   dialect: "mysql",
   logging: false,
   timezone: "+09:00",
@@ -21,19 +21,48 @@ const development = {
   collate: "utf8mb4_unicode_ci",
 };
 const test = {
-  username: "admin",
-  password: "jeewon0109!",
   database: "chikachika_db_test",
-  host: "database-1.c2g4zseshvri.ap-northeast-2.rds.amazonaws.com",
-  port: 3306,
+  port: process.env.DB_Port,
+  host: process.env.DB_Host,
+  username: process.env.DB_Username,
+  password: process.env.DB_Password,
   dialect: "mysql",
   logging: false,
-  charset: "utf8",
-  collate: "utf8_general_ci",
+  timezone: "+09:00",
+  dialectOptions: {
+    charset: "utf8mb4",
+    dateStrings: true,
+    typeCast: true,
+  },
+  pool: {
+    max: 1000,
+    min: 5,
+    idle: 300000,
+  },
+  charset: "utf8mb4",
+  collate: "utf8mb4_unicode_ci",
 };
-const production = {
+const prod = {
   database: "chikachika_db_prod",
-  port: 3306,
+  port: process.env.DB_Port,
+  host: process.env.DB_Host,
+  username: process.env.DB_Username,
+  password: process.env.DB_Password,
+  dialect: "mysql",
+  logging: false,
+  timezone: "+09:00",
+  dialectOptions: {
+    charset: "utf8mb4",
+    dateStrings: true,
+    typeCast: true,
+  },
+  pool: {
+    max: 1000,
+    min: 5,
+    idle: 300000,
+  },
+  charset: "utf8mb4",
+  collate: "utf8mb4_unicode_ci",
   /*
   replication: {
     read: [
@@ -55,28 +84,10 @@ const production = {
     },
   },
   */
-  host: "database-1.c2g4zseshvri.ap-northeast-2.rds.amazonaws.com",
-  username: "admin",
-  password: "jeewon0109!",
-  dialect: "mysql",
-  logging: false,
-  timezone: "+09:00",
-  dialectOptions: {
-    charset: "utf8mb4",
-    dateStrings: true,
-    typeCast: true,
-  },
-  pool: {
-    max: 1000,
-    min: 5,
-    idle: 300000,
-  },
-  charset: "utf8mb4",
-  collate: "utf8mb4_unicode_ci",
 };
 
 module.exports = {
-  development,
-  production,
+  dev,
+  prod,
   test,
 };
