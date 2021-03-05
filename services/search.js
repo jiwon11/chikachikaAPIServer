@@ -210,7 +210,7 @@ module.exports.reviews = async function reviewSearch(event) {
     const [search, created] = await db.Search_record.findOrCreate({
       where: {
         userId: searchUser.id,
-        query: treatment.name,
+        query: treatment.usualName,
         category: "review",
       },
     });
