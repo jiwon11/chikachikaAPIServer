@@ -324,24 +324,6 @@ module.exports.allTagItems = async function allTagItems(event) {
       }
       treatment.setDataValue("category", "treatment");
     });
-    const symptoms = await db.Symptom_item.findAll({
-      where: {
-        name: {
-          [Sequelize.Op.like]: `${query}%`,
-        },
-      },
-      attributes: ["id", "name"],
-      order: [["name", "ASC"]],
-      limit: 3,
-    });
-    symptoms.forEach((symptom) => {
-      if (symptom.dataValues.name.substr(0, queryLen) === query) {
-        symptom.setDataValue("initialLetterContained", true);
-      } else {
-        symptom.setDataValue("initialLetterContained", false);
-      }
-      symptom.setDataValue("category", "symptom");
-    });
     const generaltags = await db.GeneralTag.findAll({
       where: {
         name: {
@@ -447,7 +429,7 @@ module.exports.allTagItems = async function allTagItems(event) {
     cities = cities.sort(function async(a, b) {
       return a.dataValues.fullName < b.dataValues.fullName ? -1 : a.dataValues.fullName > b.dataValues.fullName ? 1 : 0;
     });
-    var mergeResults = cities.concat(treatments, symptoms, generaltags, clinics);
+    var mergeResults = cities.concat(treatments, generaltags, clinics);
     mergeResults = mergeResults.sort(function async(a, b) {
       return b.dataValues.initialLetterContained - a.dataValues.initialLetterContained;
     });
