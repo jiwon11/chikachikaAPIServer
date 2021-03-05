@@ -117,6 +117,22 @@ const getHolidaysByMonthCount = function (year, month, monthCount = 1) {
   });
 };
 
+module.exports.dbSync = async function dbSync(event) {
+  try {
+    sequelize.sync({});
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: "ok" }),
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
+
 module.exports.handler = async function dbReset(event) {
   /*
     const clinicNames = await sequelize.query("SELECT name, COUNT(name) FROM dental_clinics GROUP BY name HAVING COUNT(name) >= 2;", { type: QueryTypes.SELECT });
