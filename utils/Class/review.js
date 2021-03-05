@@ -23,7 +23,7 @@ const reviewIncludeAttributes = function (userId) {
     [Sequelize.literal(`IF((SELECT COUNT(*) FROM reviewBills where reviewBills.reviewId=review.id AND reviewBills.deletedAt IS NULL)>0,TRUE,FALSE)`), "verifyBills"],
     [
       Sequelize.literal(
-        "(SELECT JSON_ARRAYAGG((SELECT treatment_items.name FROM treatment_items where review_treatment_items.treatmentItemId = treatment_items.id ORDER BY review_treatment_items.index ASC)) FROM review_treatment_items WHERE review_treatment_items.reviewId = review.id AND review_treatment_items.deletedAt IS NULL)"
+        "(SELECT JSON_ARRAYAGG((SELECT treatment_items.usualName FROM treatment_items where review_treatment_items.treatmentItemId = treatment_items.id ORDER BY review_treatment_items.index ASC)) FROM review_treatment_items WHERE review_treatment_items.reviewId = review.id AND review_treatment_items.deletedAt IS NULL)"
       ),
       "reviewTreatmentTags",
     ],
@@ -80,7 +80,7 @@ const reviewIncludeModels = function (db, viewType, query, tagCategory, tagId, c
           {
             model: db.City,
             attributes: {
-              exclude: ["geometry"],
+              exclude: ["geometry", "createdAt"],
             },
             where: residenceClincQuery,
           },
