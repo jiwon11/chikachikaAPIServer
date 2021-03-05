@@ -23,11 +23,20 @@ router.get("/", getUserInToken, multerBody.none(), async (req, res, next) => {
     }
     const treatments = await Treatment_item.findAll({
       where: {
-        name: {
-          [sequelize.Op.like]: "%" + query + "%",
-        },
+        [Sequelize.Op.or]: [
+          {
+            usualName: {
+              [Sequelize.Op.like]: `%${query}%`,
+            },
+          },
+          {
+            technicalName: {
+              [Sequelize.Op.like]: `%${query}%`,
+            },
+          },
+        ],
       },
-      attributes: ["id", "name"],
+      attributes: ["id", "usualName", "technicalName"],
       raw: true,
     });
     return res.status(200).json(treatments);

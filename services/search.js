@@ -9,9 +9,18 @@ module.exports.treatmentItems = async function treatmentItems(event) {
     const query = event.queryStringParameters.q;
     const treatments = await db.Treatment_item.findAll({
       where: {
-        name: {
-          [Sequelize.Op.like]: `${query}%`,
-        },
+        [Sequelize.Op.or]: [
+          {
+            usualName: {
+              [Sequelize.Op.like]: `%${query}%`,
+            },
+          },
+          {
+            technicalName: {
+              [Sequelize.Op.like]: `%${query}%`,
+            },
+          },
+        ],
       },
     });
     let response = {
@@ -210,7 +219,7 @@ module.exports.reviews = async function reviewSearch(event) {
     const [search, created] = await db.Search_record.findOrCreate({
       where: {
         userId: searchUser.id,
-        query: treatment.name,
+        query: treatment.usualName,
         category: "review",
       },
     });

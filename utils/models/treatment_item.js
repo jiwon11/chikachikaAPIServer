@@ -12,6 +12,11 @@ module.exports = (sequelize, DataTypes) =>
         allowNull: false,
         unique: true,
       },
+      engTechnicalName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+      },
     },
     {
       timestamps: true,

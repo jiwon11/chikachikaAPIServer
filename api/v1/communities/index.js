@@ -100,7 +100,10 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
       } else {
         let treatment = await db.Treatment_item.findOne({
           where: {
-            name: hashtag,
+            [Sequelize.Op.or]: {
+              usualName: hashtag,
+              technicalName: hashtag,
+            },
           },
         });
         if (treatment) {
@@ -109,7 +112,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
               index: hashtags.indexOf(hashtag) + 1,
             },
           });
-          tagArray.push({ name: treatment.name, category: "treatment", id: treatment.id });
+          tagArray.push({ name: treatment.usualName, category: "treatment", id: treatment.id });
         } else {
           let city = await db.City.findOne({
             where: {
@@ -349,7 +352,10 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
       } else {
         let treatment = await db.Treatment_item.findOne({
           where: {
-            name: hashtag,
+            [Sequelize.Op.or]: {
+              usualName: hashtag,
+              technicalName: hashtag,
+            },
           },
         });
         if (treatment) {
@@ -358,7 +364,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
               index: hashtags.indexOf(hashtag) + 1,
             },
           });
-          tagArray.push({ name: treatment.name, category: "treatment", id: treatment.id });
+          tagArray.push({ name: treatment.usualName, category: "treatment", id: treatment.id });
         } else {
           let city = await db.City.findOne({
             where: {
