@@ -841,6 +841,7 @@ resources:
       Properties:
         QueueName: commentNotification-${self:provider.stage}
         MessageRetentionPeriod: 600
+        ReceiveMessageWaitTimeSeconds: 20
         RedrivePolicy:
           deadLetterTargetArn:
             "Fn::GetAtt":
@@ -852,6 +853,7 @@ resources:
       Properties:
         QueueName: replyNotification-${self:provider.stage}
         MessageRetentionPeriod: 600
+        ReceiveMessageWaitTimeSeconds: 20
         RedrivePolicy:
           deadLetterTargetArn:
             "Fn::GetAtt":
@@ -863,6 +865,7 @@ resources:
       Properties:
         QueueName: likeNotification-${self:provider.stage}
         MessageRetentionPeriod: 600
+        ReceiveMessageWaitTimeSeconds: 20
         RedrivePolicy:
           deadLetterTargetArn:
             "Fn::GetAtt":
@@ -874,6 +877,7 @@ resources:
       Properties:
         QueueName: eventNotification-${self:provider.stage}
         MessageRetentionPeriod: 600
+        ReceiveMessageWaitTimeSeconds: 20
         RedrivePolicy:
           deadLetterTargetArn:
             "Fn::GetAtt":
@@ -885,6 +889,7 @@ resources:
       Properties:
         QueueName: reportNotification-${self:provider.stage}.fifo
         FifoQueue: true
+        ReceiveMessageWaitTimeSeconds: 20
         MessageRetentionPeriod: 600
         RedrivePolicy:
           deadLetterTargetArn:
