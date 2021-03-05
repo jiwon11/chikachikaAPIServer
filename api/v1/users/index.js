@@ -25,6 +25,7 @@ router.get("/:userId/reviews", getUserInToken, async (req, res, next) => {
     const userWroteReviews = await db.Review.getUserReviewsAll(db, targetUserId, viewUserId, limit, offset);
     return res.status(200).json(userWroteReviews);
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       statusCode: 500,
       body: { statusText: "Server Error", message: error.message },
