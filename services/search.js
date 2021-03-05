@@ -317,16 +317,25 @@ module.exports.allTagItems = async function allTagItems(event) {
     });
     const treatments = await db.Treatment_item.findAll({
       where: {
-        name: {
-          [Sequelize.Op.like]: `${query}%`,
-        },
+        [Sequlize.Op.or]: [
+          {
+            usualName: {
+              [Sequelize.Op.like]: `${query}%`,
+            },
+          },
+          {
+            technicalName: {
+              [Sequelize.Op.like]: `${query}%`,
+            },
+          },
+        ],
       },
-      attributes: ["id", "name"],
-      order: [["name", "ASC"]],
+      attributes: ["id", "usualName", "technicalName"],
+      order: [["usualName", "ASC"]],
       limit: 3,
     });
     treatments.forEach((treatment) => {
-      if (treatment.dataValues.name.substr(0, queryLen) === query) {
+      if (treatment.dataValues.usualName.substr(0, queryLen) === query) {
         treatment.setDataValue("initialLetterContained", true);
       } else {
         treatment.setDataValue("initialLetterContained", false);
