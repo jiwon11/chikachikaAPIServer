@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) =>
   sequelize.define(
-    "treatment_item",
+    "disease_item",
     {
       technicalName: {
         type: DataTypes.STRING,
