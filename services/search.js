@@ -317,7 +317,7 @@ module.exports.allTagItems = async function allTagItems(event) {
     });
     const treatments = await db.Treatment_item.findAll({
       where: {
-        [Sequlize.Op.or]: [
+        [Sequelize.Op.or]: [
           {
             usualName: {
               [Sequelize.Op.like]: `${query}%`,
