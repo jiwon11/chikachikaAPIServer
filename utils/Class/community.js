@@ -80,14 +80,6 @@ const communityIncludeModels = function (db, clusterQuery, query, tagCategory, t
       },
     },
     {
-      model: db.Symptom_item,
-      as: "SymptomItems",
-      attributes: ["id", "name"],
-      through: {
-        attributes: ["index"],
-      },
-    },
-    {
       model: db.GeneralTag,
       as: "GeneralTags",
       attributes: ["id", "name"],
@@ -133,13 +125,6 @@ const communityIncludeModels = function (db, clusterQuery, query, tagCategory, t
       }
     } else if (tagCategory === "general") {
       let modelIdx = models.findIndex((model) => model.as === "GeneralTags");
-      models[modelIdx].where = {
-        name: {
-          [Sequelize.Op.like]: `%${query}%`,
-        },
-      };
-    } else if (tagCategory === "symptom") {
-      let modelIdx = models.findIndex((model) => model.as === "SymptomItems");
       models[modelIdx].where = {
         name: {
           [Sequelize.Op.like]: `%${query}%`,
