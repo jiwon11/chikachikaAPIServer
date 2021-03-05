@@ -90,7 +90,7 @@ const reviewIncludeModels = function (db, viewType, query, tagCategory, tagId, c
       {
         model: db.Treatment_item,
         as: "TreatmentItems",
-        attributes: ["id", "name"],
+        attributes: ["id", "usualName"],
         order: [["index", "ASC"]],
         through: {
           model: db.Review_treatment_item,
@@ -120,9 +120,18 @@ const reviewIncludeModels = function (db, viewType, query, tagCategory, tagId, c
       } else if (tagCategory === "treatment") {
         let modelIdx = includeModels.findIndex((model) => model.as === "TreatmentItems");
         includeModels[modelIdx].where = {
-          name: {
-            [Sequelize.Op.like]: `%${query}%`,
-          },
+          [Sequelize.Op.or]: [
+            {
+              usualName: {
+                [Sequelize.Op.like]: `%${query}%`,
+              },
+            },
+            {
+              technicalName: {
+                [Sequelize.Op.like]: `%${query}%`,
+              },
+            },
+          ],
         };
       } else if (tagCategory === "clinic") {
         let modelIdx = includeModels.findIndex((model) => model.model === db.Dental_clinic);
@@ -154,7 +163,7 @@ const reviewIncludeModels = function (db, viewType, query, tagCategory, tagId, c
       {
         model: db.Treatment_item,
         as: "TreatmentItems",
-        attributes: ["id", "name"],
+        attributes: ["id", "usualName"],
         through: {
           model: db.Review_treatment_item,
           attributes: ["cost", "index"],

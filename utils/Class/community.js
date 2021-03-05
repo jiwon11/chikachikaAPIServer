@@ -74,7 +74,7 @@ const communityIncludeModels = function (db, clusterQuery, query, tagCategory, t
     {
       model: db.Treatment_item,
       as: "TreatmentItems",
-      attributes: ["id", "name"],
+      attributes: ["id", "usualName"],
       through: {
         attributes: ["index"],
       },
@@ -133,9 +133,18 @@ const communityIncludeModels = function (db, clusterQuery, query, tagCategory, t
     } else if (tagCategory === "treatment") {
       let modelIdx = models.findIndex((model) => model.as === "TreatmentItems");
       models[modelIdx].where = {
-        name: {
-          [Sequelize.Op.like]: `%${query}%`,
-        },
+        [Sequelize.Op.or]: [
+          {
+            usualName: {
+              [Sequelize.Op.like]: `%${query}%`,
+            },
+          },
+          {
+            technicalName: {
+              [Sequelize.Op.like]: `%${query}%`,
+            },
+          },
+        ],
       };
     } else if (tagCategory === "clinic") {
       let modelIdx = models.findIndex((model) => model.as === "Clinics");

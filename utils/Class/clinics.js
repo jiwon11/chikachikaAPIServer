@@ -495,7 +495,7 @@ module.exports.NewestReviewsInResidence = async function (db, emdCity, day, nowT
           {
             model: db.Treatment_item,
             as: "TreatmentItems",
-            attributes: ["id", "name"],
+            attributes: ["id", "usualName"],
             through: {
               attributes: [],
             },

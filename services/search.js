@@ -9,9 +9,18 @@ module.exports.treatmentItems = async function treatmentItems(event) {
     const query = event.queryStringParameters.q;
     const treatments = await db.Treatment_item.findAll({
       where: {
-        name: {
-          [Sequelize.Op.like]: `${query}%`,
-        },
+        [Sequelize.Op.or]: [
+          {
+            usualName: {
+              [Sequelize.Op.like]: `%${query}%`,
+            },
+          },
+          {
+            technicalName: {
+              [Sequelize.Op.like]: `%${query}%`,
+            },
+          },
+        ],
       },
     });
     let response = {
