@@ -1,7 +1,7 @@
 const { phone, verifyPhoneNumberFunc } = require("../utils/verify");
 const { User, Phone_verify, NotificationConfig, City } = require("../utils/models");
 const jwt = require("jsonwebtoken");
-
+const cloudFrontUrl = "https://d1lkvafdh6ugy5.cloudfront.net/";
 /**
  ### 사용자가 입력한 핸드폰 번호로 인증번호를 보내는 함수
  * @param {string} userPhoneNumber 사용자의 핸드폰 번호
@@ -97,7 +97,13 @@ module.exports.handler = async function registerUser(event) {
       statusText: "Accepted",
       message: `${user.nickname}님의 회원가입이 완료되었습니다.`,
       token: jwtToken,
-      user: { userId: user.id, userNickname: user.nickname, userProfileImg: user.profileImg, userResidences: userResidences },
+      user: {
+        userId: user.id,
+        userNickname: user.nickname,
+        userProfileImg: user.profileImg,
+        img_thumbNail: `${cloudFrontUrl}${user.userProfileImgKeyValue}?w=140&h=140&f=jpeg&q=100`,
+        userResidences: userResidences,
+      },
     };
     return {
       statusCode: 201,
