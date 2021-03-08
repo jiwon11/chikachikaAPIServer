@@ -279,7 +279,7 @@ router.get("/wroteCommentPosts", getUserInToken, async (req, res, next) => {
         }),
         limit: limit,
         offset: offset,
-        group: ["id", "TreatmentItems.id", "SymptomItems.id", "GeneralTags.id", "CityTags.id"],
+        group: ["id", "TreatmentItems.id", "GeneralTags.id", "CityTags.id"],
         order: [[{ model: db.Community_comment }, "createdAt", "DESC"]],
         subQuery: false,
       });

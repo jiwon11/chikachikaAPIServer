@@ -115,7 +115,7 @@ const clinicIncludeModels = function (db, query, tagCategory, tagId, clusterQuer
         {
           model: db.Treatment_item,
           as: "TreatmentItems",
-          attributes: ["id", "name"],
+          attributes: ["id", "usualName"],
         },
       ],
     },
