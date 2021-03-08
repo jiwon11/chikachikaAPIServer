@@ -68,6 +68,8 @@ module.exports.handler = async function registerUser(event) {
       provider: provider,
       fcmToken: fcmToken,
       certifiedPhoneNumber: certifiedPhoneNumber === "true",
+      profileImg: "https://chikachika.s3.ap-northeast-2.amazonaws.com/userProfileImgs/defaultProfileImg.png",
+      userProfileImgKeyValue: "userProfileImgs/defaultProfileImg.png",
     });
     await NotificationConfig.create({
       userId: user.id,
