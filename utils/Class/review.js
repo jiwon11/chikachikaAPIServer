@@ -27,6 +27,12 @@ const reviewIncludeAttributes = function (userId) {
       ),
       "reviewTreatmentTags",
     ],
+    [
+      Sequelize.literal(
+        "(SELECT JSON_ARRAYAGG((SELECT disease_items.usualName FROM disease_items where review_disease_items.diseaseItemId = disease_items.id ORDER BY review_disease_items.index ASC)) FROM review_disease_items WHERE review_disease_items.reviewId = review.id AND review_disease_items.deletedAt IS NULL)"
+      ),
+      "reviewDiseaseTags",
+    ],
   ];
 };
 module.exports.reviewIncludeAttributes = reviewIncludeAttributes;
@@ -97,6 +103,16 @@ const reviewIncludeModels = function (db, viewType, query, tagCategory, tagId, c
           attributes: ["cost", "index"],
         },
       },
+      {
+        model: db.Disease_item,
+        as: "DiseaseItems",
+        attributes: ["id", "usualName"],
+        order: [["index", "ASC"]],
+        through: {
+          model: db.Review_disease_item,
+          attributes: ["index"],
+        },
+      },
     ];
     if (appendModels) {
       includeModels.push(appendModels);
@@ -138,6 +154,22 @@ const reviewIncludeModels = function (db, viewType, query, tagCategory, tagId, c
         includeModels[modelIdx].where = {
           id: tagId,
         };
+      } else if (tagCategory === "disease") {
+        let modelIdx = includeModels.findIndex((model) => model.as === "DiseaseItems");
+        includeModels[modelIdx].where = {
+          [Sequelize.Op.or]: [
+            {
+              usualName: {
+                [Sequelize.Op.like]: `%${query}%`,
+              },
+            },
+            {
+              technicalName: {
+                [Sequelize.Op.like]: `%${query}%`,
+              },
+            },
+          ],
+        };
       }
     }
   } else if (viewType === "detail") {
@@ -167,6 +199,16 @@ const reviewIncludeModels = function (db, viewType, query, tagCategory, tagId, c
         through: {
           model: db.Review_treatment_item,
           attributes: ["cost", "index"],
+        },
+      },
+      {
+        model: db.Disease_item,
+        as: "DiseaseItems",
+        attributes: ["id", "usualName"],
+        order: [["index", "ASC"]],
+        through: {
+          model: db.Review_disease_item,
+          attributes: ["index"],
         },
       },
     ];
@@ -272,7 +314,7 @@ module.exports.getAll = async function (db, userId, order, limit, offset) {
     include: reviewIncludeModels(db, "list"),
     limit: limit,
     offset: offset,
-    order: [orderQuery, ["TreatmentItems", db.Review_treatment_item, "index", "ASC"]],
+    order: [orderQuery, ["TreatmentItems", db.Review_treatment_item, "index", "ASC"], ["DiseaseItems", db.Review_disease_item, "index", "ASC"]],
   });
 };
 
@@ -291,6 +333,7 @@ module.exports.getClinicReviewsAll = async function (db, clinicId, userId, limit
     order: [
       ["createdAt", "DESC"],
       ["TreatmentItems", db.Review_treatment_item, "index", "ASC"],
+      ["DiseaseItems", db.Review_disease_item, "index", "ASC"],
     ],
     limit: limitQuery,
     offset: offsetQuery,
@@ -314,6 +357,7 @@ module.exports.getUserReviewsAll = async function (db, targetUserId, userId, lim
     order: [
       ["createdAt", "DESC"],
       ["TreatmentItems", db.Review_treatment_item, "index", "ASC"],
+      ["DiseaseItems", db.Review_disease_item, "index", "ASC"],
     ],
     limit: limitQuery,
     offset: offsetQuery,
@@ -339,7 +383,7 @@ module.exports.getKeywordSearchAll = async function (db, userId, query, tagCateg
       include: reviewIncludeAttributes(userId),
     },
     include: reviewIncludeModels(db, "list", query, tagCategory, tagId, clusterQuery, undefined),
-    order: [orderQuery, ["TreatmentItems", db.Review_treatment_item, "index", "ASC"]],
+    order: [orderQuery, ["TreatmentItems", db.Review_treatment_item, "index", "ASC"], ["DiseaseItems", db.Review_disease_item, "index", "ASC"]],
     limit: limitQuery,
     offset: offsetQuery,
     subQuery: false,

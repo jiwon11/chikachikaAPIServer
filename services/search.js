@@ -29,7 +29,40 @@ module.exports.treatmentItems = async function treatmentItems(event) {
     };
     return response;
   } catch (err) {
-    console.info("Error login", err);
+    console.info("Error", err);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${err.message}"}`,
+    };
+  }
+};
+
+module.exports.diseaseItems = async function diseaseItems(event) {
+  try {
+    const query = event.queryStringParameters.q;
+    const treatments = await db.Disease_item.findAll({
+      where: {
+        [Sequelize.Op.or]: [
+          {
+            usualName: {
+              [Sequelize.Op.like]: `%${query}%`,
+            },
+          },
+          {
+            technicalName: {
+              [Sequelize.Op.like]: `%${query}%`,
+            },
+          },
+        ],
+      },
+    });
+    let response = {
+      statusCode: 200,
+      body: JSON.stringify(treatments),
+    };
+    return response;
+  } catch (err) {
+    console.info("Error", err);
     return {
       statusCode: 500,
       body: `{"statusText": "Server error","message": "${err.message}"}`,
@@ -342,6 +375,33 @@ module.exports.allTagItems = async function allTagItems(event) {
       }
       treatment.setDataValue("category", "treatment");
     });
+    const diseases = await db.Disease_item.findAll({
+      where: {
+        [Sequelize.Op.or]: [
+          {
+            usualName: {
+              [Sequelize.Op.like]: `${query}%`,
+            },
+          },
+          {
+            technicalName: {
+              [Sequelize.Op.like]: `${query}%`,
+            },
+          },
+        ],
+      },
+      attributes: ["id", "usualName", "technicalName"],
+      order: [["usualName", "ASC"]],
+      limit: 3,
+    });
+    diseases.forEach((disease) => {
+      if (disease.dataValues.usualName.substr(0, queryLen) === query) {
+        disease.setDataValue("initialLetterContained", true);
+      } else {
+        disease.setDataValue("initialLetterContained", false);
+      }
+      disease.setDataValue("category", "disease");
+    });
     const generaltags = await db.GeneralTag.findAll({
       where: {
         name: {
@@ -447,7 +507,7 @@ module.exports.allTagItems = async function allTagItems(event) {
     cities = cities.sort(function async(a, b) {
       return a.dataValues.fullName < b.dataValues.fullName ? -1 : a.dataValues.fullName > b.dataValues.fullName ? 1 : 0;
     });
-    var mergeResults = cities.concat(treatments, generaltags, clinics);
+    var mergeResults = cities.concat(treatments, generaltags, clinics, diseases);
     mergeResults = mergeResults.sort(function async(a, b) {
       return b.dataValues.initialLetterContained - a.dataValues.initialLetterContained;
     });

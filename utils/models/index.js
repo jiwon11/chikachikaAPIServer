@@ -54,6 +54,9 @@ db.Residence = require("./residence")(sequelize, Sequelize);
 db.DentalClinicProfileImg = require("./dentalClinicProfileImg")(sequelize, Sequelize);
 db.Sido = require("./sido")(sequelize, Sequelize);
 db.Sigungu = require("./sigungu")(sequelize, Sequelize);
+db.Disease_item = require("./disease")(sequelize, Sequelize);
+db.Review_disease_item = require("./review_disease_item")(sequelize, Sequelize);
+db.Community_disease = require("./community_disease")(sequelize, Sequelize);
 
 /*사용자와 타이머 관걔형 */
 db.User.hasMany(db.Timer, {
@@ -155,6 +158,18 @@ db.Treatment_item.belongsToMany(db.Review, {
   foreignKey: "treatmentItemId",
   as: "Reviews",
   through: db.Review_treatment_item,
+});
+/* 질병 항목과 리뷰 관계형*/
+db.Review.belongsToMany(db.Disease_item, {
+  foreignKey: "reviewId",
+  as: "DiseaseItems",
+  through: db.Review_disease_item,
+  onDelete: "CASCADE",
+});
+db.Disease_item.belongsToMany(db.Review, {
+  foreignKey: "DiseaseItemId",
+  as: "Reviews",
+  through: db.Review_disease_item,
 });
 /*리뷰 콘텐츠와 리뷰 관계형*/
 db.User.belongsToMany(db.Review, {
@@ -379,6 +394,19 @@ db.Treatment_item.belongsToMany(db.Community, {
   foreignKey: "treatmentItemId",
   as: "Communties",
   through: db.Community_treatment,
+  onDelete: "CASCADE",
+});
+/* 치료 항목과 커뮤니티글 관계형*/
+db.Community.belongsToMany(db.Disease_item, {
+  foreignKey: "communityId",
+  as: "DiseaseItems",
+  through: db.Community_disease,
+  onDelete: "CASCADE",
+});
+db.Disease_item.belongsToMany(db.Community, {
+  foreignKey: "diseaseItemId",
+  as: "Communties",
+  through: db.Community_disease,
   onDelete: "CASCADE",
 });
 /* 증상 항목과 커뮤니티글 관계형*/
