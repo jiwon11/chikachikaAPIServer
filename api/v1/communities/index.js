@@ -114,45 +114,62 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
           });
           tagArray.push({ name: treatment.usualName, category: "treatment", id: treatment.id });
         } else {
-          let city = await db.City.findOne({
+          let disease = await db.Disease_item.findOne({
             where: {
-              [Sequelize.Op.or]: [
-                Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), {
-                  [Sequelize.Op.like]: `${hashtag}`,
-                }),
-              ],
+              [Sequelize.Op.or]: {
+                usualName: hashtag,
+                technicalName: hashtag,
+              },
             },
           });
-          if (city) {
-            await communityPost.addCityTag(city, {
+          if (disease) {
+            await communityPost.addDiseaseItems(disease, {
               through: {
                 index: hashtags.indexOf(hashtag) + 1,
               },
             });
-            tagArray.push({ name: city.name, category: "city", id: city.id });
+            tagArray.push({ name: disease.usualName, category: "disease", id: disease.id });
           } else {
-            let generalTag = await db.GeneralTag.findOne({
+            let city = await db.City.findOne({
               where: {
-                name: hashtag,
+                [Sequelize.Op.or]: [
+                  Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), {
+                    [Sequelize.Op.like]: `${hashtag}`,
+                  }),
+                ],
               },
             });
-            if (generalTag) {
-              await communityPost.addGeneralTag(generalTag, {
+            if (city) {
+              await communityPost.addCityTag(city, {
                 through: {
                   index: hashtags.indexOf(hashtag) + 1,
                 },
               });
-              tagArray.push({ name: generalTag.name, category: "general", id: generalTag.id });
+              tagArray.push({ name: city.name, category: "city", id: city.id });
             } else {
-              let newGeneralTag = await db.GeneralTag.create({
-                name: hashtag,
-              });
-              await communityPost.addGeneralTag(newGeneralTag, {
-                through: {
-                  index: hashtags.indexOf(hashtag) + 1,
+              let generalTag = await db.GeneralTag.findOne({
+                where: {
+                  name: hashtag,
                 },
               });
-              tagArray.push({ name: newGeneralTag.name, category: "general", id: newGeneralTag.id });
+              if (generalTag) {
+                await communityPost.addGeneralTag(generalTag, {
+                  through: {
+                    index: hashtags.indexOf(hashtag) + 1,
+                  },
+                });
+                tagArray.push({ name: generalTag.name, category: "general", id: generalTag.id });
+              } else {
+                let newGeneralTag = await db.GeneralTag.create({
+                  name: hashtag,
+                });
+                await communityPost.addGeneralTag(newGeneralTag, {
+                  through: {
+                    index: hashtags.indexOf(hashtag) + 1,
+                  },
+                });
+                tagArray.push({ name: newGeneralTag.name, category: "general", id: newGeneralTag.id });
+              }
             }
           }
         }
@@ -366,45 +383,62 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
           });
           tagArray.push({ name: treatment.usualName, category: "treatment", id: treatment.id });
         } else {
-          let city = await db.City.findOne({
+          let disease = await db.Disease_item.findOne({
             where: {
-              [Sequelize.Op.or]: [
-                Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), {
-                  [Sequelize.Op.like]: `${hashtag}`,
-                }),
-              ],
+              [Sequelize.Op.or]: {
+                usualName: hashtag,
+                technicalName: hashtag,
+              },
             },
           });
-          if (city) {
-            await communityPost.addCityTag(city, {
+          if (disease) {
+            await communityPost.addDiseaseItems(disease, {
               through: {
                 index: hashtags.indexOf(hashtag) + 1,
               },
             });
-            tagArray.push({ name: city.name, category: "city", id: city.id });
+            tagArray.push({ name: disease.usualName, category: "disease", id: disease.id });
           } else {
-            let generalTag = await db.GeneralTag.findOne({
+            let city = await db.City.findOne({
               where: {
-                name: hashtag,
+                [Sequelize.Op.or]: [
+                  Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), {
+                    [Sequelize.Op.like]: `${hashtag}`,
+                  }),
+                ],
               },
             });
-            if (generalTag) {
-              await communityPost.addGeneralTag(generalTag, {
+            if (city) {
+              await communityPost.addCityTag(city, {
                 through: {
                   index: hashtags.indexOf(hashtag) + 1,
                 },
               });
-              tagArray.push({ name: generalTag.name, category: "general", id: generalTag.id });
+              tagArray.push({ name: city.name, category: "city", id: city.id });
             } else {
-              let newGeneralTag = await db.GeneralTag.create({
-                name: hashtag,
-              });
-              await communityPost.addGeneralTag(newGeneralTag, {
-                through: {
-                  index: hashtags.indexOf(hashtag) + 1,
+              let generalTag = await db.GeneralTag.findOne({
+                where: {
+                  name: hashtag,
                 },
               });
-              tagArray.push({ name: newGeneralTag.name, category: "general", id: newGeneralTag.id });
+              if (generalTag) {
+                await communityPost.addGeneralTag(generalTag, {
+                  through: {
+                    index: hashtags.indexOf(hashtag) + 1,
+                  },
+                });
+                tagArray.push({ name: generalTag.name, category: "general", id: generalTag.id });
+              } else {
+                let newGeneralTag = await db.GeneralTag.create({
+                  name: hashtag,
+                });
+                await communityPost.addGeneralTag(newGeneralTag, {
+                  through: {
+                    index: hashtags.indexOf(hashtag) + 1,
+                  },
+                });
+                tagArray.push({ name: newGeneralTag.name, category: "general", id: newGeneralTag.id });
+              }
             }
           }
         }

@@ -123,6 +123,7 @@ router.get("/likes", getUserInToken, async (req, res, next) => {
         order: [
           [Sequelize.literal("`Like_Review.createdAt`"), "DESC"],
           ["TreatmentItems", db.Review_treatment_item, "index", "ASC"],
+          ["DiseaseItems", db.Review_disease_item, "index", "ASC"],
         ],
       });
       return res.status(200).json(userLikeReviews);
@@ -174,6 +175,7 @@ router.get("/scraps", getUserInToken, async (req, res, next) => {
         order: [
           [Sequelize.literal("`Scrap.createdAt`"), "DESC"],
           ["TreatmentItems", db.Review_treatment_item, "index", "ASC"],
+          ["DiseaseItems", db.Review_disease_item, "index", "ASC"],
         ],
       });
       return res.status(200).json(userScrapReviews);
@@ -239,10 +241,11 @@ router.get("/wroteCommentPosts", getUserInToken, async (req, res, next) => {
         }),
         limit: limit,
         offset: offset,
-        group: ["id", "TreatmentItems.id"],
+        group: ["id", "TreatmentItems.id", "DiseaseItems.id"],
         order: [
           [{ model: db.Review_comment }, "createdAt", "DESC"],
           ["TreatmentItems", db.Review_treatment_item, "index", "ASC"],
+          ["DiseaseItems", db.Review_disease_item, "index", "ASC"],
         ],
         subQuery: false,
       });
@@ -279,7 +282,7 @@ router.get("/wroteCommentPosts", getUserInToken, async (req, res, next) => {
         }),
         limit: limit,
         offset: offset,
-        group: ["id", "TreatmentItems.id", "GeneralTags.id", "CityTags.id"],
+        group: ["id", "TreatmentItems.id", "GeneralTags.id", "CityTags.id", "DiseaseItems.id"],
         order: [[{ model: db.Community_comment }, "createdAt", "DESC"]],
         subQuery: false,
       });
