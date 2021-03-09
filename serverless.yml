@@ -16,6 +16,10 @@ custom:
   prune:
     automatic: true
     number: 1
+  scripts:
+    hooks:
+      'deploy:createDeploymentArtifacts': npm test
+
 dashboard:
   lambda:
     enabled: true
@@ -944,3 +948,4 @@ plugins:
   - serverless-api-gateway-caching
   - serverless-prune-plugin
   - serverless-offline-sqs
+  - serverless-plugin-scripts
