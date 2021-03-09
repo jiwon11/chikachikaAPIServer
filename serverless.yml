@@ -18,7 +18,7 @@ custom:
     number: 1
   scripts:
     hooks:
-      'deploy:createDeploymentArtifacts': npm test
+      'deploy:finalize': npm test
 
 dashboard:
   lambda:
