@@ -1,4 +1,6 @@
 const axios = require("axios");
+const dotenv = require("dotenv");
+dotenv.config();
 
 const stageArg = process.argv.filter((x) => x.startsWith("-stage="))[0];
 const stage = stageArg ? stageArg.split("=")[1] : "dev";
@@ -7,12 +9,10 @@ var USERTOKEN;
 var API_ENDPOINT;
 if (stage === "test") {
   API_ENDPOINT = "https://43tbm5rlw1.execute-api.ap-northeast-1.amazonaws.com/test";
-  USERTOKEN =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YjhmZTUwLTdmYmQtMTFlYi1iZGRiLTMxODE5ZTA1YzZlNSIsImlhdCI6MTYxNTE4NDQ5NSwiZXhwIjoxNjQ2NzQyMDk1fQ.m8G3Odh1zXxfxyoEytpuI7q9eS1L7SxGgV8lOQvdmE4";
+  USERTOKEN = process.env.USERTOKEN;
 } else if (stage === "dev") {
   API_ENDPOINT = "https://0l855bcmib.execute-api.ap-northeast-1.amazonaws.com/dev";
-  USERTOKEN =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YjhmZTUwLTdmYmQtMTFlYi1iZGRiLTMxODE5ZTA1YzZlNSIsImlhdCI6MTYxNTE4NDQ5NSwiZXhwIjoxNjQ2NzQyMDk1fQ.m8G3Odh1zXxfxyoEytpuI7q9eS1L7SxGgV8lOQvdmE4";
+  USERTOKEN = process.env.USERTOKEN;
 }
 
 axios.defaults.adapter = require("axios/lib/adapters/http");

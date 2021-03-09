@@ -68,6 +68,7 @@ provider:
     DB_Password: ${param:DB_Password}
     DB_Username: ${param:DB_Username}
     cloudFrontUrl: ${param:cloudFrontUrl}
+    USERTOKEN: ${param:USERTOKEN}
   memorySize: 1024 # optional, in MB, default: 1024
   timeout: 6 # optional, in seconds, default: 6
   versionFunctions: false # optional, default: true
