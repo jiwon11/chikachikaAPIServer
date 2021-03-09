@@ -16,14 +16,15 @@ if (stage === "test") {
 }
 
 axios.defaults.adapter = require("axios/lib/adapters/http");
-
-test("GET search Treatments", async () => {
-  const res = await axios
-    .get(`${API_ENDPOINT}/search/treatments?q=${encodeURIComponent("스케일링")}`, {
-      headers: {
-        Authorization: USERTOKEN,
-      },
-    })
-    .then((response) => response);
-  expect(res.status).toBe(200);
+describe("GET search", () => {
+  test("GET search Treatments", async () => {
+    const res = await axios
+      .get(`${API_ENDPOINT}/search/treatments?q=${encodeURIComponent("스케일링")}`, {
+        headers: {
+          Authorization: USERTOKEN,
+        },
+      })
+      .then((response) => response);
+    expect(res.status).toBe(200);
+  });
 });
