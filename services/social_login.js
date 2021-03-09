@@ -1,6 +1,6 @@
 const { User, NotificationConfig, City } = require("../utils/models");
 const jwt = require("jsonwebtoken");
-const cloudFrontUrl = "https://d1lkvafdh6ugy5.cloudfront.net/";
+const cloudFrontUrl = process.env.cloudFrontUrl;
 
 module.exports.socialUserCheck = async function socialUserCheck(event) {
   try {

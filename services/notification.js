@@ -1,6 +1,6 @@
 const db = require("../utils/models");
 const Sequelize = require("sequelize");
-const cloudFrontUrl = "https://d1lkvafdh6ugy5.cloudfront.net/";
+const cloudFrontUrl = process.env.cloudFrontUrl;
 
 module.exports.getNotifications = async function getNotifications(event) {
   try {

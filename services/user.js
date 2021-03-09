@@ -1,7 +1,7 @@
 const { City, User, NewTown, Dental_clinic, NotificationConfig } = require("../utils/models");
 const Sequelize = require("sequelize");
 const jwt = require("jsonwebtoken");
-const cloudFrontUrl = "https://d1lkvafdh6ugy5.cloudfront.net/";
+const cloudFrontUrl = process.env.cloudFrontUrl;
 
 module.exports.getUserInfo = async function getUserInfo(event) {
   try {

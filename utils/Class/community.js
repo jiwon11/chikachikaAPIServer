@@ -1,5 +1,5 @@
 const Sequelize = require("sequelize");
-const cloudFrontUrl = "https://d1lkvafdh6ugy5.cloudfront.net/";
+const cloudFrontUrl = process.env.cloudFrontUrl;
 const communityIncludeAttributes = function (userId) {
   return [
     [Sequelize.literal(`(SELECT TIMESTAMPDIFF(SECOND,community.createdAt,NOW()))`), "createdDiff(second)"],
