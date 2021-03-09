@@ -1,7 +1,7 @@
 const { verifyPhoneNumberFunc } = require("../utils/verify");
 const { User, NotificationConfig, City } = require("../utils/models");
 const jwt = require("jsonwebtoken");
-const cloudFrontUrl = "https://d1lkvafdh6ugy5.cloudfront.net/";
+const cloudFrontUrl = process.env.cloudFrontUrl;
 
 /**
  ### 핸드폰 번호 인증을 통해 로그인(로컬)을 진행하는 함수

@@ -1,7 +1,7 @@
 const { phone, verifyPhoneNumberFunc } = require("../utils/verify");
 const { User, Phone_verify, NotificationConfig, City } = require("../utils/models");
 const jwt = require("jsonwebtoken");
-const cloudFrontUrl = "https://d1lkvafdh6ugy5.cloudfront.net/";
+const cloudFrontUrl = process.env.cloudFrontUrl;
 /**
  ### 사용자가 입력한 핸드폰 번호로 인증번호를 보내는 함수
  * @param {string} userPhoneNumber 사용자의 핸드폰 번호
