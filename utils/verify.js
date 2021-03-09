@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const ApiError = require("../utils/error");
 const { Phone_verify, User, City } = require("../utils/models");
 const jwt = require("jsonwebtoken");
+const cloudFrontUrl = process.env.cloudFrontUrl;
 
 module.exports.phone = async function checkPhoneNumber(phoneNumber) {
   const token = Math.floor(Math.random() * 1000000);
