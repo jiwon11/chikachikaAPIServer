@@ -1,7 +1,8 @@
 const axios = require("axios");
 
-const stage = process.env.stage || "dev";
-console.log(stage);
+const stageArg = process.argv.filter((x) => x.startsWith("-stage="))[0];
+const stage = stageArg ? stageArg.split("=")[1] : "dev";
+console.log("stage:", stage);
 var USERTOKEN;
 var API_ENDPOINT;
 if (stage === "test") {

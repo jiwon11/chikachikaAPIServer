@@ -18,7 +18,7 @@ custom:
     number: 1
   scripts:
     hooks:
-      'deploy:finalize': npm test
+      'deploy:finalize': npm test -- -stage=${opt:stage, 'dev'}
 
 dashboard:
   lambda:
