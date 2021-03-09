@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "serverless offline start",
     "deploy": "serverless deploy",
-    "debug": "export SLS_DEBUG=* && node --debug ./node_modules/serverless/bin/serverless offline -s dev"
+    "debug": "export SLS_DEBUG=* && node --debug ./node_modules/serverless/bin/serverless offline -s dev",
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -41,14 +42,18 @@
     "serverless-offline-sqs": "^4.1.1",
     "serverless-plugin-cloudwatch-dashboard": "^1.2.0",
     "serverless-plugin-ifelse": "^1.0.6",
+    "serverless-plugin-scripts": "^1.0.2",
     "serverless-webpack": "^5.3.5",
     "slack-node": "^0.1.8",
     "webpack": "^5.16.0",
     "xml-js": "^1.6.11"
   },
   "devDependencies": {
+    "artillery": "^1.6.2",
+    "jest": "^26.6.3",
     "serverless-apigw-binary": "^0.4.4",
     "serverless-offline-env": "^0.2.0",
-    "serverless-prune-plugin": "^1.4.3"
+    "serverless-prune-plugin": "^1.4.3",
+    "supertest": "^6.1.3"
   }
 }
