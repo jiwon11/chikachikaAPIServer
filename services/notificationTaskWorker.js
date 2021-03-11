@@ -415,7 +415,7 @@ module.exports.billsVerify = async function billsVerify(event) {
                     emoji: true,
                   },
                   value: "permission",
-                  url: "https://google.com",
+                  url: "localhost:3000/dev/admin/verifyBills",
                 },
                 {
                   type: "button",
@@ -425,7 +425,7 @@ module.exports.billsVerify = async function billsVerify(event) {
                     emoji: true,
                   },
                   value: "return",
-                  url: "https://google.com",
+                  url: "localhost:3000/dev/admin/verifyBills",
                 },
               ],
             },
