@@ -69,6 +69,7 @@ provider:
     DB_Username: ${param:DB_Username}
     cloudFrontUrl: ${param:cloudFrontUrl}
     USERTOKEN: ${param:USERTOKEN}
+    apiUrl: ${param:apiUrl}
   memorySize: 1024 # optional, in MB, default: 1024
   timeout: 6 # optional, in seconds, default: 6
   versionFunctions: false # optional, default: true
@@ -811,6 +812,13 @@ functions:
               # in our case the HTTP Authorization header
               identitySource: method.request.header.Authorization
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  verifyBillsAdmin:
+    handler: services/admin.verifyBills
+    events:
+      - http:
+          path: admin/verifyBills/{purpose}
+          method: get
+          cors: true
   pushNotifiactionCommentTaskWorker:
     handler: services/notificationTaskWorker.comment
     events:

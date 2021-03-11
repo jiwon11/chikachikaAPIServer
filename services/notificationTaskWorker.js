@@ -50,7 +50,7 @@ const pushFcm = async function (message) {
     };
   }
 };
-
+module.exports.pushFcm = pushFcm;
 module.exports.comment = async function (event) {
   try {
     var timezoneDate = new Date(Date.now());
@@ -341,6 +341,7 @@ module.exports.billsVerify = async function billsVerify(event) {
         ["review_contents", "index", "ASC"],
       ],
     });
+    const apiUrl = process.env.apiUrl;
     const slackMessage = {
       attachments: [
         {
@@ -395,19 +396,32 @@ module.exports.billsVerify = async function billsVerify(event) {
               image_url: review.reviewBills[0].dataValues.img_url,
               alt_text: "inspiration",
             },
-          ],
-          actions: [
             {
-              name: "permission",
-              text: "permission",
-              type: "button",
-              value: "permission",
-            },
-            {
-              name: "return",
-              text: "return",
-              type: "button",
-              value: "return",
+              type: "actions",
+              elements: [
+                {
+                  type: "button",
+                  text: {
+                    type: "plain_text",
+                    text: "permission",
+                    emoji: true,
+                  },
+                  value: "permission",
+                  url: `http://localhost:3000/dev/admin/verifyBills/permission?reviewId=${review.id}`,
+                  //url: `${apiUrl}admin/verifyBills`,
+                },
+                {
+                  type: "button",
+                  text: {
+                    type: "plain_text",
+                    text: "return",
+                    emoji: true,
+                  },
+                  value: "return",
+                  url: `http://localhost:3000/dev/admin/verifyBills/return?reviewId=${review.id}`,
+                  //url: `${apiUrl}admin/verifyBills`,
+                },
+              ],
             },
           ],
         },
@@ -429,6 +443,7 @@ module.exports.billsVerify = async function billsVerify(event) {
       method: "POST",
       data: slackMessage,
     });
+    console.log(slackResponse);
     const response = {
       message: "Task Worker PULL successfully",
       input: JSON.stringify(event),
