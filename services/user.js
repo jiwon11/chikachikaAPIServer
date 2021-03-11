@@ -25,7 +25,7 @@ module.exports.getUserInfo = async function getUserInfo(event) {
           "birthdate",
           "provider",
           "userProfileImgKeyValue",
-          [Sequelize.fn("CONCAT", `${cloudFrontUrl}`, Sequelize.col("userProfileImgKeyValue"), "?w=140&h=140&f=jpeg&q=100"), "img_thumbNail"],
+          [Sequelize.fn("CONCAT", `${cloudFrontUrl}`, Sequelize.col("userProfileImgKeyValue"), "?w=140&h=140&f=png&q=100"), "img_thumbNail"],
           [Sequelize.literal(`(SELECT COUNT(*) FROM appointments where userId="${userId}" AND deletedAt IS NULL)`), "appointmentsNum"],
           [Sequelize.literal(`(SELECT COUNT(*) FROM UserScrapClinics where userId="${userId}")`), "scrapClinicsNum"],
         ],
