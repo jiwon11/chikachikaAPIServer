@@ -55,7 +55,7 @@ const reviewIncludeModels = function (db, viewType, query, tagCategory, tagId, c
           "nickname",
           "profileImg",
           "userProfileImgKeyValue",
-          [Sequelize.fn("CONCAT", `${cloudFrontUrl}`, Sequelize.col("userProfileImgKeyValue"), "?w=140&h=140&f=jpeg&q=100"), "img_thumbNail"],
+          [Sequelize.fn("CONCAT", `${cloudFrontUrl}`, Sequelize.col("userProfileImgKeyValue"), "?w=140&h=140&f=png&q=100"), "img_thumbNail"],
         ],
       },
       {
