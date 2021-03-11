@@ -407,7 +407,7 @@ module.exports.billsVerify = async function billsVerify(event) {
                     emoji: true,
                   },
                   value: "permission",
-                  url: `http://localhost:3000/dev/admin/verifyBills`,
+                  url: `http://localhost:3000/dev/admin/verifyBills/permission`,
                   //url: `${apiUrl}admin/verifyBills`,
                 },
                 {
@@ -418,7 +418,7 @@ module.exports.billsVerify = async function billsVerify(event) {
                     emoji: true,
                   },
                   value: "return",
-                  url: `http://localhost:3000/dev/admin/verifyBills`,
+                  url: `http://localhost:3000/dev/admin/verifyBills/return`,
                   //url: `${apiUrl}admin/verifyBills`,
                 },
               ],
