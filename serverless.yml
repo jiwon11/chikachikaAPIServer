@@ -813,10 +813,10 @@ functions:
               identitySource: method.request.header.Authorization
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   verifyBillsAdmin:
-    handler: services/admin.verifyBills/{purpose}
+    handler: services/admin.verifyBills
     events:
       - http:
-          path: admin/verifyBills
+          path: admin/verifyBills/{purpose}
           method: get
           cors: true
   pushNotifiactionCommentTaskWorker:
