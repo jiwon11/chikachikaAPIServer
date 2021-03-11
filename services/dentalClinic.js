@@ -115,6 +115,8 @@ module.exports.detailClinics = async function detailClinics(event) {
         website: clinic.website,
         launchDate: clinic.launchDate,
         dentalTransparent: clinic.dentalTransparent,
+        geographLong: clinic.geographLong,
+        geographLat: clinic.geographLat,
         reviewNum: clinic.get("reviewNum"),
         conclustionNow: clinic.get("conclustionNow"),
         lunchTimeNow: clinic.get("lunchTimeNow"),
