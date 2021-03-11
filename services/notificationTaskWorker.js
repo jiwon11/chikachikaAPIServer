@@ -396,6 +396,20 @@ module.exports.billsVerify = async function billsVerify(event) {
               alt_text: "inspiration",
             },
           ],
+          actions: [
+            {
+              name: "permission",
+              text: "permission",
+              type: "button",
+              value: "permission",
+            },
+            {
+              name: "return",
+              text: "return",
+              type: "button",
+              value: "return",
+            },
+          ],
         },
       ],
     };
