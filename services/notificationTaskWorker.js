@@ -395,19 +395,39 @@ module.exports.billsVerify = async function billsVerify(event) {
               image_url: review.reviewBills[0].dataValues.img_url,
               alt_text: "inspiration",
             },
-          ],
-          actions: [
             {
-              name: "permission",
-              text: "permission",
-              type: "button",
-              value: "permission",
-            },
-            {
-              name: "return",
-              text: "return",
-              type: "button",
-              value: "return",
+              type: "actions",
+              elements: [
+                {
+                  type: "button",
+                  text: {
+                    type: "plain_text",
+                    text: "Farmhouse",
+                    emoji: true,
+                  },
+                  value: "click_me_123",
+                },
+                {
+                  type: "button",
+                  text: {
+                    type: "plain_text",
+                    text: "permission",
+                    emoji: true,
+                  },
+                  value: "permission",
+                  url: "https://google.com",
+                },
+                {
+                  type: "button",
+                  text: {
+                    type: "plain_text",
+                    text: "return",
+                    emoji: true,
+                  },
+                  value: "return",
+                  url: "https://google.com",
+                },
+              ],
             },
           ],
         },
