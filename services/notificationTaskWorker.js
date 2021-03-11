@@ -50,7 +50,7 @@ const pushFcm = async function (message) {
     };
   }
 };
-
+module.exports.pushFcm = pushFcm;
 module.exports.comment = async function (event) {
   try {
     var timezoneDate = new Date(Date.now());
