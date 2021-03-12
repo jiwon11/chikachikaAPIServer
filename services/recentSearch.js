@@ -10,10 +10,10 @@ module.exports.postRecentSearch = async function postRecentSearch(event) {
     const sq = event.queryStringParameters.sq;
     const iq = event.queryStringParameters.iq;
     var targetId;
-    if (tagCategory === "clinic") {
-      targetId = event.queryStringParameters.targetId;
-    } else {
+    if (tagCategory === "city") {
       targetId = null;
+    } else {
+      targetId = event.queryStringParameters.targetId;
     }
     const user = await db.User.findOne({
       where: {
