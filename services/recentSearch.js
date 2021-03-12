@@ -9,6 +9,12 @@ module.exports.postRecentSearch = async function postRecentSearch(event) {
     const tagCategory = event.queryStringParameters.tagCategory;
     const sq = event.queryStringParameters.sq;
     const iq = event.queryStringParameters.iq;
+    var targetId;
+    if (tagCategory === "clinic") {
+      targetId = event.queryStringParameters.targetId;
+    } else {
+      targetId = null;
+    }
     const user = await db.User.findOne({
       where: {
         id: userId,
@@ -22,6 +28,7 @@ module.exports.postRecentSearch = async function postRecentSearch(event) {
             inputQuery: iq,
             searchQuery: sq,
             category: tagCategory,
+            targetId: targetId,
             route: "keywordSearch",
           },
         });
@@ -32,6 +39,7 @@ module.exports.postRecentSearch = async function postRecentSearch(event) {
               inputQuery: iq,
               searchQuery: sq,
               category: tagCategory,
+              targetId: targetId,
               route: "keywordSearch",
             },
             {
@@ -82,7 +90,7 @@ module.exports.getRecent = async function getRecentSearch(event) {
         userId: decoded.id,
         route: route,
       },
-      attributes: ["id", "searchQuery", "inputQuery", "category", "updatedAt"],
+      attributes: ["id", "searchQuery", "inputQuery", "category", "targetId", "updatedAt"],
       order: [["updatedAt", "DESC"]],
     });
     return {
