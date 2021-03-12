@@ -403,7 +403,7 @@ module.exports.billsVerify = async function billsVerify(event) {
                   type: "button",
                   text: {
                     type: "plain_text",
-                    text: "permission",
+                    text: "승인",
                     emoji: true,
                   },
                   value: "permission",
@@ -414,7 +414,7 @@ module.exports.billsVerify = async function billsVerify(event) {
                   type: "button",
                   text: {
                     type: "plain_text",
-                    text: "return",
+                    text: "반려",
                     emoji: true,
                   },
                   value: "return",

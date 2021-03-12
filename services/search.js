@@ -129,7 +129,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
     });
     if (user) {
       console.log(event.queryStringParameters);
-      const { lat, long, sq, iq, sort, days, time, wantParking, holiday, tagCategory } = event.queryStringParameters;
+      const { lat, long, sq, iq, sort, days, time, wantParking, holiday, tagCategory, tagId } = event.queryStringParameters;
       const limit = parseInt(event.queryStringParameters.limit);
       const offset = parseInt(event.queryStringParameters.offset);
       if (!sq) {
@@ -146,6 +146,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
               inputQuery: iq,
               searchQuery: sq,
               category: tagCategory,
+              targetId: tagId,
               route: "keywordClinicSearch",
             },
           });
@@ -156,6 +157,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
                 inputQuery: iq,
                 searchQuery: sq,
                 category: tagCategory,
+                targetId: tagId,
                 route: "keywordClinicSearch",
               },
               {

@@ -45,8 +45,15 @@ module.exports.verifyBills = async function verifyBills(event) {
         token: review.user.fcmToken,
       };
     }
-    const fcmResponse = await pushFcm(message);
-    console.log(fcmResponse);
+    const userNotifyConfig = await db.NotificationConfig.findOne({
+      where: {
+        userId: review.user.id,
+      },
+    });
+    if (userNotifyConfig.event === true) {
+      const fcmResponse = await pushFcm(message);
+      console.log(fcmResponse);
+    }
     return {
       statusCode: 200,
       body: `{ status: "OK" }`,

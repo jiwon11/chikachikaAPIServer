@@ -18,6 +18,9 @@ module.exports = (sequelize, DataTypes) =>
         type: DataTypes.STRING(50),
         allowNull: false,
       },
+      targetId: {
+        type: DataTypes.STRING(50),
+      },
     },
     {
       timestamps: true,

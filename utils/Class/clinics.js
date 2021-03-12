@@ -117,6 +117,11 @@ const clinicIncludeModels = function (db, query, tagCategory, tagId, clusterQuer
           as: "TreatmentItems",
           attributes: ["id", "usualName"],
         },
+        {
+          model: db.Disease_item,
+          as: "DiseaseItems",
+          attributes: ["id", "usualName"],
+        },
       ],
     },
     {
@@ -143,9 +148,34 @@ const clinicIncludeModels = function (db, query, tagCategory, tagId, clusterQuer
   } else if (tagCategory === "treatment") {
     let modelIdx = includeModels.findIndex((model) => model.model === db.Review);
     includeModels[modelIdx].include[0].where = {
-      name: {
-        [Sequelize.Op.like]: `%${query}%`,
-      },
+      [Sequelize.Op.or]: [
+        {
+          usualName: {
+            [Sequelize.Op.like]: `%${query}%`,
+          },
+        },
+        {
+          technicalName: {
+            [Sequelize.Op.like]: `%${query}%`,
+          },
+        },
+      ],
+    };
+  } else if (tagCategory === "disease") {
+    let modelIdx = includeModels.findIndex((model) => model.model === db.Review);
+    includeModels[modelIdx].include[1].where = {
+      [Sequelize.Op.or]: [
+        {
+          usualName: {
+            [Sequelize.Op.like]: `%${query}%`,
+          },
+        },
+        {
+          technicalName: {
+            [Sequelize.Op.like]: `%${query}%`,
+          },
+        },
+      ],
     };
   }
   return includeModels;
