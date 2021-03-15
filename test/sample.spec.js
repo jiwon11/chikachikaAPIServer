@@ -8,7 +8,7 @@ console.log("stage:", stage);
 var USERTOKEN;
 var API_ENDPOINT;
 if (stage === "test") {
-  API_ENDPOINT = "https://43tbm5rlw1.execute-api.ap-northeast-1.amazonaws.com/test";
+  API_ENDPOINT = "https://6fqodlsasj.execute-api.ap-northeast-1.amazonaws.com/test";
   USERTOKEN = process.env.USERTOKEN;
 } else if (stage === "dev") {
   API_ENDPOINT = "https://0l855bcmib.execute-api.ap-northeast-1.amazonaws.com/dev";
