@@ -70,6 +70,8 @@ provider:
     cloudFrontUrl: ${param:cloudFrontUrl}
     USERTOKEN: ${param:USERTOKEN}
     apiUrl: ${param:apiUrl}
+    TWILIO_ACCOUNT_SID: ${param:TWILIO_ACCOUNT_SID}
+    TWILIO_AUTH_TOKEN: ${param:TWILIO_AUTH_TOKEN}
   memorySize: 1024 # optional, in MB, default: 1024
   timeout: 6 # optional, in seconds, default: 6
   versionFunctions: false # optional, default: true
