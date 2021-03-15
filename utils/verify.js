@@ -4,6 +4,9 @@ const ApiError = require("../utils/error");
 const { Phone_verify, User, City } = require("../utils/models");
 const jwt = require("jsonwebtoken");
 const cloudFrontUrl = process.env.cloudFrontUrl;
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const client = require("twilio")(accountSid, authToken);
 
 module.exports.phone = async function checkPhoneNumber(phoneNumber) {
   const token = Math.floor(Math.random() * 1000000);
@@ -11,6 +14,7 @@ module.exports.phone = async function checkPhoneNumber(phoneNumber) {
     token: token,
     phoneNumber: phoneNumber,
   });
+  /*
   const accessKey = process.env.NCP_access_token;
   const secretKey = process.env.NCP_secret_key;
   const serviceID = process.env.NCP_serviceID;
@@ -49,9 +53,16 @@ module.exports.phone = async function checkPhoneNumber(phoneNumber) {
       "x-ncp-apigw-signature-v2": signature,
     },
   };
+  const response = await axios.post(`https://sens.apigw.ntruss.com/sms/v2/services/${serviceID}/messages`, requestBody, axiosConfig);
+  */
   try {
-    const response = await axios.post(`https://sens.apigw.ntruss.com/sms/v2/services/${serviceID}/messages`, requestBody, axiosConfig);
-    if (response.status === 202) {
+    const message = await client.messages.create({
+      body: `[치카치카]인증번호 [${token}]를 입력해주세요.`,
+      messagingServiceSid: "MGb740d131f110fba2beb052ff9f12b4be",
+      to: `+82${phoneNumber}`,
+    });
+    console.log(message);
+    if (message.status === "accepted") {
       const existUser = await User.findOne({
         where: {
           phoneNumber: phoneNumber,
@@ -97,13 +108,14 @@ module.exports.phone = async function checkPhoneNumber(phoneNumber) {
         body: responseBody,
       };
     } else {
-      let responseBody = `{"statusText": "Accepted","message": "${response.data}"}`;
+      let responseBody = `{"statusText": "Accepted","message": "${message.sid}"}`;
       return {
         statusCode: 403,
         body: responseBody,
       };
     }
   } catch (error) {
+    console.log(error);
     let responseBody = `{"statusText": "Server Error","message": ${error.message}}`;
     return {
       statusCode: 500,

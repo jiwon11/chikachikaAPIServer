@@ -146,7 +146,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
               inputQuery: iq,
               searchQuery: sq,
               category: tagCategory,
-              targetId: tagId,
+              targetId: null,
               route: "keywordClinicSearch",
             },
           });
