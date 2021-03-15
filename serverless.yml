@@ -4,9 +4,6 @@ org: jiwon112
 
 useDotenv: true
 
-package:
-  exclude:
-    - node_modules/**
 custom:
   #secrets: ${file(secrets.json)}
   apigwBinary:
