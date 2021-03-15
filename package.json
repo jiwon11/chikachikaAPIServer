@@ -13,7 +13,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "aws-sdk": "^2.821.0",
     "aws-serverless-express": "^3.3.8",
     "aws-serverless-express-binary": "^1.0.1",
     "axios": "^0.21.1",
