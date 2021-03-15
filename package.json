@@ -7,7 +7,7 @@
     "dev": "serverless offline start",
     "deploy": "serverless deploy",
     "debug": "export SLS_DEBUG=* && node --debug ./node_modules/serverless/bin/serverless offline -s dev",
-    "test": "jest"
+    "jest": "jest"
   },
   "keywords": [],
   "author": "",
