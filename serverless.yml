@@ -4,6 +4,9 @@ org: jiwon112
 
 useDotenv: true
 
+package:
+  individually: true
+
 custom:
   #secrets: ${file(secrets.json)}
   apigwBinary:
@@ -960,3 +963,4 @@ plugins:
   - serverless-prune-plugin
   - serverless-offline-sqs
   - serverless-plugin-scripts
+  - serverless-plugin-optimize
