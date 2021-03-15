@@ -4,6 +4,9 @@ org: jiwon112
 
 useDotenv: true
 
+package:
+  individually: true
+
 custom:
   #secrets: ${file(secrets.json)}
   apigwBinary:
