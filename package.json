@@ -42,7 +42,6 @@
     "serverless-plugin-cloudwatch-dashboard": "^1.2.0",
     "serverless-plugin-ifelse": "^1.0.6",
     "serverless-plugin-scripts": "^1.0.2",
-    "serverless-webpack": "^5.3.5",
     "slack-node": "^0.1.8",
     "twilio": "^3.57.0",
     "webpack": "^5.16.0",
