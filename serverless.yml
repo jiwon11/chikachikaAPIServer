@@ -3,6 +3,7 @@ service: chikachika-API-serverless
 org: jiwon112
 
 useDotenv: true
+configValidationMode: error
 
 package:
   excludeDevDependencies: false
