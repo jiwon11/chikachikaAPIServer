@@ -27,10 +27,6 @@ custom:
     hooks:
       'deploy:finalize': npm run jest -- -stage=${opt:stage, 'dev'}
 
-dashboard:
-  lambda:
-    enabled: true
-
 provider:
   name: aws
   runtime: nodejs12.x
@@ -43,7 +39,7 @@ provider:
     apiGateway: true
     lambda: true
   apiGateway:
-    shouldStartNameWithService: true,
+    shouldStartNameWithService: false,
     minimumCompressionSize: 1024
     binaryMediaTypes:
       - 'multipart/form-data'
