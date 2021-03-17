@@ -673,3 +673,53 @@ module.exports.clinicNameSpaceRemove = async function clinicNameSpaceRemove(even
     };
   }
 };
+
+module.exports.subwayImport = async function subwayImport(event) {
+  try {
+    const subwayLists = await db.Subway.findAll();
+    for (const subway of subwayLists) {
+      console.log(subway);
+      const subwayCities = await City.findAll({
+        where: Sequelize.literal(`MBRContains(geometry,ST_GeomFromText("point(${subway.geographLong} ${subway.geographLat})"))`),
+      });
+      if (subwayCities) {
+        await subway.addCities(subwayCities);
+      }
+    }
+    /*
+    const subwayLists = await db.Subway.findAll();
+    for (const subway of subwayLists) {
+      const subwayName = subway.name[subway.name.length - 1] === "역" ? subway.name.substring(0, subway.name.length - 1) : subway.name;
+      await subway.update({
+        name: subwayName,
+      });
+      console.log(subwayName);
+      
+      const subwayCity = await City.current(subway.geographLong, subway.geographLat);
+      if (subwayCity) {
+        await subway.update({
+          cityId: subwayCity.id,
+        });
+        console.log(subwayCity.fullCityName);
+      }
+    }
+    const subway = await db.Subway.findOne({
+      where: {
+        id: 1,
+      },
+      include: [
+        {
+          model: db.City,
+          attributes: ["fullCityName"],
+        },
+      ],
+    });
+    */
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};

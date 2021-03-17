@@ -13,6 +13,9 @@ if (stage === "test") {
 } else if (stage === "dev") {
   API_ENDPOINT = "https://0l855bcmib.execute-api.ap-northeast-1.amazonaws.com/dev";
   USERTOKEN = process.env.USERTOKEN;
+} else if (stage === "prod") {
+  API_ENDPOINT = "https://7k25if0alb.execute-api.ap-northeast-1.amazonaws.com/prod";
+  USERTOKEN = process.env.USERTOKEN;
 }
 
 axios.defaults.adapter = require("axios/lib/adapters/http");
