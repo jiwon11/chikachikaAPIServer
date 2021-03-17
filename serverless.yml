@@ -863,6 +863,14 @@ functions:
       - sqs: 
           arn: arn:aws:sqs:ap-northeast-1:751612718299:FifoReceiverDeadLetterQueue-${self:provider.stage}.fifo
           enabled: true
+  subwayAroundClinics:
+    handler: services/main.subwayAroundClinics
+    events:
+      - http:
+          path: home/subwayAroundClinics
+          method: get
+          cors: true
+
 resources:
   Resources:
     commentNotification:

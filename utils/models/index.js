@@ -57,7 +57,7 @@ db.Sigungu = require("./sigungu")(sequelize, Sequelize);
 db.Disease_item = require("./disease")(sequelize, Sequelize);
 db.Review_disease_item = require("./review_disease_item")(sequelize, Sequelize);
 db.Community_disease = require("./community_disease")(sequelize, Sequelize);
-
+db.Subway = require("./subways")(sequelize, Sequelize);
 /*사용자와 타이머 관걔형 */
 db.User.hasMany(db.Timer, {
   foreignKey: "userId",
@@ -633,4 +633,16 @@ db.Clinic_report.hasMany(db.Clinic_report_img, {
 });
 db.Clinic_report_img.belongsTo(db.Clinic_report);
 
+db.City.belongsToMany(db.Subway, {
+  foreignKey: "cityId",
+  as: "Subways",
+  through: "subwayCities",
+  onDelete: "CASCADE",
+});
+db.Subway.belongsToMany(db.City, {
+  foreignKey: "subwayId",
+  as: "Cities",
+  through: "subwayCities",
+  onDelete: "CASCADE",
+});
 module.exports = db;
