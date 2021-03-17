@@ -27,3 +27,46 @@ module.exports.residenceClinicReviews = async function residenceClinicReviews(ev
     };
   }
 };
+module.exports.subwayAroundClinics = async function subwayAroundClinics(event) {
+  try {
+    const cityId = event.queryStringParameters.cityId;
+    //const limit = parseInt(event.queryStringParameters.limit);
+    //const offset = parseInt(event.queryStringParameters.offset);
+    const city = await db.City.findOne({
+      where: {
+        id: cityId,
+      },
+    });
+    const subways = await city.getSubways();
+    var subwayAroundClinics = {};
+    for (const subway of subways) {
+      subwayAroundClinics[subway.dataValues.name] = await db.Dental_clinic.searchAll(
+        db,
+        "residence",
+        [cityId],
+        null,
+        null,
+        null,
+        null,
+        null,
+        subway.geographLat,
+        subway.geographLong,
+        5,
+        0,
+        "distance",
+        null,
+        null
+      );
+    }
+    return {
+      statusCode: 200,
+      body: JSON.stringify(subwayAroundClinics),
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
