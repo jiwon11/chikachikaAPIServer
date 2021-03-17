@@ -5,6 +5,7 @@ org: jiwon112
 useDotenv: true
 
 package:
+  excludeDevDependencies: false
   exclude:
     - node_modules/**
 
