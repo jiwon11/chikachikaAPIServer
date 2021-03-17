@@ -1,12 +1,11 @@
 const jwt = require("jsonwebtoken");
-
+const { User } = require("../utils/models");
 function generateAuthResponse(principalId, effect, methodArn) {
   const policyDocument = generatePolicyDocument(effect, methodArn);
-
-  return {
-    principalId,
-    policyDocument,
-  };
+  var authResponse = {};
+  authResponse.principalId = principalId;
+  authResponse.policyDocument = policyDocument;
+  return authResponse;
 }
 
 function generatePolicyDocument(effect, methodArn) {
@@ -27,17 +26,27 @@ function generatePolicyDocument(effect, methodArn) {
 }
 
 module.exports.verifyToken = (event, context, callback) => {
-  const token = event.authorizationToken;
-  const methodArn = event.methodArn;
-
-  if (!token) return callback(null, "Unauthorized");
-
-  // verifies token
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  console.log(decoded);
-  if (decoded) {
-    return callback(null, generateAuthResponse(decoded.id, "Allow", methodArn));
-  } else {
-    return callback(null, generateAuthResponse(decoded.id, "Deny", methodArn));
+  try {
+    const token = event.authorizationToken;
+    const methodArn = event.methodArn;
+    if (token === undefined) {
+      return callback("Unauthorized");
+    } else {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      if (decoded) {
+        console.log("exist decoded token");
+        return callback(null, generateAuthResponse(decoded.id, "Allow", methodArn));
+      } else {
+        console.log("undefined decoded token");
+        return callback(null, generateAuthResponse(decoded.id, "Deny", methodArn));
+      }
+    }
+    // verifies token
+  } catch (error) {
+    console.log(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
   }
 };

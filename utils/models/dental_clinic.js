@@ -1,11 +1,16 @@
-module.exports = (sequelize, DataTypes) =>
-  sequelize.define(
+const clinicQueryClass = require("../Class/clinics");
+const Sequelize = require("sequelize");
+module.exports = (sequelize, DataTypes) => {
+  const dentalClinic = sequelize.define(
     "dental_clinic",
     {
       name: {
         type: DataTypes.STRING(300),
         allowNull: false,
         unique: true,
+      },
+      originalName: {
+        type: DataTypes.STRING,
       },
       local: {
         type: DataTypes.STRING(300),
@@ -152,17 +157,26 @@ module.exports = (sequelize, DataTypes) =>
         defaltValue: false,
         allowNullL: false,
       },
-      holiday_treatment: {
-        type: DataTypes.BOOLEAN,
-        allowNullL: false,
+      holiday_treatment_start_time: {
+        type: DataTypes.TIME,
+        allowNullL: true,
       },
-      weekend_treatment: {
-        type: DataTypes.BOOLEAN,
+      holiday_treatment_end_time: {
+        type: DataTypes.TIME,
         allowNullL: true,
       },
       ykiho: {
         type: DataTypes.STRING,
         allowNull: true,
+      },
+      description: {
+        type: DataTypes.STRING(5000),
+        allowNull: true,
+      },
+      dentalTransparent: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
       },
     },
     {
@@ -172,3 +186,8 @@ module.exports = (sequelize, DataTypes) =>
       collate: "utf8mb4_unicode_ci",
     }
   );
+  dentalClinic.searchAll = clinicQueryClass.SearchAll;
+  dentalClinic.NewestReviewsInResidence = clinicQueryClass.NewestReviewsInResidence;
+  dentalClinic.getKeywordSearchAll = clinicQueryClass.getKeywordSearchAll;
+  return dentalClinic;
+};

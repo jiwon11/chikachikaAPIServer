@@ -1,5 +1,6 @@
-module.exports = (sequelize, DataTypes) =>
-  sequelize.define(
+const communityQueryClass = require("../Class/community");
+module.exports = (sequelize, DataTypes) => {
+  const community = sequelize.define(
     "community",
     {
       type: {
@@ -14,6 +15,9 @@ module.exports = (sequelize, DataTypes) =>
         type: DataTypes.BOOLEAN,
         allowNull: false,
       },
+      tagArray: {
+        type: DataTypes.JSON,
+      },
     },
     {
       timestamps: true,
@@ -22,3 +26,9 @@ module.exports = (sequelize, DataTypes) =>
       collate: "utf8mb4_unicode_ci",
     }
   );
+  community.getOne = communityQueryClass.getOne;
+  community.getAll = communityQueryClass.getAll;
+  community.getUserCommunityPostAll = communityQueryClass.getUserCommunityPostAll;
+  community.getKeywordSearchAll = communityQueryClass.getKeywordSearchAll;
+  return community;
+};

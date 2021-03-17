@@ -8,12 +8,9 @@ module.exports = {
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-    await queryInterface.addColumn("notifications", "communityId", {
-      type: Sequelize.INTEGER,
-      references: {
-        model: "communities",
-        key: "id",
-      },
+    return queryInterface.changeColumn("cities", "geometry", {
+      type: Sequelize.GEOMETRY,
+      allowNull: false,
     });
   },
 
@@ -24,6 +21,9 @@ module.exports = {
      * Example:
      * await queryInterface.dropTable('users');
      */
-    await queryInterface.removeColumn("notifications", "communityId");
+    return queryInterface.changeColumn("cities", "geometry", {
+      type: Sequelize.GEOMETRY("POLYGON"),
+      allowNull: false,
+    });
   },
 };

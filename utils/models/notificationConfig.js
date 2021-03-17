@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) =>
   sequelize.define(
-    "notoficationConfig",
+    "notificationConfig",
     {
       like: {
         type: DataTypes.BOOLEAN,
@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) =>
       comment: {
         type: DataTypes.BOOLEAN,
       },
-      timer: {
+      event: {
         type: DataTypes.BOOLEAN,
       },
     },

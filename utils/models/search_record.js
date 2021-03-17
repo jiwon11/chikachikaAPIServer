@@ -2,13 +2,24 @@ module.exports = (sequelize, DataTypes) =>
   sequelize.define(
     "search_record",
     {
-      query: {
+      searchQuery: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+      },
+      inputQuery: {
         type: DataTypes.STRING(50),
         allowNull: false,
       },
       category: {
         type: DataTypes.STRING(50),
         allowNull: false,
+      },
+      route: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+      },
+      targetId: {
+        type: DataTypes.STRING(50),
       },
     },
     {

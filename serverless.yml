@@ -2,35 +2,56 @@ app: chikachika
 service: chikachika-API-serverless
 org: jiwon112
 
+useDotenv: true
+
 custom:
   #secrets: ${file(secrets.json)}
   apigwBinary:
     types:           #list of mime-types 
        - 'multipart/form-data'
+  apiGatewayCaching:
+    enabled: true
+    clusterSize: '0.5' # defaults to '0.5'
+    ttlInSeconds: 300 # defaults to the maximum allowed: 3600
+  prune:
+    automatic: true
+    number: 1
+  scripts:
+    hooks:
+      'deploy:finalize': npm run jest -- -stage=${opt:stage, 'dev'}
 
 dashboard:
   lambda:
-    enabled: false
+    enabled: true
 
 provider:
   name: aws
   runtime: nodejs12.x
-  stage: prod # optional, default: dev
-  profile: prodProfile
+  stage: ${opt:stage, 'dev'} # optional, default: dev
+  profile: ${self:provider.stage}Profile
   region: ap-northeast-1 # optional, default: us-east-1
   stackName: chikachika-API-serverless-${self:provider.stage} # Use a custom name for the CloudFormation stack
   apiName: chikachika-API-serverless-${self:provider.stage} # Use a custom name for the API Gateway API
+  tracing:
+    apiGateway: true
+    lambda: true
   apiGateway:
     shouldStartNameWithService: true,
     minimumCompressionSize: 1024
     binaryMediaTypes:
       - 'multipart/form-data'
       - 'image/*'
-  iamRoleStatements:
-    - Effect: "Allow"
-      Action:
-        - "s3:GetObject"
-      Resource: "arn:aws:s3:::chikachika-review-images/*"
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "s3:GetObject"
+          Resource: "arn:aws:s3:::chikachika-review-images/*"
+        - Effect: Allow
+          Action:
+            - sqs:*
+          Resource: arn:aws:sqs:*:*:*
   environment:
     JWT_SECRET: ${param:JWT_SECRET}
     NCP_access_token: ${param:NCP_access_token}
@@ -38,6 +59,19 @@ provider:
     NCP_serviceID: ${param:NCP_serviceID}
     AWS_Access_Key_ID: ${param:AWS_Access_Key_ID}
     AWS_Secret_Access_Key: ${param:AWS_Secret_Access_Key}
+    TZ: ${param:TZ}
+    stage: ${self:provider.stage}
+    fcmBucketName: ${param:fcmBucketName}
+    fcmkey: ${param:fcmkey}
+    FbDBURL: ${param:fcmkey}
+    DB_Host: ${param:DB_Host}
+    DB_Password: ${param:DB_Password}
+    DB_Username: ${param:DB_Username}
+    cloudFrontUrl: ${param:cloudFrontUrl}
+    USERTOKEN: ${param:USERTOKEN}
+    apiUrl: ${param:apiUrl}
+    TWILIO_ACCOUNT_SID: ${param:TWILIO_ACCOUNT_SID}
+    TWILIO_AUTH_TOKEN: ${param:TWILIO_AUTH_TOKEN}
   memorySize: 1024 # optional, in MB, default: 1024
   timeout: 6 # optional, in seconds, default: 6
   versionFunctions: false # optional, default: true
@@ -58,12 +92,72 @@ functions:
               # in our case the HTTP Authorization header
               identitySource: method.request.header.Authorization
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  getUserInfo:
+    handler: services/user.getUserInfo
+    events:
+      - http:
+          path: userInfo
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  keywordSearchResults:
+    handler: services/search.keywordSearchResults
+    events:
+      - http:
+          path: search/{type}
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  getUserProfile:
+    handler: services/user.getUserProfile
+    events:
+      - http:
+          path: user/profile
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   allTagItems:
     handler: services/search.allTagItems
     events:
       - http:
-          path: search/allTagItems
+          path: search/allTagItems/{purpose}
           method: get
+          cors: true
+          caching:
+            enabled: true
+            ttlInSeconds: 300 # overrides the global setting for ttlInSeconds
+            cacheKeyParameters:
+              - name: request.path.purpose
+              - name: request.querystring.q
+              - name: request.querystring.offset
+              - name: request.querystring.limit
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  postRecentSearch:
+    handler: services/recentSearch.postRecentSearch
+    events:
+      - http:
+          path: search/recent
+          method: post
           cors: true
           authorizer:
               name: verify-token
@@ -110,13 +204,28 @@ functions:
               # in our case the HTTP Authorization header
               identitySource: method.request.header.Authorization
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
-  localClinicSearch:
-    handler: services/search.localClinicSearch
+  keywordClinicSearch:
+    handler: services/search.keywordClinicSearch
     events:
       - http:
           path: clinics
           method: get
           cors: true
+          caching:
+            enabled: true
+            ttlInSeconds: 300 # overrides the global setting for ttlInSeconds
+            cacheKeyParameters:
+              - name: request.querystring.lat
+              - name: request.querystring.long
+              - name: request.querystring.iq
+              - name: request.querystring.sq
+              - name: request.querystring.sort
+              - name: request.querystring.days
+              - name: request.querystring.time
+              - name: request.querystring.wantParking
+              - name: request.querystring.limit
+              - name: request.querystring.offset
+              - name: request.querystring.holiday
           authorizer:
               name: verify-token
               # this tells the lambda where to take the information from,
@@ -130,6 +239,21 @@ functions:
           path: around/clinics
           method: get
           cors: true
+          caching:
+            enabled: true
+            ttlInSeconds: 300 # overrides the global setting for ttlInSeconds
+            cacheKeyParameters:
+              - name: request.querystring.lat
+              - name: request.querystring.long
+              - name: request.querystring.wantParking
+              - name: request.querystring.sort
+              - name: request.querystring.days
+              - name: request.querystring.time
+              - name: request.querystring.holiday
+              - name: request.querystring.maplat
+              - name: request.querystring.maplong
+              - name: request.querystring.limit
+              - name: request.querystring.offset
           authorizer:
               name: verify-token
               # this tells the lambda where to take the information from,
@@ -149,6 +273,19 @@ functions:
               # in our case the HTTP Authorization header
               identitySource: method.request.header.Authorization
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  diseaseSearch:
+    handler: services/search.diseaseItems
+    events:
+      - http:
+          path: search/disease
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   clinicSearch:
     handler: services/search.dentalClinics
     events:
@@ -156,6 +293,11 @@ functions:
           path: search/clinics
           method: get
           cors: true
+          caching:
+            enabled: true
+            ttlInSeconds: 300 # overrides the global setting for ttlInSeconds
+            cacheKeyParameters:
+              - name: request.querystring.q
           authorizer:
               name: verify-token
               # this tells the lambda where to take the information from,
@@ -210,48 +352,611 @@ functions:
           path: social_login
           method: post
           cors: true
-  importDentalClinic:
-    handler: services/dentalClinic.importDentalClinic
-    package:
-      include:
-        - dental_clinic_json/dental_database.json
+  socialUserCheck:
+    handler: services/social_login.socialUserCheck
     events:
       - http:
-          path: importDentalClinic
+          path: socialUserCheck
           method: post
           cors: true
-  importDentalSubject:
-    handler: services/subject.importDentalSubject
+  deleteUser:
+    handler: services/user.deleteUser
     events:
       - http:
-          path: importDentalSubject
-          method: post
+          path: withdrawal
+          method: delete
           cors: true
-  clinicSubjects:
-    handler: services/subject.clinicSubjects
-    package:
-      include:
-        - dental_clinic_json/dental_subject_database.json
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+  searchCities:
+    handler: services/residence.searchCities
     events:
       - http:
-          path: clinicSubjects
-          method: post
-          cors: true
-  getNonPaymentItemHospList:
-    handler: services/dentalClinic.getNonPaymentItemHospList
-    events:
-      - http:
-          path: getNonPaymentItemHospList
+          path: search/cities
           method: get
           cors: true
-  dbUpdate:
-    handler: services/dbReset.handler
+          caching:
+            enabled: true
+            ttlInSeconds: 300 # overrides the global setting for ttlInSeconds
+            cacheKeyParameters:
+              - name: request.querystring.q
+              - name: request.querystring.limit
+              - name: request.querystring.offset
+  citiesBycurrentLocation:
+    handler: services/residence.citiesBycurrentLocation
     events:
       - http:
-          path: dbUpdate
+          path: search/cities/currentLocation
           method: get
           cors: true
+          caching:
+            enabled: true
+            ttlInSeconds: 300 # overrides the global setting for ttlInSeconds
+            cacheKeyParameters:
+              - name: request.querystring.lat
+              - name: request.querystring.long
+  addUserResidence:
+    handler: services/residence.addUserResidence
+    events:
+      - http:
+          path: residence
+          method: post
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  changeUserResidence:
+    handler: services/residence.changeUserResidence
+    events:
+      - http:
+          path: residence
+          method: put
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  deleteUserResidence:
+    handler: services/residence.deleteUserResidence
+    events:
+      - http:
+          path: residence
+          method: delete
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  getUserResidence:
+    handler: services/residence.getUserResidence
+    events:
+      - http:
+          path: residence
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  nowUserResidence:
+    handler: services/residence.userResidenceNow
+    events:
+      - http:
+          path: residence/now
+          method: post
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  addLikeReview:
+    handler: services/like.addLikeReview
+    events:
+      - http:
+          path: like/review
+          method: post
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  removeLikeReview:
+    handler: services/like.removeLikeReview
+    events:
+      - http:
+          path: like/review
+          method: delete
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  addLikeCommunity:
+    handler: services/like.addLikeCommunity
+    events:
+      - http:
+          path: like/communityPost
+          method: post
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  removeLikeCommunity:
+    handler: services/like.removeLikeCommunity
+    events:
+      - http:
+          path: like/communityPost
+          method: delete
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  addScrapReview:
+    handler: services/scrap.addScrapReview
+    events:
+      - http:
+          path: scrap/review
+          method: post
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  removeScrapeReview:
+    handler: services/scrap.removeScrapReview
+    events:
+      - http:
+          path: scrap/review
+          method: delete
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  addScrapCommunity:
+    handler: services/scrap.addScrapCommunities
+    events:
+      - http:
+          path: scrap/communityPost
+          method: post
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  removeScrapCommunity:
+    handler: services/scrap.removeScrapCommunities
+    events:
+      - http:
+          path: scrap/communityPost
+          method: delete
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  addScrapClinic:
+    handler: services/scrap.addScrapClinic
+    events:
+      - http:
+          path: scrap/clinic
+          method: post
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  removeScrapClinic:
+    handler: services/scrap.removeScrapClinic
+    events:
+      - http:
+          path: scrap/clinic
+          method: delete
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  getScrapClinic:
+    handler: services/scrap.getScrapClinic
+    events:
+      - http:
+          path: scrap/clinic
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  detailClinics:
+    handler: services/dentalClinic.detailClinics
+    events:
+      - http:
+          path: clinic/detail
+          method: get
+          cors: true
+          caching:
+            enabled: true
+            ttlInSeconds: 300 # overrides the global setting for ttlInSeconds
+            cacheKeyParameters:
+              - name: request.querystring.clinicId
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  userScrapClinics:
+    handler: services/dentalClinic.userScrapClinics
+    events:
+      - http:
+          path: clinic/detail/scrap
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  ClinicsReviews:
+    handler: services/dentalClinic.clinicReviews
+    events:
+      - http:
+          path: clinic/detail/reviews
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  updateNotificationConfig:
+    handler: services/setting.updateNotificationConfig
+    events:
+      - http:
+          path: notificationConfig
+          method: put
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  keywordClinicAutoComplete:
+    handler: services/search.keywordClinicAutoComplete
+    events:
+      - http:
+          path: clinic/keyword
+          method: get
+          cors: true
+          caching:
+            enabled: true
+            ttlInSeconds: 300 # overrides the global setting for ttlInSeconds
+            cacheKeyParameters:
+              - name: request.querystring.query
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  redienceClinics:
+    handler: services/around.redienceClinics
+    events:
+      - http:
+          path: residence/clinics
+          method: get
+          cors: true
+          caching:
+            enabled: true
+            ttlInSeconds: 300 # overrides the global setting for ttlInSeconds
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  getNotifications:
+    handler: services/notification.getNotifications
+    events:
+      - http:
+          path: notifications
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  delNotifications:
+    handler: services/notification.delNotifications
+    events:
+      - http:
+          path: notifications
+          method: delete
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  postClinicReport:
+    handler: services/report.postClinicReport
+    events:
+      - http:
+          path: reports/clinics
+          method: post
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  residenceClinicsAndReviews:
+    handler: services/residence.residenceClinicsAndReviews
+    events:
+      - http:
+          path: residence/clinicsAndReviews
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  postAppointment:
+    handler: services/appointment.postAppointment
+    events:
+      - http:
+          path: appointment
+          method: post
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  getAppointment:
+    handler: services/appointment.getAppointment
+    events:
+      - http:
+          path: appointment
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  removeAppointment:
+    handler: services/appointment.removeAppointment
+    events:
+      - http:
+          path: appointment
+          method: delete
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  residenceClinicReviews:
+    handler: services/main.residenceClinicReviews
+    events:
+      - http:
+          path: residenceClinicReviews
+          method: get
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  postReports:
+    handler: services/report.reports
+    events:
+      - http:
+          path: reports
+          method: post
+          cors: true
+          authorizer:
+              name: verify-token
+              # this tells the lambda where to take the information from,
+              # in our case the HTTP Authorization header
+              identitySource: method.request.header.Authorization
+              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+  verifyBillsAdmin:
+    handler: services/admin.verifyBills
+    events:
+      - http:
+          path: admin/verifyBills/{purpose}
+          method: get
+          cors: true
+  pushNotifiactionCommentTaskWorker:
+    handler: services/notificationTaskWorker.comment
+    events:
+      - sqs: 
+          arn: arn:aws:sqs:ap-northeast-1:751612718299:commentNotification-${opt:stage, 'dev'}
+          enabled: true
+  pushNotifiactionReplyTaskWorker:
+    handler: services/notificationTaskWorker.reply
+    events:
+      - sqs: 
+          arn: arn:aws:sqs:ap-northeast-1:751612718299:replyNotification-${opt:stage, 'dev'}
+          enabled: true
+  pushNotifiactionLikeTaskWorker:
+    handler: services/notificationTaskWorker.like
+    events:
+      - sqs: 
+          arn: arn:aws:sqs:ap-northeast-1:751612718299:likeNotification-${opt:stage, 'dev'}
+          enabled: true
+  pushNotifiactionReportTaskWorker:
+    handler: services/notificationTaskWorker.report
+    events:
+      - sqs: 
+          arn: arn:aws:sqs:ap-northeast-1:751612718299:reportNotification-${opt:stage, 'dev'}.fifo
+          enabled: true
+  billsVerifyTaskWorker:
+    handler: services/notificationTaskWorker.billsVerify
+    events:
+      - sqs: 
+          arn: arn:aws:sqs:ap-northeast-1:751612718299:billsVerify-${self:provider.stage}.fifo
+          enabled: true
+  deleteSQSMessageTaskWorker:
+    handler: services/notificationTaskWorker.deleteSQSMessage
+    events:
+      - sqs: 
+          arn: arn:aws:sqs:ap-northeast-1:751612718299:ReceiverDeadLetterQueue-${self:provider.stage}
+          enabled: true
+  deleteFifoSQSMessageTaskWorker:
+    handler: services/notificationTaskWorker.deleteFifoSQSMessage
+    events:
+      - sqs: 
+          arn: arn:aws:sqs:ap-northeast-1:751612718299:FifoReceiverDeadLetterQueue-${self:provider.stage}.fifo
+          enabled: true
+resources:
+  Resources:
+    commentNotification:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: commentNotification-${self:provider.stage}
+        MessageRetentionPeriod: 600
+        ReceiveMessageWaitTimeSeconds: 20
+        RedrivePolicy:
+          deadLetterTargetArn:
+            "Fn::GetAtt":
+            - ReceiverDeadLetterQueue
+            - Arn
+          maxReceiveCount: 1
+    replyNotification:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: replyNotification-${self:provider.stage}
+        MessageRetentionPeriod: 600
+        ReceiveMessageWaitTimeSeconds: 20
+        RedrivePolicy:
+          deadLetterTargetArn:
+            "Fn::GetAtt":
+            - ReceiverDeadLetterQueue
+            - Arn
+          maxReceiveCount: 1
+    likeNotification:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: likeNotification-${self:provider.stage}
+        MessageRetentionPeriod: 600
+        ReceiveMessageWaitTimeSeconds: 20
+        RedrivePolicy:
+          deadLetterTargetArn:
+            "Fn::GetAtt":
+            - ReceiverDeadLetterQueue
+            - Arn
+          maxReceiveCount: 1
+    eventNotification:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: eventNotification-${self:provider.stage}
+        MessageRetentionPeriod: 600
+        ReceiveMessageWaitTimeSeconds: 20
+        RedrivePolicy:
+          deadLetterTargetArn:
+            "Fn::GetAtt":
+            - ReceiverDeadLetterQueue
+            - Arn
+          maxReceiveCount: 1
+    reportNotification:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: reportNotification-${self:provider.stage}.fifo
+        FifoQueue: true
+        ReceiveMessageWaitTimeSeconds: 20
+        MessageRetentionPeriod: 600
+        RedrivePolicy:
+          deadLetterTargetArn:
+            "Fn::GetAtt":
+            - FifoReceiverDeadLetterQueue
+            - Arn
+          maxReceiveCount: 1
+    billsVerify:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: billsVerify-${self:provider.stage}.fifo
+        FifoQueue: true
+        ContentBasedDeduplication: true
+        ReceiveMessageWaitTimeSeconds: 20
+        MessageRetentionPeriod: 600
+        RedrivePolicy:
+          deadLetterTargetArn:
+            "Fn::GetAtt":
+            - FifoReceiverDeadLetterQueue
+            - Arn
+          maxReceiveCount: 1
+    ReceiverDeadLetterQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: ReceiverDeadLetterQueue-${self:provider.stage}
+        ReceiveMessageWaitTimeSeconds: 20
+    FifoReceiverDeadLetterQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: FifoReceiverDeadLetterQueue-${self:provider.stage}.fifo
+        FifoQueue: true
+        ContentBasedDeduplication: true
+        ReceiveMessageWaitTimeSeconds: 20
 plugins:
   - serverless-offline
   - serverless-apigw-binary
   - serverless-plugin-cloudwatch-dashboard
+  - serverless-api-gateway-caching
+  - serverless-prune-plugin
+  - serverless-offline-sqs
+  - serverless-plugin-scripts

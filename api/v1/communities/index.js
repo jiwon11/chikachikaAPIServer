@@ -1,13 +1,11 @@
 const express = require("express");
-const ApiError = require("../../../utils/error");
 const { getUserInToken } = require("../middlewares");
 const AWS = require("aws-sdk");
 const multer = require("multer");
 const multerS3 = require("multer-s3");
 const path = require("path");
-const sequelize = require("sequelize");
-const { User, Community, Community_img, Symptom_item, Dental_clinic, Treatment_item, GeneralTag, Community_comment } = require("../../../utils/models");
-const user = require("../../../utils/models/user");
+const db = require("../../../utils/models");
+const Sequelize = require("sequelize");
 
 const router = express.Router();
 
@@ -25,31 +23,51 @@ const communityImgUpload = multer({
   },
 });
 
-router.post("/", getUserInToken, communityImgUpload.array("images"), async (req, res, next) => {
+router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, next) => {
   try {
-    const images = req.files;
-    const { description, wantDentistHelp, type } = req.body;
-    const communityPost = await Community.create({
+    console.log(req.body);
+    const description = req.body.description;
+    const type = req.body.type;
+    const wantDentistHelp = req.body.type;
+    const images = JSON.parse(req.body.images);
+    const user = await db.User.findOne({
+      where: {
+        id: req.user.id,
+      },
+    });
+    const city = await user.getResidences({
+      attributes: ["id"],
+      through: {
+        where: {
+          now: true,
+        },
+      },
+    });
+    console.log("images: ", images);
+    const communityPost = await db.Community.create({
       description: description,
       wantDentistHelp: wantDentistHelp === "true",
       type: type,
       userId: req.user.id,
+      cityId: city[0].id,
     });
     await Promise.all(
       images.map((image) =>
-        Community_img.create({
+        db.Community_img.create({
           img_originalname: image.originalname,
           img_mimetype: image.mimetype,
           img_filename: image.key,
           img_size: image.size,
           img_url: image.location,
-          img_index: images.indexOf(image) + 1,
+          img_index: image.index,
+          img_width: image.width,
+          img_height: image.height,
           communityId: communityPost.id,
         })
       )
     );
     var hashtags = [];
-    const regex = /\{\{[가-힣|ㄱ-ㅎ|ㅏ-ㅣ|0-9|a-zA-Z]+\}\}/gm;
+    const regex = /\{\{[가-힣|ㄱ-ㅎ|ㅏ-ㅣ|0-9|a-zA-Z|(|)|([\{\}\[\]\/?.,;:|\)*~`!^\-_+<>@\#$%&\\\=\(\'\")]*\}\}/gm;
     let m;
     while ((m = regex.exec(description)) !== null) {
       if (m.index === regex.lastIndex) {
@@ -64,8 +82,10 @@ router.post("/", getUserInToken, communityImgUpload.array("images"), async (req,
         }
       });
     }
+    tagArray = [];
     for (const hashtag of hashtags) {
-      let clinic = await Dental_clinic.findOne({
+      console.log(hashtag);
+      let clinic = await db.Dental_clinic.findOne({
         where: {
           name: hashtag,
         },
@@ -76,10 +96,14 @@ router.post("/", getUserInToken, communityImgUpload.array("images"), async (req,
             index: hashtags.indexOf(hashtag) + 1,
           },
         });
+        tagArray.push({ name: clinic.name, category: "clinic", id: clinic.id });
       } else {
-        let treatment = await Treatment_item.findOne({
+        let treatment = await db.Treatment_item.findOne({
           where: {
-            name: hashtag,
+            [Sequelize.Op.or]: {
+              usualName: hashtag,
+              technicalName: hashtag,
+            },
           },
         });
         if (treatment) {
@@ -88,44 +112,72 @@ router.post("/", getUserInToken, communityImgUpload.array("images"), async (req,
               index: hashtags.indexOf(hashtag) + 1,
             },
           });
+          tagArray.push({ name: treatment.usualName, category: "treatment", id: treatment.id });
         } else {
-          let symptom = await Symptom_item.findOne({
+          let disease = await db.Disease_item.findOne({
             where: {
-              name: hashtag,
+              [Sequelize.Op.or]: {
+                usualName: hashtag,
+                technicalName: hashtag,
+              },
             },
           });
-          if (symptom) {
-            await communityPost.addSymptomItem(symptom, {
+          if (disease) {
+            await communityPost.addDiseaseItems(disease, {
               through: {
                 index: hashtags.indexOf(hashtag) + 1,
               },
             });
+            tagArray.push({ name: disease.usualName, category: "disease", id: disease.id });
           } else {
-            let generalTag = await GeneralTag.findOne({
+            let city = await db.City.findOne({
               where: {
-                name: hashtag,
+                [Sequelize.Op.or]: [
+                  Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), {
+                    [Sequelize.Op.like]: `${hashtag}`,
+                  }),
+                ],
               },
             });
-            if (generalTag) {
-              await communityPost.addGeneralTag(generalTag, {
+            if (city) {
+              await communityPost.addCityTag(city, {
                 through: {
                   index: hashtags.indexOf(hashtag) + 1,
                 },
               });
+              tagArray.push({ name: city.name, category: "city", id: city.id });
             } else {
-              let newGeneralTag = await GeneralTag.create({
-                name: hashtag,
-              });
-              await communityPost.addGeneralTag(newGeneralTag, {
-                through: {
-                  index: hashtags.indexOf(hashtag) + 1,
+              let generalTag = await db.GeneralTag.findOne({
+                where: {
+                  name: hashtag,
                 },
               });
+              if (generalTag) {
+                await communityPost.addGeneralTag(generalTag, {
+                  through: {
+                    index: hashtags.indexOf(hashtag) + 1,
+                  },
+                });
+                tagArray.push({ name: generalTag.name, category: "general", id: generalTag.id });
+              } else {
+                let newGeneralTag = await db.GeneralTag.create({
+                  name: hashtag,
+                });
+                await communityPost.addGeneralTag(newGeneralTag, {
+                  through: {
+                    index: hashtags.indexOf(hashtag) + 1,
+                  },
+                });
+                tagArray.push({ name: newGeneralTag.name, category: "general", id: newGeneralTag.id });
+              }
             }
           }
         }
       }
     }
+    await communityPost.update({
+      tagArray: { tagArray: tagArray },
+    });
     return res.status(201).json({
       statusCode: 201,
       body: { statusText: "Accepted", message: "수다방 글 작성이 완료되었습니다!" },
@@ -144,74 +196,33 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
     const type = req.query.type === "All" ? ["Question", "FreeTalk"] : [req.query.type];
     const limit = parseInt(req.query.limit);
     const offset = parseInt(req.query.offset);
-    const order = req.query.order === "createdAt" ? "createdAt" : "popular";
-    const communityPosts = await Community.findAll({
-      where: {
-        type: type,
-      },
-      attributes: {
-        include: [
-          [
-            sequelize.literal(
-              "(SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = community.id AND deletedAt IS null) + (SELECT COUNT(*) FROM Community_reply LEFT JOIN community_comments ON (community_comments.id = Community_reply.commentId) WHERE community_comments.communityId = community.id)"
-            ),
-            "postCommentsCount",
-          ],
-          //[sequelize.literal("(SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = community.id AND deletedAt IS null)"), "postCommentsCount"],
-          [sequelize.literal("(SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id)"), "postLikeCount"],
-          [sequelize.literal(`(SELECT COUNT(*) FROM Like_Community WHERE Like_Community.likedCommunityId = community.id AND Like_Community.likerId = "${req.user.id}")`), "viewerLikeCommunityPost"],
-        ],
-      },
-      include: [
-        {
-          model: User,
-          attributes: ["nickname", "profileImg"],
+    const order = req.query.order;
+    const cityId = req.query.cityId;
+    const region = req.query.region;
+    const userId = req.user.id;
+    var clusterQuery;
+    if (region === "residence") {
+      var userResidence = await db.City.findOne({
+        where: {
+          id: cityId,
         },
-        {
-          model: Community_img,
-          attributes: ["id", "img_originalname", "img_mimetype", "img_filename", "img_url", "img_size", "img_index"],
-        },
-        {
-          model: Dental_clinic,
-          as: "Clinics",
-          attributes: ["name"],
-          through: {
-            attributes: ["index"],
-          },
-        },
-        {
-          model: Treatment_item,
-          as: "TreatmentItems",
-          attributes: ["name"],
-          through: {
-            attributes: ["index"],
-          },
-        },
-        {
-          model: Symptom_item,
-          as: "SymptomItems",
-          attributes: ["name"],
-          through: {
-            attributes: ["index"],
-          },
-        },
-        {
-          model: GeneralTag,
-          as: "GeneralTags",
-          attributes: ["name"],
-          through: {
-            attributes: ["index"],
-          },
-        },
-      ],
-      order: [
-        [order, "DESC"],
-        ["community_imgs", "img_index", "ASC"],
-      ],
-      offset: offset,
-      limit: limit,
-      subQuery: false,
-    });
+      });
+      clusterQuery = userResidence.newTownId
+        ? {
+            newTownId: userResidence.newTownId,
+          }
+        : {
+            sido: userResidence.sido,
+            sigungu: userResidence.sigungu,
+          };
+    } else if (region !== "all") {
+      return res.status(400).json({
+        statusCode: 400,
+        body: { statusText: "Bad Request", message: "유효하지 않는 쿼리입니다." },
+      });
+    }
+    console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
+    const communityPosts = await db.Community.getAll(db, userId, type, clusterQuery, order, offset, limit);
     return res.json(communityPosts);
   } catch (error) {
     console.log(error);
@@ -225,6 +236,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
 router.get("/", getUserInToken, async (req, res, next) => {
   try {
     const communityPostId = req.query.postId;
+    const userId = req.user.id;
     if (!communityPostId) {
       return res.status(400).json({
         statusCode: 400,
@@ -234,110 +246,17 @@ router.get("/", getUserInToken, async (req, res, next) => {
         },
       });
     }
-    const communityPost = await Community.findOne({
-      where: {
-        id: communityPostId,
-      },
-      attributes: [
-        "id",
-        "type",
-        "description",
-        "wantDentistHelp",
-        "createdAt",
-        "userId",
-        [
-          sequelize.literal(
-            "(SELECT COUNT(*) FROM community_comments WHERE community_comments.communityId = community.id AND deletedAt IS null) + (SELECT COUNT(*) FROM Community_reply LEFT JOIN community_comments ON (community_comments.id = Community_reply.commentId) WHERE community_comments.communityId = community.id)"
-          ),
-          "postCommentsCount",
-        ],
-      ],
-      include: [
-        {
-          model: User,
-          attributes: ["nickname", "profileImg"],
-        },
-        {
-          model: Community_img,
-        },
-      ],
-      order: [["community_imgs", "img_index", "ASC"]],
-    });
+    const communityPost = await db.Community.getOne(db, userId, communityPostId);
     if (communityPost) {
-      const symptomItems = await communityPost.getSymptomItems({
-        attributes: ["id", "name"],
-        through: {
-          attributes: ["index"],
-        },
-      });
-      const treatmentItems = await communityPost.getTreatmentItems({
-        attributes: ["id", "name"],
-        through: {
-          attributes: ["index"],
-        },
-      });
-      const clinics = await communityPost.getClinics({
-        attributes: ["id", "name"],
-      });
-      const generalTags = await communityPost.getGeneralTags({
-        attributes: ["id", "name"],
-      });
-      const tags = symptomItems.concat(treatmentItems, clinics, generalTags);
-      tags.sort(function (a, b) {
-        var nameA = a.hasOwnProperty("community_treatment")
-          ? a["community_treatment"]["index"]
-          : a.hasOwnProperty("community_dental_clinic")
-          ? a["community_dental_clinic"]["index"]
-          : a.hasOwnProperty("community_symptom")
-          ? a["community_symptom"]["index"]
-          : a.hasOwnProperty("communityGeneralTag")
-          ? a["communityGeneralTag"]["index"]
-          : null;
-        var nameB = b.hasOwnProperty("community_treatment")
-          ? b["community_treatment"]["index"]
-          : b.hasOwnProperty("community_dental_clinic")
-          ? b["community_dental_clinic"]["index"]
-          : b.hasOwnProperty("community_symptom")
-          ? b["community_symptom"]["index"]
-          : b.hasOwnProperty("communityGeneralTag")
-          ? b["communityGeneralTag"]["index"]
-          : null;
-        if (nameA < nameB) {
-          return -1;
-        }
-        if (nameA > nameB) {
-          return 1;
-        }
-        return 0;
-      });
-      const communityComments = await communityPost.getCommunity_comments({
-        include: [
-          {
-            model: User,
-          },
-          {
-            model: Community_comment,
-            as: "Replys",
-          },
-        ],
-      });
-      const communityLikeNum = await communityPost.countLikers();
-      const viewer = await User.findOne({
+      const viewer = await db.User.findOne({
         where: {
           id: req.user.id,
         },
       });
-      const viewerLikeCommunityPost = await communityPost.hasLikers(viewer);
       if (viewer.id !== communityPost.userId) {
         await communityPost.addViewer(viewer);
       }
-      return res.status(200).json({
-        communityPost: communityPost,
-        tags: tags,
-        communityComments: communityComments,
-        communityLikeNum: communityLikeNum,
-        viewerLikeCommunityPost: viewerLikeCommunityPost,
-      });
+      return res.status(200).json(communityPost);
     } else {
       return res.status(404).json({
         statusCode: 404,
@@ -355,18 +274,23 @@ router.get("/", getUserInToken, async (req, res, next) => {
   }
 });
 
-router.put("/", getUserInToken, communityImgUpload.array("images"), async (req, res, next) => {
+router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next) => {
   try {
     const postId = req.query.postId;
+    const userId = req.user.id;
     if (!postId) {
       return res.status(400).json({
         statusCode: 400,
         body: { statusText: "Bad Request", message: "postId가 없습니다." },
       });
     }
-    const images = req.files;
-    const { description, wantDentistHelp, type } = req.body;
-    const communityPost = await Community.findOne({
+    console.log(req.body);
+    const description = req.body.description;
+    const type = req.body.type;
+    const wantDentistHelp = req.body.type;
+    const images = JSON.parse(req.body.images);
+    console.log("images: ", images);
+    const communityPost = await db.Community.findOne({
       where: {
         id: postId,
         userId: req.user.id,
@@ -392,16 +316,15 @@ router.put("/", getUserInToken, communityImgUpload.array("images"), async (req, 
     });
     await communityPost.removeClinics();
     await communityPost.removeTreatmentItems();
-    await communityPost.removeSymptomItems();
     await communityPost.removeGeneralTags();
-    await Community_img.destroy({
+    await db.Community_img.destroy({
       where: {
         communityId: communityPost.id,
       },
     });
     await Promise.all(
       images.map((image) =>
-        Community_img.create({
+        db.Community_img.create({
           img_originalname: image.originalname,
           img_mimetype: image.mimetype,
           img_filename: image.key,
@@ -413,7 +336,7 @@ router.put("/", getUserInToken, communityImgUpload.array("images"), async (req, 
       )
     );
     var hashtags = [];
-    const regex = /\{\{[가-힣|ㄱ-ㅎ|ㅏ-ㅣ|0-9|a-zA-Z]+\}\}/gm;
+    const regex = /\{\{[가-힣|ㄱ-ㅎ|ㅏ-ㅣ|0-9|a-zA-Z|(|)|([\{\}\[\]\/?.,;:|\)*~`!^\-_+<>@\#$%&\\\=\(\'\")]*\}\}/gm;
     let m;
     while ((m = regex.exec(description)) !== null) {
       if (m.index === regex.lastIndex) {
@@ -428,8 +351,10 @@ router.put("/", getUserInToken, communityImgUpload.array("images"), async (req, 
         }
       });
     }
+    tagArray = [];
     for (const hashtag of hashtags) {
-      let clinic = await Dental_clinic.findOne({
+      console.log(hashtag);
+      let clinic = await db.Dental_clinic.findOne({
         where: {
           name: hashtag,
         },
@@ -440,10 +365,14 @@ router.put("/", getUserInToken, communityImgUpload.array("images"), async (req, 
             index: hashtags.indexOf(hashtag) + 1,
           },
         });
+        tagArray.push({ name: clinic.name, category: "clinic", id: clinic.id });
       } else {
-        let treatment = await Treatment_item.findOne({
+        let treatment = await db.Treatment_item.findOne({
           where: {
-            name: hashtag,
+            [Sequelize.Op.or]: {
+              usualName: hashtag,
+              technicalName: hashtag,
+            },
           },
         });
         if (treatment) {
@@ -452,47 +381,76 @@ router.put("/", getUserInToken, communityImgUpload.array("images"), async (req, 
               index: hashtags.indexOf(hashtag) + 1,
             },
           });
+          tagArray.push({ name: treatment.usualName, category: "treatment", id: treatment.id });
         } else {
-          let symptom = await Symptom_item.findOne({
+          let disease = await db.Disease_item.findOne({
             where: {
-              name: hashtag,
+              [Sequelize.Op.or]: {
+                usualName: hashtag,
+                technicalName: hashtag,
+              },
             },
           });
-          if (symptom) {
-            await communityPost.addSymptomItem(symptom, {
+          if (disease) {
+            await communityPost.addDiseaseItems(disease, {
               through: {
                 index: hashtags.indexOf(hashtag) + 1,
               },
             });
+            tagArray.push({ name: disease.usualName, category: "disease", id: disease.id });
           } else {
-            let generalTag = await GeneralTag.findOne({
+            let city = await db.City.findOne({
               where: {
-                name: hashtag,
+                [Sequelize.Op.or]: [
+                  Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), {
+                    [Sequelize.Op.like]: `${hashtag}`,
+                  }),
+                ],
               },
             });
-            if (generalTag) {
-              await communityPost.addGeneralTag(generalTag, {
+            if (city) {
+              await communityPost.addCityTag(city, {
                 through: {
                   index: hashtags.indexOf(hashtag) + 1,
                 },
               });
+              tagArray.push({ name: city.name, category: "city", id: city.id });
             } else {
-              let newGeneralTag = await GeneralTag.create({
-                name: hashtag,
-              });
-              await communityPost.addGeneralTag(newGeneralTag, {
-                through: {
-                  index: hashtags.indexOf(hashtag) + 1,
+              let generalTag = await db.GeneralTag.findOne({
+                where: {
+                  name: hashtag,
                 },
               });
+              if (generalTag) {
+                await communityPost.addGeneralTag(generalTag, {
+                  through: {
+                    index: hashtags.indexOf(hashtag) + 1,
+                  },
+                });
+                tagArray.push({ name: generalTag.name, category: "general", id: generalTag.id });
+              } else {
+                let newGeneralTag = await db.GeneralTag.create({
+                  name: hashtag,
+                });
+                await communityPost.addGeneralTag(newGeneralTag, {
+                  through: {
+                    index: hashtags.indexOf(hashtag) + 1,
+                  },
+                });
+                tagArray.push({ name: newGeneralTag.name, category: "general", id: newGeneralTag.id });
+              }
             }
           }
         }
       }
     }
+    await communityPost.update({
+      tagArray: { tagArray: tagArray },
+    });
+    const updateCommunityPost = await db.Community.getOne(db, userId, communityPost.id);
     return res.status(200).json({
       statusCode: 200,
-      body: { statusText: "Accepted", message: "수다방 글을 수정하였습니다." },
+      body: { statusText: "Accepted", message: "수다방 글을 수정하였습니다.", updateCommunityPost: updateCommunityPost },
     });
   } catch (error) {
     console.log(error);
@@ -506,9 +464,12 @@ router.put("/", getUserInToken, communityImgUpload.array("images"), async (req, 
 router.delete("/", getUserInToken, async (req, res, next) => {
   try {
     const postId = req.query.postId;
-    const communityPost = await Community.findOne({
+    const communityPost = await db.Community.findOne({
       where: {
         id: postId,
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
       },
     });
     if (communityPost) {

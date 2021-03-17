@@ -2,7 +2,17 @@ module.exports = (sequelize, DataTypes) =>
   sequelize.define(
     "treatment_item",
     {
-      name: {
+      technicalName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+      },
+      usualName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+      },
+      engTechnicalName: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true,

@@ -8,10 +8,17 @@ module.exports = {
      * Example:
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
-    await queryInterface.addConstraint("dental_clinics", {
-      fields: ["name"],
-      type: "unique",
-      name: "clinicUniqueName",
+    await queryInterface.createTable("korea_holidays", {
+      id: {
+        allowNull: false,
+        autoIncrement: true,
+        primaryKey: true,
+        type: Sequelize.INTEGER,
+      },
+      date: {
+        type: Sequelize.DATEONLY,
+        allowNull: false,
+      },
     });
   },
 
@@ -22,6 +29,5 @@ module.exports = {
      * Example:
      * await queryInterface.dropTable('users');
      */
-    await queryInterface.removeConstraint("dental_clinics", "clinicUniqueName");
   },
 };

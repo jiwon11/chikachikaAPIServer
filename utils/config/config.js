@@ -1,34 +1,70 @@
+require("dotenv").config();
+const env = process.env;
 const development = {
   database: "chikachika_db_dev",
   port: 3306,
-  host: "database-1.c2g4zseshvri.ap-northeast-2.rds.amazonaws.com",
-  username: "admin",
-  password: "jeewon0109!",
+  host: env.DB_Host,
+  username: env.DB_Username,
+  password: env.DB_Password,
   dialect: "mysql",
   logging: false,
   timezone: "+09:00",
+  dialectOptions: {
+    charset: "utf8mb4",
+    dateStrings: true,
+    typeCast: true,
+  },
   pool: {
-    max: 20,
+    max: 1000,
     min: 5,
-    idle: 60000,
+    idle: 300000,
   },
   charset: "utf8mb4",
   collate: "utf8mb4_unicode_ci",
 };
 const test = {
-  username: "admin",
-  password: "jeewon0109!",
   database: "chikachika_db_test",
-  host: "database-1.c2g4zseshvri.ap-northeast-2.rds.amazonaws.com",
   port: 3306,
+  host: process.env.DB_Host,
+  username: process.env.DB_Username,
+  password: process.env.DB_Password,
   dialect: "mysql",
   logging: false,
-  charset: "utf8",
-  collate: "utf8_general_ci",
+  timezone: "+09:00",
+  dialectOptions: {
+    charset: "utf8mb4",
+    dateStrings: true,
+    typeCast: true,
+  },
+  pool: {
+    max: 1000,
+    min: 5,
+    idle: 300000,
+  },
+  charset: "utf8mb4",
+  collate: "utf8mb4_unicode_ci",
 };
 const production = {
   database: "chikachika_db_prod",
   port: 3306,
+  host: process.env.DB_Host,
+  username: process.env.DB_Username,
+  password: process.env.DB_Password,
+  dialect: "mysql",
+  logging: false,
+  timezone: "+09:00",
+  dialectOptions: {
+    charset: "utf8mb4",
+    dateStrings: true,
+    typeCast: true,
+  },
+  pool: {
+    max: 1000,
+    min: 5,
+    idle: 300000,
+  },
+  charset: "utf8mb4",
+  collate: "utf8mb4_unicode_ci",
   /*
   replication: {
     read: [
@@ -50,19 +86,6 @@ const production = {
     },
   },
   */
-  host: "database-1.c2g4zseshvri.ap-northeast-2.rds.amazonaws.com",
-  username: "admin",
-  password: "jeewon0109!",
-  dialect: "mysql",
-  logging: false,
-  timezone: "+09:00",
-  pool: {
-    max: 20,
-    min: 5,
-    idle: 60000,
-  },
-  charset: "utf8mb4",
-  collate: "utf8mb4_unicode_ci",
 };
 
 module.exports = {

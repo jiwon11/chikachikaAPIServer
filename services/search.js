@@ -1,15 +1,26 @@
-const sequelize = require("sequelize");
 const jwt = require("jsonwebtoken");
-const { Symptom_item, Dental_clinic, Treatment_item, Review, User, Review_content, Search_record, GeneralTag } = require("../utils/models");
+const db = require("../utils/models");
+const Sequelize = require("sequelize");
+const moment = require("moment");
+const communityQueryClass = require("../utils/Class/community");
 
 module.exports.treatmentItems = async function treatmentItems(event) {
   try {
     const query = event.queryStringParameters.q;
-    const treatments = await Treatment_item.findAll({
+    const treatments = await db.Treatment_item.findAll({
       where: {
-        name: {
-          [sequelize.Op.like]: `${query}%`,
-        },
+        [Sequelize.Op.or]: [
+          {
+            usualName: {
+              [Sequelize.Op.like]: `%${query}%`,
+            },
+          },
+          {
+            technicalName: {
+              [Sequelize.Op.like]: `%${query}%`,
+            },
+          },
+        ],
       },
     });
     let response = {
@@ -18,7 +29,40 @@ module.exports.treatmentItems = async function treatmentItems(event) {
     };
     return response;
   } catch (err) {
-    console.info("Error login", err);
+    console.info("Error", err);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${err.message}"}`,
+    };
+  }
+};
+
+module.exports.diseaseItems = async function diseaseItems(event) {
+  try {
+    const query = event.queryStringParameters.q;
+    const treatments = await db.Disease_item.findAll({
+      where: {
+        [Sequelize.Op.or]: [
+          {
+            usualName: {
+              [Sequelize.Op.like]: `%${query}%`,
+            },
+          },
+          {
+            technicalName: {
+              [Sequelize.Op.like]: `%${query}%`,
+            },
+          },
+        ],
+      },
+    });
+    let response = {
+      statusCode: 200,
+      body: JSON.stringify(treatments),
+    };
+    return response;
+  } catch (err) {
+    console.info("Error", err);
     return {
       statusCode: 500,
       body: `{"statusText": "Server error","message": "${err.message}"}`,
@@ -29,10 +73,10 @@ module.exports.treatmentItems = async function treatmentItems(event) {
 module.exports.symptomItems = async function symptomItems(event) {
   try {
     const query = event.queryStringParameters.q;
-    const symptoms = await Symptom_item.findAll({
+    const symptoms = await db.Symptom_item.findAll({
       where: {
         name: {
-          [sequelize.Op.like]: `${query}%`,
+          [Sequelize.Op.like]: `${query}%`,
         },
       },
     });
@@ -53,13 +97,13 @@ module.exports.symptomItems = async function symptomItems(event) {
 module.exports.dentalClinics = async function dentalClinics(event) {
   try {
     const query = event.queryStringParameters.q;
-    const clinics = await Dental_clinic.findAll({
+    const clinics = await db.Dental_clinic.findAll({
       where: {
         name: {
-          [sequelize.Op.like]: `${query}%`,
+          [Sequelize.Op.like]: `${query}%`,
         },
       },
-      attributes: ["id", "name", "address"],
+      attributes: ["id", "name", "local", "address", "originalName"],
     });
     let response = {
       statusCode: 200,
@@ -75,76 +119,105 @@ module.exports.dentalClinics = async function dentalClinics(event) {
   }
 };
 
-module.exports.localClinicSearch = async function localClinicSearch(event) {
+module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
   try {
-    const { lat, long, query } = event.queryStringParameters;
-    if (!query) {
-      return {
-        statusCode: 400,
-        body: `{"statusText": "Bad Request","message": "검색어를 입력해주새요."}`,
-      };
-    }
-    if (parseFloat(long) > 131.87222222 && parseFloat(long) < 125.06666667) {
-      return {
-        statusCode: 400,
-        body: `{"statusText": "Bad Request","message": "한국 내 경도 범위를 입력하세요."}`,
-      };
-    }
-    if (parseFloat(lat) > 38.45 && parseFloat(lat) < 33.1) {
-      return {
-        statusCode: 400,
-        body: `{"statusText": "Bad Request","message": "한국 내 위도 범위를 입력하세요."}`,
-      };
-    }
-    var week = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
-    const today = new Date();
-    const nowTime = `${today.getHours()}:${today.getMinutes()}:${today.getSeconds()}`;
-    const day = week[today.getDay()];
-    console.log(day, nowTime);
-    const clinics = await Dental_clinic.findAll({
-      attributes: [
-        "id",
-        "name",
-        "local",
-        "address",
-        "telNumber",
-        "website",
-        "geographLong",
-        "geographLat",
-        `${day}_Consulation_start_time`,
-        `${day}_Consulation_end_time`,
-        [
-          sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`),
-          "dinstance(km)",
-        ],
-        [sequelize.literal(`${day}_Consulation_start_time <= "${nowTime}" AND ${day}_Consulation_end_time >= "${nowTime}"`), "conclustionNow"],
-      ],
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await db.User.findOne({
       where: {
-        [sequelize.Op.all]: sequelize.literal(`${day}_Consulation_start_time != "00:00:00" AND ${day}_Consulation_end_time != "00:00:00"`),
-        [sequelize.Op.or]: [
-          {
-            name: {
-              [sequelize.Op.like]: `%${query}%`,
-            },
-          },
-          {
-            local: {
-              [sequelize.Op.like]: `%${query}%`,
-            },
-          },
-        ],
+        id: userId,
       },
-      order: [
-        [sequelize.literal(`${day}_Consulation_start_time <= "${nowTime}" AND ${day}_Consulation_end_time >= "${nowTime}"`), "DESC"],
-        [sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`), "ASC"],
-      ],
     });
-    console.log(clinics.length);
-    let response = {
-      statusCode: 200,
-      body: JSON.stringify(clinics),
-    };
-    return response;
+    if (user) {
+      console.log(event.queryStringParameters);
+      const { lat, long, sq, iq, sort, days, time, wantParking, holiday, tagCategory, tagId } = event.queryStringParameters;
+      const limit = parseInt(event.queryStringParameters.limit);
+      const offset = parseInt(event.queryStringParameters.offset);
+      if (!sq) {
+        return {
+          statusCode: 400,
+          body: `{"statusText": "Bad Request","message": "검색어를 입력해주새요."}`,
+        };
+      }
+      if (user) {
+        if (iq !== "") {
+          const [search, created] = await db.Search_record.findOrCreate({
+            where: {
+              userId: user.id,
+              inputQuery: iq,
+              searchQuery: sq,
+              category: tagCategory,
+              targetId: null,
+              route: "keywordClinicSearch",
+            },
+          });
+          if (!created) {
+            await db.Search_record.update(
+              {
+                userId: user.id,
+                inputQuery: iq,
+                searchQuery: sq,
+                category: tagCategory,
+                targetId: tagId,
+                route: "keywordClinicSearch",
+              },
+              {
+                where: {
+                  id: search.id,
+                },
+              }
+            );
+          }
+        }
+      } else {
+        return {
+          statusCode: 401,
+          body: `{"statusText": "Unauthorized","message": "사용자를 찾을 수 없습니다."}`,
+        };
+      }
+      if (parseFloat(long) > 131.87222222 && parseFloat(long) < 125.06666667) {
+        return {
+          statusCode: 400,
+          body: `{"statusText": "Bad Request","message": "한국 내 경도 범위를 입력하세요."}`,
+        };
+      }
+      if (parseFloat(lat) > 38.45 && parseFloat(lat) < 33.1) {
+        return {
+          statusCode: 400,
+          body: `{"statusText": "Bad Request","message": "한국 내 위도 범위를 입력하세요."}`,
+        };
+      }
+      var week = {
+        mon: null,
+        tus: null,
+        wed: null,
+        thu: null,
+        fri: null,
+        sat: null,
+      };
+      if (time !== "") {
+        if (days !== "") {
+          days.split(",").forEach((day) => {
+            week[day] = time;
+          });
+        } else {
+          const today = moment().tz(process.env.TZ);
+          const weekDay = ["sun", "mon", "tus", "wed", "thu", "fri", "sat"];
+          const day = weekDay[today.day()];
+          week[day] = time;
+        }
+      }
+      var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
+      const today = moment().tz(process.env.TZ);
+      const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
+      const day = weekDay[today.day()];
+      console.log(day, nowTime);
+      const clinics = await db.Dental_clinic.searchAll(db, "keyword", sq, nowTime, day, week, lat, long, null, null, limit, offset, sort, wantParking, holiday);
+      let response = {
+        statusCode: 200,
+        body: JSON.stringify(clinics),
+      };
+      return response;
+    }
   } catch (error) {
     console.log(error);
     return {
@@ -168,25 +241,25 @@ module.exports.reviews = async function reviewSearch(event) {
     } else if (order === "popular") {
       orderQuery = ["", "ASC"];
     }
-    const searchUser = await User.findOne({
+    const searchUser = await db.User.findOne({
       where: {
         id: decoded.id,
       },
     });
-    const treatment = await Treatment_item.findOne({
+    const treatment = await db.Treatment_item.findOne({
       where: {
         id: treatmentId,
       },
     });
-    const [search, created] = await Search_record.findOrCreate({
+    const [search, created] = await db.Search_record.findOrCreate({
       where: {
         userId: searchUser.id,
-        query: treatment.name,
+        query: treatment.usualName,
         category: "review",
       },
     });
     if (!created) {
-      await Search_record.update(
+      await db.Search_record.update(
         {
           category: "review",
         },
@@ -204,7 +277,13 @@ module.exports.reviews = async function reviewSearch(event) {
       include: [
         {
           model: User,
-          attributes: ["id", "nickname", "profileImg"],
+          attributes: [
+            "id",
+            "nickname",
+            "profileImg",
+            "userProfileImgKeyValue",
+            [Sequelize.fn("CONCAT", `${cloudFrontUrl}`, Sequelize.col("userProfileImgKeyValue"), "?w=150&h=150&f=png&q=100"), "img_thumbNail"],
+          ],
         },
         {
           model: Treatment_item,
@@ -215,13 +294,13 @@ module.exports.reviews = async function reviewSearch(event) {
         },
         {
           model: Dental_clinic,
-          attributes: ["id", "name", "address", "telNumber"],
+          attributes: ["id", "name", "address", "telNumber", "originalName"],
         },
         {
           model: Review_content,
         },
       ],
-      order: [[orderQuery], ["review_contents", "index", "ASC"]],
+      order: [[orderQuery]],
       offset: offset,
       limit: limit,
     });
@@ -229,6 +308,7 @@ module.exports.reviews = async function reviewSearch(event) {
       reviews.map(async (review) => {
         delete review.dataValues.review_treatment_item;
         review.dataValues.viewerLikeReview = await review.hasLikers(searchUser);
+        review.dataValues.viewerScrapReview = await review.hasScrapers(searchUser);
         review.dataValues.reviewCommentNum = await review.countReview_comments();
         review.dataValues.reviewLikeNum = await review.countLikers();
       })
@@ -250,53 +330,192 @@ module.exports.allTagItems = async function allTagItems(event) {
     const token = event.headers.Authorization;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const query = event.queryStringParameters.q;
-    const clinics = await Dental_clinic.findAll({
+    const purpose = event.pathParameters.purpose;
+    const queryLen = query.length;
+    const clinics = await db.Dental_clinic.findAll({
       where: {
         name: {
-          [sequelize.Op.like]: `${query}%`,
+          [Sequelize.Op.like]: `${query}%`,
         },
       },
-      attributes: ["id", "name", "address"],
+      attributes: ["id", "name", "originalName", "address", "local"],
+      order: [["originalName", "ASC"]],
+      limit: 5,
     });
-    const treatments = await Treatment_item.findAll({
+    clinics.forEach((clinic) => {
+      if (clinic.dataValues.originalName.substr(0, queryLen) === query) {
+        clinic.setDataValue("initialLetterContained", true);
+      } else {
+        clinic.setDataValue("initialLetterContained", false);
+      }
+      clinic.setDataValue("category", "clinic");
+    });
+    const treatments = await db.Treatment_item.findAll({
+      where: {
+        [Sequelize.Op.or]: [
+          {
+            usualName: {
+              [Sequelize.Op.like]: `${query}%`,
+            },
+          },
+          {
+            technicalName: {
+              [Sequelize.Op.like]: `${query}%`,
+            },
+          },
+        ],
+      },
+      attributes: ["id", "usualName", "technicalName"],
+      order: [["usualName", "ASC"]],
+      limit: 3,
+    });
+    treatments.forEach((treatment) => {
+      if (treatment.dataValues.usualName.substr(0, queryLen) === query) {
+        treatment.setDataValue("initialLetterContained", true);
+      } else {
+        treatment.setDataValue("initialLetterContained", false);
+      }
+      treatment.setDataValue("category", "treatment");
+    });
+    const diseases = await db.Disease_item.findAll({
+      where: {
+        [Sequelize.Op.or]: [
+          {
+            usualName: {
+              [Sequelize.Op.like]: `${query}%`,
+            },
+          },
+          {
+            technicalName: {
+              [Sequelize.Op.like]: `${query}%`,
+            },
+          },
+        ],
+      },
+      attributes: ["id", "usualName", "technicalName"],
+      order: [["usualName", "ASC"]],
+      limit: 3,
+    });
+    diseases.forEach((disease) => {
+      if (disease.dataValues.usualName.substr(0, queryLen) === query) {
+        disease.setDataValue("initialLetterContained", true);
+      } else {
+        disease.setDataValue("initialLetterContained", false);
+      }
+      disease.setDataValue("category", "disease");
+    });
+    const generaltags = await db.GeneralTag.findAll({
       where: {
         name: {
-          [sequelize.Op.like]: `${query}%`,
+          [Sequelize.Op.like]: `${query}%`,
         },
       },
       attributes: ["id", "name"],
+      order: [["name", "ASC"]],
+      limit: 5,
     });
-    clinics.forEach((clinic) => clinic.setDataValue("categoty", "clinic"));
-    const symptoms = await Symptom_item.findAll({
-      where: {
-        name: {
-          [sequelize.Op.like]: `${query}%`,
+    generaltags.forEach((generaltag) => {
+      if (generaltag.dataValues.name.substr(0, queryLen) === query) {
+        generaltag.setDataValue("initialLetterContained", true);
+      } else {
+        generaltag.setDataValue("initialLetterContained", false);
+      }
+      generaltag.setDataValue("category", "general");
+    });
+    var cities;
+    var sido = [];
+    var sigungu = [];
+    if (purpose === "autoComplete") {
+      // 수다방 글 작성 시, 자동완성용 API
+      cities = await db.City.findAll({
+        where: Sequelize.where(Sequelize.literal("CONCAT(emdName, '(',REPLACE(sigungu,' ', '-'),')')"), {
+          [Sequelize.Op.like]: `${query}%`,
+        }),
+        attributes: [
+          "id",
+          "sido",
+          "sigungu",
+          "emdName",
+          [Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), "fullAddress"],
+          [Sequelize.literal("CONCAT(emdName, '(',REPLACE(sigungu,' ', '-'),')')"), "cityName"],
+        ],
+        group: Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")),
+        limit: 5,
+      });
+      cities.forEach((city) => {
+        if (city.dataValues.emdName.substr(0, queryLen) === query) {
+          city.setDataValue("initialLetterContained", true);
+        } else {
+          city.setDataValue("initialLetterContained", false);
+        }
+        city.setDataValue("isEMD", true);
+      });
+    } else if (purpose === "keywordSearch") {
+      // 통합검색 시, 자동완성용 API
+      sido = await db.Sido.findAll({
+        attributes: ["id", "name", ["fullName", "fullAddress"]],
+        where: {
+          fullName: {
+            [Sequelize.Op.like]: `%${query}%`,
+          },
         },
-      },
-      attributes: ["id", "name"],
-    });
-    symptoms.forEach((symptom) => symptom.setDataValue("categoty", "symptom"));
-    const generaltags = await GeneralTag.findAll({
-      where: {
-        name: {
-          [sequelize.Op.like]: `${query}%`,
+        order: [["fullName", "ASC"]],
+      });
+      sido.forEach((sido) => {
+        if (sido.dataValues.name.substr(0, queryLen) === query) {
+          sido.setDataValue("initialLetterContained", true);
+        } else {
+          sido.setDataValue("initialLetterContained", false);
+        }
+        sido.setDataValue("isEMD", false);
+      });
+      sigungu = await db.Sigungu.findAll({
+        attributes: ["id", "name", ["fullName", "fullAddress"]],
+        where: {
+          fullName: {
+            [Sequelize.Op.like]: `%${query}%`,
+          },
         },
-      },
-      attributes: ["id", "name"],
+        limit: 5,
+        order: [["fullName", "ASC"]],
+      });
+      sigungu.forEach((sigungu) => {
+        if (sigungu.dataValues.name.substr(0, queryLen) === query) {
+          sigungu.setDataValue("initialLetterContained", true);
+        } else {
+          sigungu.setDataValue("initialLetterContained", false);
+        }
+        sigungu.setDataValue("isEMD", false);
+      });
+      cities = await db.City.findAll({
+        where: Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
+          [Sequelize.Op.like]: `%${query}%`,
+        }),
+        attributes: ["id", ["emdName", "name"], "sido", "sigungu", [Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), "fullAddress"]],
+        group: Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")),
+        limit: 5,
+      });
+      cities.forEach((city) => {
+        if (city.dataValues.name.substr(0, queryLen) === query) {
+          city.setDataValue("initialLetterContained", true);
+        } else {
+          city.setDataValue("initialLetterContained", false);
+        }
+        city.setDataValue("isEMD", true);
+      });
+    }
+    cities = cities.concat(sido, sigungu);
+    cities.forEach((city) => city.setDataValue("category", "city"));
+    cities = cities.sort(function async(a, b) {
+      return a.dataValues.fullName < b.dataValues.fullName ? -1 : a.dataValues.fullName > b.dataValues.fullName ? 1 : 0;
     });
-    generaltags.forEach((generaltag) => generaltag.setDataValue("categoty", "generaltag"));
-    var mergeResults = clinics.concat(treatments, symptoms, generaltags);
-    await Promise.all(
-      mergeResults.map(async (result) => {
-        result.dataValues.postNum = await result.countCommunties();
-      })
-    );
-    var sortReuslts = mergeResults.sort(function async(a, b) {
-      return b.dataValues.postNum - a.dataValues.postNum;
+    var mergeResults = cities.concat(treatments, generaltags, clinics, diseases);
+    mergeResults = mergeResults.sort(function async(a, b) {
+      return b.dataValues.initialLetterContained - a.dataValues.initialLetterContained;
     });
     return {
       statusCode: 200,
-      body: JSON.stringify(sortReuslts),
+      body: JSON.stringify(mergeResults),
     };
   } catch (error) {
     console.log(error);
@@ -310,28 +529,185 @@ module.exports.allTagItems = async function allTagItems(event) {
 module.exports.keywordSearchResults = async function keywordSearchResults(event) {
   try {
     const token = event.headers.Authorization;
-    const query = event.queryStringParameters.query;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const [search, created] = await Search_record.findOrCreate({
+    const type = event.pathParameters.type;
+    const userId = decoded.id;
+    const sq = event.queryStringParameters.sq;
+    const iq = event.queryStringParameters.iq;
+    const limit = parseInt(event.queryStringParameters.limit);
+    const offset = parseInt(event.queryStringParameters.offset);
+    const order = event.queryStringParameters.order;
+    const region = event.queryStringParameters.region;
+    const cityId = event.queryStringParameters.cityId;
+    const tagCategory = event.queryStringParameters.tagCategory;
+    const tagId = event.queryStringParameters.tagId;
+    const lat = event.queryStringParameters.lat;
+    const long = event.queryStringParameters.long;
+    const user = await db.User.findOne({
       where: {
-        userId: decoded.id,
-        query: query,
-        category: "keyword",
+        id: userId,
       },
     });
-    if (!created) {
-      await Search_record.update(
-        {
-          category: "keyword",
-        },
-        {
+    if (user) {
+      var clusterQuery;
+      if (region === "residence") {
+        var userResidence = await db.City.findOne({
           where: {
-            id: search.id,
+            id: cityId,
           },
-        }
-      );
+        });
+        clusterQuery = userResidence.newTownId
+          ? {
+              newTownId: userResidence.newTownId,
+            }
+          : {
+              sido: userResidence.sido,
+              sigungu: userResidence.sigungu,
+            };
+      } else if (region !== "all") {
+        return {
+          statusCode: 400,
+          body: { statusText: "Bad Request", message: "유효하지 않는 쿼리입니다." },
+        };
+      }
+      switch (type) {
+        case "community":
+          const communityType = event.queryStringParameters.type === "All" ? ["Question", "FreeTalk"] : [event.queryStringParameters.type];
+          const communityResult = await db.Community.getKeywordSearchAll(db, communityType, sq, tagCategory, tagId, userId, clusterQuery, offset, limit, order);
+          console.log(`${type} results Num: ${communityResult.length}`);
+          return {
+            statusCode: 200,
+            body: JSON.stringify(communityResult),
+          };
+        case "review":
+          console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
+          const reviewResult = await db.Review.getKeywordSearchAll(db, userId, sq, tagCategory, tagId, clusterQuery, limit, offset, order);
+          console.log(`${type} results Num: ${reviewResult.length}`);
+          return {
+            statusCode: 200,
+            body: JSON.stringify(reviewResult),
+          };
+        case "clinic":
+          console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
+          const clinicResult = await db.Dental_clinic.getKeywordSearchAll(db, lat, long, sq, tagCategory, tagId, clusterQuery, limit, offset, order);
+          console.log(`${type} results Num: ${clinicResult.length}`);
+          return {
+            statusCode: 200,
+            body: JSON.stringify(clinicResult),
+          };
+        default:
+          break;
+      }
+    } else {
+      return {
+        statusCode: 401,
+        body: `{"statusText": "Unauthorized","message": "사용자를 찾을 수 없습니다."}`,
+      };
     }
   } catch (error) {
+    console.log(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};
+
+module.exports.keywordClinicAutoComplete = async function keywordClinicAutoComplete(event) {
+  try {
+    const { query } = event.queryStringParameters;
+    const queryLen = query.length;
+    const sido = await db.Sido.findAll({
+      attributes: ["id", "name", ["fullName", "fullAddress"]],
+      where: {
+        fullName: {
+          [Sequelize.Op.like]: `%${query}%`,
+        },
+      },
+      order: [["fullName", "ASC"]],
+    });
+    sido.forEach((sido) => {
+      sido.setDataValue("category", "city");
+      if (sido.dataValues.name.substr(0, queryLen) === query) {
+        sido.setDataValue("initialLetterContained", true);
+      } else {
+        sido.setDataValue("initialLetterContained", false);
+      }
+      sido.setDataValue("isEMD", false);
+    });
+    const sigungu = await db.Sigungu.findAll({
+      attributes: ["id", "name", ["fullName", "fullAddress"]],
+      where: {
+        fullName: {
+          [Sequelize.Op.like]: `%${query}%`,
+        },
+      },
+      order: [["fullName", "ASC"]],
+      limit: 5,
+    });
+    sigungu.forEach((sigungu) => {
+      sigungu.setDataValue("category", "city");
+      if (sigungu.dataValues.name.substr(0, queryLen) === query) {
+        sigungu.setDataValue("initialLetterContained", true);
+      } else {
+        sigungu.setDataValue("initialLetterContained", false);
+      }
+      sigungu.setDataValue("isEMD", false);
+    });
+    const emd = await db.City.findAll({
+      attributes: [
+        "id",
+        ["emdName", "name"],
+        "sido",
+        "sigungu",
+        [Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), "fullAddress"],
+        [Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("adCity")), "adFullAddress"],
+      ],
+      where: Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
+        [Sequelize.Op.like]: `%${query}%`,
+      }),
+      group: Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")),
+      order: [["fullCityName", "ASC"]],
+      limit: 5,
+    });
+    emd.forEach((emd) => {
+      emd.setDataValue("category", "city");
+      if (emd.dataValues.name.substr(0, queryLen) === query) {
+        emd.setDataValue("initialLetterContained", true);
+      } else {
+        emd.setDataValue("initialLetterContained", false);
+      }
+      emd.setDataValue("isEMD", true);
+    });
+    const cities = sido.concat(sigungu, emd);
+    const clinics = await db.Dental_clinic.findAll({
+      attributes: ["id", "name", "originalName", "address", "local"],
+      where: {
+        originalName: {
+          [Sequelize.Op.like]: `%${query}%`,
+        },
+      },
+      order: [["originalName", "ASC"]],
+      limit: 5,
+    });
+    clinics.forEach((clinic) => {
+      if (clinic.dataValues.name.substr(0, queryLen) === query) {
+        clinic.setDataValue("initialLetterContained", true);
+      } else {
+        clinic.setDataValue("initialLetterContained", false);
+      }
+      clinic.setDataValue("category", "clinic");
+    });
+    const mergeResults = cities.concat(clinics);
+    var sortReuslts = mergeResults.sort(function async(a, b) {
+      return b.dataValues.initialLetterContained - a.dataValues.initialLetterContained;
+    });
+    return {
+      statusCode: 200,
+      body: JSON.stringify(sortReuslts),
+    };
+  } catch (error) {
+    console.error(error);
     return {
       statusCode: 500,
       body: `{"statusText": "Server error","message": "${error.message}"}`,

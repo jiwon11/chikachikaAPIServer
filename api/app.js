@@ -15,7 +15,6 @@ app.use(
     extended: false,
   })
 );
-app.use(bodyParser.json({ limit: "50mb" }));
 app.use("/api/v1", v1);
 
 app.use((err, req, res, next) => {

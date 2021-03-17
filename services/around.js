@@ -1,32 +1,13 @@
-const sequelize = require("sequelize");
-const { Dental_clinic, Review } = require("../utils/models");
-
+const jwt = require("jsonwebtoken");
+const db = require("../utils/models");
+const Sequelize = require("sequelize");
+const moment = require("moment");
 module.exports.clinics = async function clinics(event) {
   try {
-    const { lat, long, wantParking, sort, days, time } = event.queryStringParameters;
-    const radius = 2;
-    var parking;
-    if (wantParking === "y") {
-      parking = {
-        [sequelize.Op.and]: {
-          [sequelize.Op.gt]: 0,
-          [sequelize.Op.ne]: null,
-        },
-      };
-    } else {
-      parking = {
-        [sequelize.Op.and]: {
-          [sequelize.Op.gte]: 0,
-        },
-      };
-    }
-    var order;
-    if (sort === "d") {
-      order = [
-        sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`),
-        "ASC",
-      ];
-    }
+    const { lat, long, maplat, maplong, wantParking, sort, days, time, holiday } = event.queryStringParameters;
+    console.log(JSON.stringify(event.queryStringParameters));
+    const limit = parseInt(event.queryStringParameters.limit);
+    const offset = parseInt(event.queryStringParameters.offset);
     var week = {
       mon: null,
       tus: null,
@@ -40,111 +21,20 @@ module.exports.clinics = async function clinics(event) {
         days.split(",").forEach((day) => {
           week[day] = time;
         });
+      } else {
+        const today = moment().tz(process.env.TZ);
+        const weekDay = ["sun", "mon", "tus", "wed", "thu", "fri", "sat"];
+        const day = weekDay[today.day()];
+        week[day] = time;
       }
     }
     console.log(week);
-    var weekdayTolStartTimeQuery;
-    var weekdayTolEndTimeQuery;
-    var weekdayTolStartTimeNonZero;
-    var weekdayTolEndTimeNonZero;
-    if (week.mon !== null || week.tus !== null || week.wed !== null || week.thu !== null || week.fri !== null) {
-      weekdayTolStartTimeQuery = {
-        [sequelize.Op.gt]: time,
-      };
-      weekdayTolEndTimeQuery = {
-        [sequelize.Op.lt]: time,
-      };
-      weekdayTolStartTimeNonZero = { weekday_TOL_start: { [sequelize.Op.ne]: "00:00:00" } };
-      weekdayTolEndTimeNonZero = { weekday_TOL_end: { [sequelize.Op.ne]: "00:00:00" } };
-    } else {
-      weekdayTolStartTimeQuery = { [sequelize.Op.not]: null };
-      weekdayTolEndTimeQuery = { [sequelize.Op.not]: null };
-    }
-    var satTolStartTimeQuery;
-    var satTolEndTimeQuery;
-    var satTolStartTimeNonZero;
-    var satTolEndTimeNonZero;
-    if (week.sat !== null) {
-      satTolStartTimeQuery = {
-        [sequelize.Op.gt]: time,
-      };
-      satTolEndTimeQuery = {
-        [sequelize.Op.lt]: time,
-      };
-      satTolStartTimeNonZero = { sat_TOL_start: { [sequelize.Op.ne]: "00:00:00" } };
-      satTolEndTimeNonZero = { sat_TOL_end: { [sequelize.Op.ne]: "00:00:00" } };
-    } else {
-      satTolStartTimeQuery = { [sequelize.Op.not]: null };
-      satTolEndTimeQuery = { [sequelize.Op.not]: null };
-    }
-    const clinics = await Dental_clinic.findAll({
-      attributes: {
-        include: [
-          [
-            sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`),
-            "dinstance(km)",
-          ],
-        ],
-      },
-      where: {
-        [sequelize.Op.all]: sequelize.literal(
-          `(6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat))))<=${radius}`
-        ),
-        parking_allow_num: parking,
-        [sequelize.Op.and]: [weekdayTolStartTimeNonZero, weekdayTolEndTimeNonZero, satTolStartTimeNonZero, satTolEndTimeNonZero],
-        [sequelize.Op.or]: [
-          {
-            weekday_TOL_start: weekdayTolStartTimeQuery,
-          },
-          {
-            weekday_TOL_end: weekdayTolEndTimeQuery,
-          },
-          {
-            sat_TOL_start: satTolStartTimeQuery,
-          },
-          {
-            sat_TOL_end: satTolEndTimeQuery,
-          },
-        ],
-        Mon_Consulation_start_time: {
-          [sequelize.Op.lte]: week.mon === null ? "24:00:00" : week.mon,
-        },
-        Mon_Consulation_end_time: {
-          [sequelize.Op.gte]: week.mon === null ? "00:00:00" : week.mon,
-        },
-        Tus_Consulation_start_time: {
-          [sequelize.Op.lte]: week.tus === null ? "24:00:00" : week.tus,
-        },
-        Tus_Consulation_end_time: {
-          [sequelize.Op.gte]: week.tus === null ? "00:00:00" : week.tus,
-        },
-        Wed_Consulation_start_time: {
-          [sequelize.Op.lte]: week.wed === null ? "24:00:00" : week.wed,
-        },
-        Wed_Consulation_end_time: {
-          [sequelize.Op.gte]: week.wed === null ? "00:00:00" : week.wed,
-        },
-        Thu_Consulation_start_time: {
-          [sequelize.Op.lte]: week.thu === null ? "24:00:00" : week.thu,
-        },
-        Thu_Consulation_end_time: {
-          [sequelize.Op.gte]: week.thu === null ? "00:00:00" : week.thu,
-        },
-        Fri_Consulation_start_time: {
-          [sequelize.Op.lte]: week.fri === null ? "24:00:00" : week.fri,
-        },
-        Fri_Consulation_end_time: {
-          [sequelize.Op.gte]: week.fri === null ? "00:00:00" : week.fri,
-        },
-        sat_Consulation_start_time: {
-          [sequelize.Op.lte]: week.sat === null ? "24:00:00" : week.sat,
-        },
-        Sat_Consulation_end_time: {
-          [sequelize.Op.gte]: week.sat === null ? "00:00:00" : week.sat,
-        },
-      },
-      order: [order],
-    });
+    var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
+    const today = moment().tz(process.env.TZ);
+    const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
+    const day = weekDay[today.day()];
+    console.log(day, nowTime);
+    const clinics = await db.Dental_clinic.searchAll(db, "around", null, nowTime, day, week, lat, long, maplat, maplong, limit, offset, "distance", wantParking, holiday);
     console.log(clinics.length);
     let response = {
       statusCode: 200,
@@ -152,9 +42,63 @@ module.exports.clinics = async function clinics(event) {
     };
     return response;
   } catch (error) {
+    console.log(error);
     return {
       statusCode: 500,
       body: `{"statusText": "Unaccepted","message": "${error.message}"}`,
+    };
+  }
+};
+
+module.exports.redienceClinics = async function redienceClinics(event) {
+  try {
+    const userId = event.requestContext.authorizer.principalId;
+    const user = await db.User.findOne({
+      where: {
+        id: userId,
+      },
+    });
+    if (user) {
+      const { limit, offset } = event.queryStringParameters;
+      const userResidences = await user.getResidences({
+        attributes: ["id", "sido", "sigungu", "emdName", "newTownId"],
+        through: {
+          where: {
+            now: true,
+          },
+        },
+      });
+      const clusterQuery = userResidences[0].newTownId
+        ? {
+            newTownId: userResidences[0].newTownId,
+          }
+        : {
+            sido: userResidences[0].sido,
+            sigungu: userResidences[0].sigungu,
+          };
+      console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
+      const cities = await db.City.findAll({
+        attributes: ["id"],
+        where: clusterQuery,
+      });
+      const cityIds = cities.map((city) => city.id);
+      const clinics = await db.Dental_clinic.searchAll(db, "residence", cityIds, null, null, null, null, null, null, null, parseInt(limit), parseInt(offset), "accuracy", null, null);
+      let response = {
+        statusCode: 200,
+        body: JSON.stringify(clinics),
+      };
+      return response;
+    } else {
+      return {
+        statusCode: 401,
+        body: `{"statusText": "Unauthorized","message": "사용자를 찾을 수 없습니다."}`,
+      };
+    }
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
     };
   }
 };

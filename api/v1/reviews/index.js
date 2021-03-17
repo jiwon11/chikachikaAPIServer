@@ -3,11 +3,13 @@ const AWS = require("aws-sdk");
 const multerS3 = require("multer-s3");
 const multer = require("multer");
 const path = require("path");
+const Sequelize = require("sequelize");
 const ApiError = require("../../../utils/error");
 const { getUserInToken } = require("../middlewares");
-const { Review, User, Review_content, Treatment_item, Dental_clinic, Review_treatment_item } = require("../../../utils/models");
-
+const db = require("../../../utils/models");
+const moment = require("moment");
 const router = express.Router();
+const billsVerifyConsumer = require("../../../utils/Class/SQSconsumer").billsVerify;
 
 const cloudFrontUrl = "";
 
@@ -31,63 +33,47 @@ const reviewImgUpload = multer({
   },
 });
 
+router.get("/lists", getUserInToken, async (req, res, next) => {
+  try {
+    const limit = parseInt(req.query.limit);
+    const offset = parseInt(req.query.offset);
+    const userId = req.user.id;
+    const order = req.query.order;
+    const reviews = await db.Review.getAll(db, userId, order, limit, offset);
+    console.log(reviews.length);
+    return res.json(reviews);
+  } catch (error) {
+    return res.status(500).json({
+      statusCode: 500,
+      body: { statusText: "Server Error", message: error.message },
+    });
+  }
+});
+
 router.get("/", getUserInToken, async (req, res, next) => {
   try {
     const reviewId = req.query.reviewId;
+    const userId = req.user.id;
     if (!reviewId) {
       return res.status(404).json({
         statusCode: 404,
         body: {
-          statusText: "Unaccepted",
+          statusText: "Not Found",
           message: "Not Found Query",
         },
       });
     }
-    const review = await Review.findOne({
-      where: {
-        id: reviewId,
-      },
-      include: [
-        {
-          model: User,
-          attributes: ["nickname", "profileImg"],
-        },
-        {
-          model: Dental_clinic,
-          attributes: ["name", "address"],
-        },
-        {
-          model: Review_content,
-        },
-        {
-          model: Treatment_item,
-          as: "TreatmentItems",
-          attributes: ["name"],
-          through: {
-            attributes: ["cost"],
-          },
-        },
-      ],
-      order: [["review_contents", "index", "ASC"]],
-    });
-    const reviewComments = await review.getReview_comments();
-    const reviewLikeNum = await review.countLikers();
-    const viewer = await User.findOne({
-      where: {
-        id: req.user.id,
-      },
-    });
-    if (viewer.id !== review.userId) {
-      await review.addViewer(viewer);
+    const review = await db.Review.getOne(db, reviewId, userId);
+    if (review !== null) {
+      return res.status(200).json(review);
+    } else {
+      return res.status(404).json({
+        statusCode: 404,
+        body: { statusText: "Not Found", message: "리뷰를 찾을 수 없습니다." },
+      });
     }
-    const viewerLikeReview = await review.hasLikers(viewer);
-    return res.status(200).json({
-      reivewBody: review,
-      reviewComments: reviewComments,
-      reviewLikeNum: reviewLikeNum,
-      viewerLikeReview: viewerLikeReview,
-    });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       statusCode: 500,
       body: { statusText: "Server Error", message: error.message },
@@ -98,73 +84,113 @@ router.get("/", getUserInToken, async (req, res, next) => {
 /**
  * header 값에 "content-type": "multipart/form-data" 추가 필요
  */
-router.post("/", getUserInToken, reviewImgUpload.array("images"), async (req, res, next) => {
+router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) => {
   try {
-    const images = req.files;
-    const { descriptions, starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId, imgBeforeAfters } = JSON.parse(req.body.body);
-    if (images.length === descriptions.length && descriptions.length === imgBeforeAfters.length) {
-      var concsulationDate;
-      if (req.body.concsulationDate !== "undefined" && req.body.concsulationDate) {
-        concsulationDate = new Date(req.body.concsulationDate);
-      } else {
-        concsulationDate = new Date();
-      }
-      const review = await Review.create({
-        certifiedBill: certified_bill,
-        starRate_cost: parseFloat(starRate_cost),
-        starRate_service: parseFloat(starRate_service),
-        starRate_treatment: parseFloat(starRate_treatment),
-        concsulationDate: concsulationDate,
-        userId: req.user.id,
-        dentalClinicId: dentalClinicId,
+    const paragraphs = JSON.parse(req.body.paragraphs);
+    console.log("paragraphs: ", paragraphs);
+    const body = req.body.body;
+    const { starRate_cost, starRate_treatment, starRate_service, treatments, dentalClinicId, totalCost, treatmentDate, diseases } = JSON.parse(body);
+    console.log(`treatmentDate : ${treatmentDate}`);
+    var parseTreatmentDate;
+    if (treatmentDate !== "undefined" && treatmentDate) {
+      parseTreatmentDate = new Date(treatmentDate);
+      console.log(`parseTreatmentDate : ${parseTreatmentDate}`);
+    } else {
+      parseTreatmentDate = moment().tz(process.env.TZ);
+    }
+    const review = await db.Review.create({
+      certifiedBill: false,
+      starRate_cost: parseFloat(starRate_cost),
+      starRate_service: parseFloat(starRate_service),
+      starRate_treatment: parseFloat(starRate_treatment),
+      totalCost: parseInt(totalCost),
+      treatmentDate: parseTreatmentDate,
+      userId: req.user.id,
+      dentalClinicId: dentalClinicId,
+    });
+    for (const treatment of treatments) {
+      const treatmentItem = await db.Treatment_item.findOne({
+        where: {
+          id: treatment.id,
+        },
       });
-      for (const treatment of treatments) {
-        const treatmentItem = await Treatment_item.findOne({
-          where: {
-            id: treatment.id,
+      if (treatmentItem) {
+        await review.addTreatmentItem(treatmentItem, {
+          through: {
+            cost: treatment.cost,
+            index: treatments.indexOf(treatment) + 1,
           },
         });
-        if (treatmentItem) {
-          await review.addTreatmentItem(treatmentItem, {
-            through: {
-              cost: treatment.cost,
-            },
-          });
-        } else {
-          console.log(treatmentItem);
-          return res.status(404).json({
-            statusCode: 404,
-            body: { statusText: "Unaccepted", message: "진료 항목을 찾을 수 없습니다." },
-          });
-        }
+      } else {
+        console.log(treatmentItem);
+        return res.status(404).json({
+          statusCode: 404,
+          body: { statusText: "Unaccepted", message: "진료 항목을 찾을 수 없습니다." },
+        });
       }
-      console.log(`치료 항목 개수 : ${treatments.length}`);
-      const contents = await Promise.all(
-        images.map((image) =>
-          Review_content.create({
-            img_url: image.location, //`${cloudFrontUrl}/${image.key}`
-            img_name: image.originalname,
-            mime_type: image.mimetype,
-            img_size: image.size,
-            index: images.indexOf(image) + 1,
-            description: descriptions[images.indexOf(image)],
-            img_before_after: imgBeforeAfters[images.indexOf(image)],
-            reviewId: review.id,
-          })
-        )
-      );
-      console.log(`콘텐츠 개수 : ${contents.length}`);
-      return res.status(201).json({
-        statusCode: 201,
-        body: { statusText: "Accepted", message: "리뷰 작성이 완료되었습니다!" },
-      });
-    } else {
-      return res.status(403).json({
-        statusCode: 403,
-        body: { statusText: "Unaccepted", message: "이미지 개수와 글 개수와 이미지 전후 개수가 다릅니다." },
-      });
     }
+    for (const disease of diseases) {
+      const diseaseItem = await db.Disease_item.findOne({
+        where: {
+          id: disease.id,
+        },
+      });
+      if (diseaseItem) {
+        await review.addDiseaseItem(diseaseItem, {
+          through: {
+            index: diseases.indexOf(disease) + 1,
+          },
+        });
+      } else {
+        console.log(diseaseItem);
+        return res.status(404).json({
+          statusCode: 404,
+          body: { statusText: "Unaccepted", message: "질병 항목을 찾을 수 없습니다." },
+        });
+      }
+    }
+    const contents = await Promise.all(
+      paragraphs.map((paragraph) =>
+        db.Review_content.create({
+          img_url: paragraph.location, //`${cloudFrontUrl}/${image.key}`
+          img_name: paragraph.key,
+          mime_type: paragraph.mimetype,
+          img_size: paragraph.size,
+          index: paragraphs.indexOf(paragraph) + 1,
+          description: paragraph.description,
+          img_before_after: paragraph.imgBeforeAfter,
+          img_width: paragraph.width,
+          img_height: paragraph.height,
+          reviewId: review.id,
+        })
+      )
+    );
+    console.log(`본문 개수 : ${contents.length}`);
+    if (req.body.bills) {
+      const bills = JSON.parse(req.body.bills);
+      await db.ReviewBills.create({
+        img_url: bills.location, //`${cloudFrontUrl}/${image.key}`
+        img_name: bills.originalname,
+        mime_type: bills.mimetype,
+        img_size: bills.size,
+        reviewId: review.id,
+      });
+      const reportMessage = {
+        reviewId: review.id,
+        group: `billsVerifyReview-${review.id}`,
+        id: review.id,
+      };
+      const billsVerifyNotification = await billsVerifyConsumer(reportMessage);
+      if (billsVerifyNotification.statusCode === 200) {
+        console.log(JSON.parse(billsVerifyNotification.body));
+      }
+    }
+    return res.status(201).json({
+      statusCode: 201,
+      body: { statusText: "Accepted", message: "리뷰 작성이 완료되었습니다!" },
+    });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       statusCode: 500,
       body: { statusText: "Server Error", message: error.message },
@@ -172,89 +198,121 @@ router.post("/", getUserInToken, reviewImgUpload.array("images"), async (req, re
   }
 });
 
-router.put("/", getUserInToken, reviewImgUpload.array("images"), async (req, res, next) => {
+router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) => {
   try {
     const reviewId = req.query.reviewId;
-    const images = req.files;
-    const { descriptions, starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId, imgBeforeAfters } = JSON.parse(req.body.body);
-    const review = await Review.findOne({
+    const userId = req.user.id;
+    const paragraphs = JSON.parse(req.body.paragraphs);
+    const body = req.body.body;
+    const { starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId, totalCost, treatmentDate, diseases } = JSON.parse(body);
+    const review = await db.Review.findOne({
       where: {
         id: reviewId,
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
       },
     });
     if (review) {
       if (review.userId === req.user.id) {
-        if (images.length === descriptions.length && descriptions.length === imgBeforeAfters.length) {
-          var concsulationDate;
-          if (req.body.concsulationDate !== "undefined" && req.body.concsulationDate) {
-            concsulationDate = new Date(req.body.concsulationDate);
-          } else {
-            concsulationDate = new Date();
-          }
-          await Review_content.destroy({
+        var parseTreatmentDate;
+        if (treatmentDate !== "undefined" && treatmentDate) {
+          parseTreatmentDate = new Date(treatmentDate);
+        } else {
+          parseTreatmentDate = moment().tz(process.env.TZ);
+        }
+        await db.Review_content.destroy({
+          where: {
+            reviewId: review.id,
+          },
+        });
+        await db.Review_treatment_item.destroy({
+          where: {
+            reviewId: review.id,
+          },
+          force: true,
+        });
+        await review.update({
+          certifiedBill: certified_bill,
+          starRate_cost: parseFloat(starRate_cost),
+          starRate_service: parseFloat(starRate_service),
+          starRate_treatment: parseFloat(starRate_treatment),
+          totalCost: parseInt(totalCost),
+          treatmentDate: parseTreatmentDate,
+          userId: req.user.id,
+          dentalClinicId: dentalClinicId,
+        });
+        for (const treatment of treatments) {
+          const treatmentItem = await db.Treatment_item.findOne({
             where: {
-              reviewId: review.id,
+              id: treatment.id,
             },
           });
-          await Review_treatment_item.destroy({
-            where: {
-              reviewId: review.id,
-            },
-            force: true,
-          });
-          await review.update({
-            certifiedBill: certified_bill,
-            starRate_cost: parseFloat(starRate_cost),
-            starRate_service: parseFloat(starRate_service),
-            starRate_treatment: parseFloat(starRate_treatment),
-            concsulationDate: concsulationDate,
-            userId: req.user.id,
-            dentalClinicId: dentalClinicId,
-          });
-          for (const treatment of treatments) {
-            const treatmentItem = await Treatment_item.findOne({
-              where: {
-                id: treatment.id,
+          if (treatmentItem) {
+            await review.addTreatmentItem(treatmentItem, {
+              through: {
+                cost: treatment.cost,
+                index: treatments.indexOf(treatment) + 1,
               },
             });
-            if (treatmentItem) {
-              await review.addTreatmentItem(treatmentItem, {
-                through: {
-                  cost: treatment.cost,
-                },
-              });
-            } else {
-              console.log(treatmentItem);
-              return res.status(404).json({
-                statusCode: 404,
-                body: { statusText: "Unaccepted", message: "진료 항목을 찾을 수 없습니다." },
-              });
-            }
+          } else {
+            console.log(treatmentItem);
+            return res.status(404).json({
+              statusCode: 404,
+              body: { statusText: "Unaccepted", message: "진료 항목을 찾을 수 없습니다." },
+            });
           }
-          console.log(`치료 항목 개수 : ${treatments.length}`);
-          const contents = await Promise.all(
-            images.map((image) =>
-              Review_content.create({
-                img_url: image.location, //`${cloudFrontUrl}/${image.key}`
-                img_name: image.originalname,
-                mime_type: image.mimetype,
-                img_size: image.size,
-                index: images.indexOf(image) + 1,
-                description: descriptions[images.indexOf(image)],
-                img_before_after: imgBeforeAfters[images.indexOf(image)],
-                reviewId: review.id,
-              })
-            )
-          );
-          console.log(`콘텐츠 개수 : ${contents.length}`);
+        }
+        console.log(`치료 항목 개수 : ${treatments.length}`);
+        for (const disease of diseases) {
+          const diseaseItem = await db.Disease_item.findOne({
+            where: {
+              id: disease.id,
+            },
+          });
+          if (diseaseItem) {
+            await review.addDiseaseItem(diseaseItem, {
+              through: {
+                index: diseases.indexOf(disease) + 1,
+              },
+            });
+          } else {
+            console.log(diseaseItem);
+            return res.status(404).json({
+              statusCode: 404,
+              body: { statusText: "Unaccepted", message: "질병 항목을 찾을 수 없습니다." },
+            });
+          }
+        }
+        console.log(`질병 항목 개수 : ${diseases.length}`);
+        const contents = await Promise.all(
+          paragraphs.map((paragraph) =>
+            db.Review_content.create({
+              img_url: paragraph.location, //`${cloudFrontUrl}/${image.key}`
+              img_name: paragraph.originalname,
+              mime_type: paragraph.mimetype,
+              img_size: paragraph.size,
+              index: paragraphs.indexOf(paragraph) + 1,
+              description: paragraph.description,
+              img_before_after: paragraph.imgBeforeAfter,
+              reviewId: review.id,
+              img_width: paragraph.width,
+              img_height: paragraph.height,
+            })
+          )
+        );
+        console.log(`콘텐츠 개수 : ${contents.length}`);
+        const updateReview = await db.Review.getOne(db, reviewId, userId);
+        if (review !== null) {
           return res.status(200).json({
             statusCode: 200,
             message: "리뷰글을 수정하였습니다.",
+            updateReview: updateReview,
           });
         } else {
-          return res.status(403).json({
-            statusCode: 403,
-            body: { statusText: "Unaccepted", message: "이미지 개수와 글 개수와 이미지 전후 개수가 다릅니다." },
+          return res.status(404).json({
+            statusCode: 404,
+            body: { statusText: "Not Found", message: "리뷰를 찾을 수 없습니다." },
           });
         }
       } else {
@@ -281,21 +339,24 @@ router.put("/", getUserInToken, reviewImgUpload.array("images"), async (req, res
 router.delete("/", getUserInToken, async (req, res, next) => {
   try {
     const reviewId = req.query.reviewId;
-    const review = await Review.findOne({
+    const review = await db.Review.findOne({
       where: {
         id: reviewId,
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
       },
     });
     if (review.userId === req.user.id) {
       await review.destroy({
         force: true,
       });
-      await Review_content.destroy({
+      await db.Review_content.destroy({
         where: {
           reviewId: review.id,
         },
       });
-      await Review_treatment_item.destroy({
+      await db.Review_treatment_item.destroy({
         where: {
           reviewId: review.id,
         },

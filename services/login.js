@@ -1,7 +1,7 @@
-const { verifyPhoneNumber } = require("./register");
-const { User, NotificationConfig } = require("../utils/models");
-const ApiError = require("../utils/error");
+const { verifyPhoneNumberFunc } = require("../utils/verify");
+const { User, NotificationConfig, City } = require("../utils/models");
 const jwt = require("jsonwebtoken");
+const cloudFrontUrl = process.env.cloudFrontUrl;
 
 /**
  ### 핸드폰 번호 인증을 통해 로그인(로컬)을 진행하는 함수
@@ -11,21 +11,45 @@ const jwt = require("jsonwebtoken");
  * @returns {JSON} Response 인증번호와 핸드폰 번호의 확인 여부
  */
 module.exports.handler = async function signInUser(event) {
-  const body = JSON.parse(event.body);
+  const { userPhoneNumber, token, fcmToken } = JSON.parse(event.body);
   try {
     const user = await User.findOne({
       where: {
-        phoneNumber: body.userPhoneNumber,
+        phoneNumber: userPhoneNumber,
       },
+      include: [
+        {
+          model: City,
+          as: "Residences",
+          attributes: ["id", "sido", "sigungu", "emdName"],
+          through: {
+            attributes: ["now"],
+          },
+        },
+      ],
     });
-    const isValidPhoneNumber = await verifyPhoneNumber(event);
+    const isValidPhoneNumber = await verifyPhoneNumberFunc(userPhoneNumber, token);
     if (isValidPhoneNumber.statusCode === 200) {
       console.log(user.dataValues.id);
+      await user.update({
+        fcmToken: fcmToken,
+      });
       const token = jwt.sign({ id: user.dataValues.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
-      let responseBody = `{"token": "${token}","statusText": "Accepted","message": "사용자 토큰이 발급되었습니다."}`;
+      let responseBody = {
+        statusText: "Accepted",
+        message: "사용자 토큰이 발급되었습니다.",
+        token: token,
+        user: {
+          userId: user.id,
+          userNickname: user.nickname,
+          userProfileImg: user.profileImg,
+          img_thumbNail: user.userProfileImgKeyValue === null ? null : `${cloudFrontUrl}${user.userProfileImgKeyValue}?w=140&h=140&f=jpeg&q=100`,
+          userResidences: user.Residences,
+        },
+      };
       return {
         statusCode: 200,
-        body: responseBody,
+        body: JSON.stringify(responseBody),
       };
     } else {
       let responseBody = `{"statusText": "Unaccepted","message": "인증번호가 틀립니다."}`;

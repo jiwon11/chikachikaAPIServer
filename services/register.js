@@ -1,49 +1,13 @@
-const { phone } = require("../utils/verify");
-const { Sequelize } = require("sequelize");
-const ApiError = require("../utils/error");
-const { User, Phone_verify, NotificationConfig } = require("../utils/models");
+const { phone, verifyPhoneNumberFunc } = require("../utils/verify");
+const { User, Phone_verify, NotificationConfig, City } = require("../utils/models");
 const jwt = require("jsonwebtoken");
-const { Base64 } = require("js-base64");
-
-const verifyPhoneNumberFunc = async (userPhoneNumber, token) => {
-  const verifies = await Phone_verify.findOne({
-    where: {
-      phoneNumber: userPhoneNumber,
-      token: token,
-    },
-  });
-  await User.update(
-    {
-      certifiedPhoneNumber: true,
-    },
-    {
-      where: {
-        phoneNumber: userPhoneNumber,
-      },
-    }
-  );
-  if (verifies) {
-    await verifies.destroy();
-    let responseBody = `{"statusText": "Accepted","message": "인증되었습니다."}`;
-    return {
-      statusCode: 200,
-      body: responseBody,
-    };
-  } else {
-    let responseBody = `{"statusText": "Unaccepted","message": "인증번호가 틀립니다."}`;
-    return {
-      statusCode: 401,
-      body: responseBody,
-    };
-  }
-};
+const cloudFrontUrl = process.env.cloudFrontUrl;
 /**
  ### 사용자가 입력한 핸드폰 번호로 인증번호를 보내는 함수
  * @param {string} userPhoneNumber 사용자의 핸드폰 번호
  * @returns {JSON} Response NCP의 SENS - SMS를 사용한 문자 전송 성공 여부
  */
 module.exports.sendTokenToPhoneNumber = async function sendTokenToPhoneNumber(event) {
-  console.log(event.body);
   const body = JSON.parse(event.body);
   const userPhoneNumber = body.userPhoneNumber;
   const response = await phone(userPhoneNumber);
@@ -57,11 +21,19 @@ module.exports.sendTokenToPhoneNumber = async function sendTokenToPhoneNumber(ev
  * @returns {JSON} Response 인증번호와 핸드폰 번호의 확인 여부
  */
 module.exports.verifyPhoneNumber = async function verifyPhoneNumber(event) {
-  const body = JSON.parse(event.body);
-  const userPhoneNumber = body.userPhoneNumber;
-  const token = body.token;
-  const response = await verifyPhoneNumberFunc(userPhoneNumber, token);
-  return response;
+  try {
+    const body = JSON.parse(event.body);
+    const userPhoneNumber = body.userPhoneNumber;
+    const token = body.token;
+    const response = await verifyPhoneNumberFunc(userPhoneNumber, token);
+    return response;
+  } catch (error) {
+    console.log(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Unaccepted","message": "${error.message}"}`,
+    };
+  }
 };
 
 /**
@@ -75,46 +47,68 @@ module.exports.verifyPhoneNumber = async function verifyPhoneNumber(event) {
  * @return {Object} Response 회원가입 성공 여부
  */
 module.exports.handler = async function registerUser(event) {
-  const { userPhoneNumber, nickname, fcmToken, provider, token } = JSON.parse(event.body);
   try {
-    const isVerify = await verifyPhoneNumberFunc(userPhoneNumber, token);
-    if (isVerify.statusCode === 200) {
-      const certifiedPhoneNumber = true;
-      const overlapPhoneNumber = await User.findOne({
-        where: {
-          phoneNumber: userPhoneNumber,
-        },
-        attributes: ["phoneNumber"],
-      });
-      if (overlapPhoneNumber) {
-        let responseBody = '{"statusText": "Unaccepted","message": "이미 가입 되어있는 전화번호입니다."}';
-        return {
-          statusCode: 403,
-          body: responseBody,
-        };
-      }
-      const user = await User.create({
+    const { userPhoneNumber, nickname, fcmToken, provider, certifiedPhoneNumber, cityId } = JSON.parse(event.body);
+    const overlapPhoneNumber = await User.findOne({
+      where: {
         phoneNumber: userPhoneNumber,
-        nickname: nickname,
-        provider: provider,
-        fcmToken: fcmToken,
-        certifiedPhoneNumber: certifiedPhoneNumber,
-      });
-      await NotificationConfig.create({
-        userId: user.id,
-        like: true,
-        comment: true,
-        timer: true,
-      });
-      const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
-      let responseBody = `{"statusText": "Accepted","message": "${user.nickname}님의 회원가입이 완료되었습니다.", "token": "${token}"}`;
+      },
+      attributes: ["phoneNumber"],
+    });
+    if (overlapPhoneNumber) {
+      let responseBody = '{"statusText": "Unaccepted","message": "이미 가입 되어있는 전화번호입니다."}';
       return {
-        statusCode: 201,
+        statusCode: 403,
         body: responseBody,
       };
-    } else {
-      return isVerify;
     }
+    const user = await User.create({
+      phoneNumber: userPhoneNumber,
+      nickname: nickname,
+      provider: provider,
+      fcmToken: fcmToken,
+      certifiedPhoneNumber: certifiedPhoneNumber === "true",
+      profileImg: "https://chikachika.s3.ap-northeast-2.amazonaws.com/userProfileImgs/defaultProfileImg.png",
+      userProfileImgKeyValue: "userProfileImgs/defaultProfileImg.png",
+    });
+    await NotificationConfig.create({
+      userId: user.id,
+      like: true,
+      comment: true,
+      event: true,
+    });
+    const city = await City.findOne({
+      attributes: ["id", "emdName"],
+      where: {
+        id: cityId,
+      },
+    });
+    await user.addResidences(city, {
+      through: {
+        now: true,
+      },
+    });
+    const userResidences = await user.getResidences({
+      attributes: ["id", "sido", "sigungu", "emdName"],
+      joinTableAttributes: ["now"],
+    });
+    const jwtToken = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
+    let responseBody = {
+      statusText: "Accepted",
+      message: `${user.nickname}님의 회원가입이 완료되었습니다.`,
+      token: jwtToken,
+      user: {
+        userId: user.id,
+        userNickname: user.nickname,
+        userProfileImg: user.profileImg,
+        img_thumbNail: `${cloudFrontUrl}${user.userProfileImgKeyValue}?w=140&h=140&f=jpeg&q=100`,
+        userResidences: userResidences,
+      },
+    };
+    return {
+      statusCode: 201,
+      body: JSON.stringify(responseBody),
+    };
   } catch (error) {
     console.log(error);
     return {

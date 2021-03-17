@@ -1,7 +1,8 @@
 "use strict";
 
 const Sequelize = require("sequelize");
-const config = require("../../utils/config/config")["development"];
+var env = process.env.stage === "dev" ? "development" : process.env.stage === "test" ? "test" : "production";
+const config = require("../../utils/config/config")[env];
 const db = {};
 
 const sequelize = new Sequelize(config.database, config.username, config.password, config);
@@ -13,12 +14,16 @@ db.Dental_clinic = require("./dental_clinic")(sequelize, Sequelize);
 db.Dentist = require("./dentist")(sequelize, Sequelize);
 db.Review = require("./review")(sequelize, Sequelize);
 db.Review_comment = require("./review_comment")(sequelize, Sequelize);
+db.Review_comment_reply = require("./review_comment_reply")(sequelize, Sequelize);
 db.Review_content = require("./review_content")(sequelize, Sequelize);
 db.Review_treatment_item = require("./review_treatment_item")(sequelize, Sequelize);
+db.ReviewBills = require("./reviewBills")(sequelize, Sequelize);
 db.Appointment = require("./appointment")(sequelize, Sequelize);
 db.Brush_condition = require("./brush_condition")(sequelize, Sequelize);
 db.Clinic_report = require("./clinic_report")(sequelize, Sequelize);
+db.Clinic_report_img = require("./clinic_report_img")(sequelize, Sequelize);
 db.Community_comment = require("./community_comment")(sequelize, Sequelize);
+db.Community_comment_reply = require("./community_comment_reply")(sequelize, Sequelize);
 db.Community_img = require("./community_img")(sequelize, Sequelize);
 db.Community = require("./community")(sequelize, Sequelize);
 db.Dental_subject = require("./dental_subject")(sequelize, Sequelize);
@@ -38,6 +43,21 @@ db.Community_dental_clinic = require("./community_dental_clinic")(sequelize, Seq
 db.Community_symptom = require("./community_symptom")(sequelize, Sequelize);
 db.Community_treatment = require("./community_treatment")(sequelize, Sequelize);
 db.CommunityGeneralTag = require("./communityGeneralTag")(sequelize, Sequelize);
+db.CommunityCityTag = require("./communityCityTag")(sequelize, Sequelize);
+db.City = require("./city")(sequelize, Sequelize);
+db.NewTown = require("./newTown")(sequelize, Sequelize);
+db.Korea_holiday = require("./korea_holiday")(sequelize, Sequelize);
+db.Clinic_subject = require("./clinic_subject")(sequelize, Sequelize);
+db.Special_treatment = require("./specialTreatment")(sequelize, Sequelize);
+db.ClinicStaticMap = require("./clinicStaticMap")(sequelize, Sequelize);
+db.Residence = require("./residence")(sequelize, Sequelize);
+db.DentalClinicProfileImg = require("./dentalClinicProfileImg")(sequelize, Sequelize);
+db.Sido = require("./sido")(sequelize, Sequelize);
+db.Sigungu = require("./sigungu")(sequelize, Sequelize);
+db.Disease_item = require("./disease")(sequelize, Sequelize);
+db.Review_disease_item = require("./review_disease_item")(sequelize, Sequelize);
+db.Community_disease = require("./community_disease")(sequelize, Sequelize);
+
 /*사용자와 타이머 관걔형 */
 db.User.hasMany(db.Timer, {
   foreignKey: "userId",
@@ -69,6 +89,20 @@ db.Dental_clinic.belongsToMany(db.User, {
   through: db.Appointment,
   onDelete: "CASCADE",
 });
+db.Brush_condition.belongsTo(db.User);
+/*사용자와 치과 관계형 - 찜*/
+db.User.belongsToMany(db.Dental_clinic, {
+  foreignKey: "userId",
+  as: "ScrapClinics",
+  through: "UserScrapClinics",
+  onDelete: "CASCADE",
+});
+db.Dental_clinic.belongsToMany(db.User, {
+  foreignKey: "dentalClinicId",
+  as: "Scrapers",
+  through: "UserScrapClinics",
+  onDelete: "CASCADE",
+});
 /*예약과 증상항목 관계형*/
 db.Appointment.belongsToMany(db.Symptom_item, {
   foreignKey: "appointmentId",
@@ -97,8 +131,8 @@ db.Treatment_item.belongsToMany(db.Appointment, {
 });
 /*사용자와 리뷰 관계형 */
 db.User.hasMany(db.Review, {
-  foreignKey: "userId",
   onDelete: "CASCADE",
+  foreignKey: "userId",
 });
 db.Review.belongsTo(db.User);
 /*치과와 리뷰 관계형 */
@@ -124,6 +158,18 @@ db.Treatment_item.belongsToMany(db.Review, {
   foreignKey: "treatmentItemId",
   as: "Reviews",
   through: db.Review_treatment_item,
+});
+/* 질병 항목과 리뷰 관계형*/
+db.Review.belongsToMany(db.Disease_item, {
+  foreignKey: "reviewId",
+  as: "DiseaseItems",
+  through: db.Review_disease_item,
+  onDelete: "CASCADE",
+});
+db.Disease_item.belongsToMany(db.Review, {
+  foreignKey: "DiseaseItemId",
+  as: "Reviews",
+  through: db.Review_disease_item,
 });
 /*리뷰 콘텐츠와 리뷰 관계형*/
 db.User.belongsToMany(db.Review, {
@@ -154,26 +200,33 @@ db.Review_comment.belongsTo(db.Review);
 db.Review_comment.belongsToMany(db.Review_comment, {
   foreignKey: "commentId",
   as: "Replys",
-  through: "Review_reply",
+  through: db.Review_comment_reply,
   onDelete: "CASCADE",
 });
 db.Review_comment.belongsTo(db.Review_comment, {
   foreignKey: "replyId",
   as: "Comments",
-  through: "Review_reply",
+  through: db.Review_comment_reply,
   onDelete: "CASCADE",
+});
+db.User.hasMany(db.Review_comment_reply, {
+  foreignKey: "targetUserId",
+  onDelete: "CASCADE",
+});
+db.Review_comment_reply.belongsTo(db.User, {
+  as: "targetUser",
 });
 /*리뷰 콘텐츠와 리뷰 관계형 -좋아요*/
 db.User.belongsToMany(db.Review, {
   foreignKey: "likerId",
   as: "LikeReviews",
-  through: "Like",
+  through: "Like_Review",
   onDelete: "CASCADE",
 });
 db.Review.belongsToMany(db.User, {
   foreignKey: "likedReviewId",
   as: "Likers",
-  through: "Like",
+  through: "Like_Review",
   onDelete: "CASCADE",
 });
 /*리뷰 콘텐츠와 리뷰 관계형 - 조회*/
@@ -202,6 +255,19 @@ db.Dental_subject.belongsToMany(db.Dentist, {
   through: "Dentist_subject",
   onDelete: "CASCADE",
 });
+/*치과병원과 특수진료항목 관계형*/
+db.Dental_clinic.belongsToMany(db.Special_treatment, {
+  foreignKey: "dentalClinicId",
+  as: "SpecialTreatments",
+  through: "Clinic_special_treatment",
+  onDelete: "CASCADE",
+});
+db.Special_treatment.belongsToMany(db.Dental_clinic, {
+  foreignKey: "specialTreatmentId",
+  as: "Clinics",
+  through: "Clinic_special_treatment",
+  onDelete: "CASCADE",
+});
 /*치과의사와 병원 관계형 */
 db.Dental_clinic.hasMany(db.Dentist, {
   foreignKey: "dentalClinicId",
@@ -218,13 +284,13 @@ db.Community_comment.belongsTo(db.Dentist);
 db.Dental_clinic.belongsToMany(db.Dental_subject, {
   foreignKey: "dentalClinicId",
   as: "Subjects",
-  through: "Clinic_subject",
+  through: db.Clinic_subject,
   onDelete: "CASCADE",
 });
 db.Dental_subject.belongsToMany(db.Dental_clinic, {
   foreignKey: "dentalSubjectId",
   as: "Clinics",
-  through: "Clinic_subject",
+  through: db.Clinic_subject,
   onDelete: "CASCADE",
 });
 /*진료항목과 진료과목 관계형*/
@@ -301,14 +367,21 @@ db.Community_comment.belongsTo(db.User);
 db.Community_comment.belongsToMany(db.Community_comment, {
   foreignKey: "commentId",
   as: "Replys",
-  through: "Community_reply",
+  through: db.Community_comment_reply,
   onDelete: "CASCADE",
 });
 db.Community_comment.belongsTo(db.Community_comment, {
   foreignKey: "replyId",
   as: "Comments",
-  through: "Community_reply",
+  through: db.Community_comment_reply,
   onDelete: "CASCADE",
+});
+db.User.hasMany(db.Community_comment_reply, {
+  foreignKey: "targetUserId",
+  onDelete: "CASCADE",
+});
+db.Community_comment_reply.belongsTo(db.User, {
+  as: "targetUser",
 });
 /* 진료 항목과 커뮤니티글 관계형*/
 db.Community.belongsToMany(db.Treatment_item, {
@@ -321,6 +394,19 @@ db.Treatment_item.belongsToMany(db.Community, {
   foreignKey: "treatmentItemId",
   as: "Communties",
   through: db.Community_treatment,
+  onDelete: "CASCADE",
+});
+/* 치료 항목과 커뮤니티글 관계형*/
+db.Community.belongsToMany(db.Disease_item, {
+  foreignKey: "communityId",
+  as: "DiseaseItems",
+  through: db.Community_disease,
+  onDelete: "CASCADE",
+});
+db.Disease_item.belongsToMany(db.Community, {
+  foreignKey: "diseaseItemId",
+  as: "Communties",
+  through: db.Community_disease,
   onDelete: "CASCADE",
 });
 /* 증상 항목과 커뮤니티글 관계형*/
@@ -360,6 +446,19 @@ db.GeneralTag.belongsToMany(db.Community, {
   foreignKey: "deneralTagId",
   as: "Communties",
   through: db.CommunityGeneralTag,
+  onDelete: "CASCADE",
+});
+/* 도시 태그와 커뮤니티글 관계형*/
+db.Community.belongsToMany(db.City, {
+  foreignKey: "communityId",
+  as: "CityTags",
+  through: db.CommunityCityTag,
+  onDelete: "CASCADE",
+});
+db.City.belongsToMany(db.Community, {
+  foreignKey: "cityId",
+  as: "Communties",
+  through: db.CommunityCityTag,
   onDelete: "CASCADE",
 });
 /*커뮤니티글과 사용자 관계형 -좋아요*/
@@ -423,7 +522,7 @@ db.Report.belongsTo(db.Community);
 /*병원 신고 관계형*/
 db.User.belongsToMany(db.Dental_clinic, {
   foreignKey: "reporterId",
-  as: "ReportedClinic",
+  as: "ReportedClinics",
   through: db.Clinic_report,
   onDelete: "CASCADE",
 });
@@ -445,21 +544,25 @@ db.Search_record.belongsTo(db.User);
 db.User.hasOne(db.NotificationConfig, {
   foreignKey: "userId",
   sourceKey: "id",
+  onDelete: "CASCADE",
 });
 db.NotificationConfig.belongsTo(db.User, {
   foreignKey: "userId",
   targetKey: "id",
 });
-
-db.Notification.belongsTo(db.User, {
+db.User.hasMany(db.Notification, {
   foreignKey: "notificatedUserId",
   onDelete: "CASCADE",
-  as: "notificatedUsers",
 });
 db.Notification.belongsTo(db.User, {
+  as: "notificatedUser",
+});
+db.User.hasMany(db.Notification, {
   foreignKey: "senderId",
   onDelete: "CASCADE",
-  as: "senders",
+});
+db.Notification.belongsTo(db.User, {
+  as: "sender",
 });
 db.Notification.belongsTo(db.Review, {
   foreignKey: "reviewId",
@@ -477,5 +580,57 @@ db.Notification.belongsTo(db.Community_comment, {
   foreignKey: "communityCommentId",
   onDelete: "CASCADE",
 });
+
+db.User.belongsToMany(db.City, {
+  foreignKey: "resident",
+  as: "Residences",
+  through: db.Residence,
+  onDelete: "CASCADE",
+});
+
+db.City.belongsToMany(db.User, {
+  foreignKey: "city",
+  as: "Residents",
+  through: db.Residence,
+  onDelete: "CASCADE",
+});
+
+db.City.hasMany(db.Dental_clinic, {
+  foreignKey: "cityId",
+  onDelete: "CASCADE",
+});
+db.Dental_clinic.belongsTo(db.City);
+
+db.NewTown.hasMany(db.City, {
+  foreignKey: "newTownId",
+  onDelete: "CASCADE",
+});
+db.City.belongsTo(db.NewTown);
+
+db.ClinicStaticMap.belongsTo(db.Dental_clinic);
+
+db.City.hasMany(db.Community, {
+  foreignKey: "cityId",
+  onDelete: "CASCADE",
+});
+db.Community.belongsTo(db.City);
+
+db.Review.hasMany(db.ReviewBills, {
+  foreignKey: "reviewId",
+  onDelete: "CASCADE",
+});
+db.ReviewBills.belongsTo(db.Review);
+
+db.Dental_clinic.hasMany(db.DentalClinicProfileImg, {
+  foreignKey: "dentalClinicId",
+  onDelete: "CASCADE",
+});
+db.DentalClinicProfileImg.belongsTo(db.Dental_clinic);
+
+db.Clinic_report.hasMany(db.Clinic_report_img, {
+  foreignKey: "reportId",
+  onDelete: "CASCADE",
+});
+db.Clinic_report_img.belongsTo(db.Clinic_report);
 
 module.exports = db;

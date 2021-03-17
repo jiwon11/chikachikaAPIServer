@@ -6,31 +6,53 @@
   "scripts": {
     "dev": "serverless offline start",
     "deploy": "serverless deploy",
-    "debug": "export SLS_DEBUG=* && node --debug ./node_modules/serverless/bin/serverless offline -s dev"
+    "debug": "export SLS_DEBUG=* && node --debug ./node_modules/serverless/bin/serverless offline -s dev",
+    "jest": "jest"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "aws-sdk": "^2.798.0",
     "aws-serverless-express": "^3.3.8",
     "aws-serverless-express-binary": "^1.0.1",
-    "axios": "^0.21.0",
+    "axios": "^0.21.1",
     "crypto": "^1.0.1",
+    "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "fast-xml-parser": "^3.17.6",
+    "firebase-admin": "^9.4.2",
+    "geojson": "^0.5.0",
     "iconv-lite": "^0.6.2",
     "js-base64": "^3.6.0",
+    "jschardet": "^2.2.1",
     "jsonwebtoken": "^8.5.1",
+    "moment": "^2.29.1",
+    "moment-timezone": "^0.5.32",
     "multer": "^1.4.2",
     "multer-s3": "^2.9.0",
     "mysql2": "^2.2.5",
+    "phin": "^3.5.1",
+    "redis": "^3.0.2",
+    "request": "^2.88.2",
     "sequelize": "^6.3.5",
     "sequelize-cli": "^6.2.0",
+    "serverless-api-gateway-caching": "^1.6.0",
     "serverless-offline": "^6.8.0",
+    "serverless-offline-sqs": "^4.1.1",
     "serverless-plugin-cloudwatch-dashboard": "^1.2.0",
+    "serverless-plugin-ifelse": "^1.0.6",
+    "serverless-plugin-scripts": "^1.0.2",
+    "slack-node": "^0.1.8",
+    "twilio": "^3.57.0",
+    "webpack": "^5.16.0",
     "xml-js": "^1.6.11"
   },
   "devDependencies": {
-    "serverless-apigw-binary": "^0.4.4"
+    "artillery": "^1.6.2",
+    "jest": "^26.6.3",
+    "serverless-apigw-binary": "^0.4.4",
+    "serverless-offline-env": "^0.2.0",
+    "serverless-prune-plugin": "^1.4.3",
+    "supertest": "^6.1.3"
   }
 }
