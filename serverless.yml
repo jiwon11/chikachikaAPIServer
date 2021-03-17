@@ -6,6 +6,7 @@ useDotenv: true
 
 package:
   excludeDevDependencies: false
+  individually: true
   exclude:
     - node_modules/**
 
