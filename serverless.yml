@@ -6,7 +6,6 @@ useDotenv: true
 configValidationMode: error
 
 package:
-  excludeDevDependencies: false
   exclude:
     - node_modules/**
 
