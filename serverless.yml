@@ -39,7 +39,6 @@ provider:
     apiGateway: true
     lambda: true
   apiGateway:
-    shouldStartNameWithService: false,
     minimumCompressionSize: 1024
     binaryMediaTypes:
       - 'multipart/form-data'
