@@ -34,7 +34,7 @@ module.exports.clinics = async function clinics(event) {
     const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
     const day = weekDay[today.day()];
     console.log(day, nowTime);
-    const clinics = await db.Dental_clinic.searchAll(db, "around", null, nowTime, day, week, lat, long, maplat, maplong, limit, offset, "distance", wantParking, holiday);
+    const clinics = await db.Dental_clinic.searchAll(db, "around", null, nowTime, day, week, lat, long, maplat, maplong, limit, offset, sort, wantParking, holiday);
     console.log(clinics.length);
     let response = {
       statusCode: 200,
