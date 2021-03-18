@@ -11,8 +11,13 @@ package:
 
 custom:
   #secrets: ${file(secrets.json)}
+  stage: ${opt:stage, self:provider.stage}
+  domains:
+    prod: api.chikachika-app.com
+    test: test-api.chikachika-app.com
+    dev: dev-api.chikachika-app.com
   customDomain:
-    domainName: api.chikachika-app.com
+    domainName: ${self:custom.domains.${self:custom.stage}}
     basePath: ""
     certificateName: "*.chikachika-app.com"
     stage: ${self:provider.stage}
