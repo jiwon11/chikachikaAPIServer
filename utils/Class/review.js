@@ -373,12 +373,34 @@ module.exports.getKeywordSearchAll = async function (db, userId, query, tagCateg
       Sequelize.literal("(((SELECT COUNT(*) FROM Like_Review WHERE Like_Review.likedReviewId = review.id)*3)+ (SELECT COUNT(*) FROM ViewReviews WHERE ViewReviews.viewedReviewId = review.id)) DESC"),
     ];
   }
-  return this.findAll({
-    where: {
+  var whereQuery;
+  if (tagCategory === "general") {
+    whereQuery = {
+      [Sequelize.Op.and]: [
+        {
+          userId: {
+            [Sequelize.Op.not]: null,
+          },
+        },
+        Sequelize.where(
+          Sequelize.literal(
+            "(SELECT GROUP_CONCAT(description ORDER BY review_contents.index ASC SEPARATOR ',') FROM review_contents WHERE review_contents.reviewId = review.id AND review_contents.deletedAt IS NULL)"
+          ),
+          {
+            [Sequelize.Op.like]: `%${query}%`,
+          }
+        ),
+      ],
+    };
+  } else {
+    whereQuery = {
       userId: {
         [Sequelize.Op.not]: null,
       },
-    },
+    };
+  }
+  return this.findAll({
+    where: whereQuery,
     attributes: {
       include: reviewIncludeAttributes(userId),
     },
