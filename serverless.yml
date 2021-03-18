@@ -11,6 +11,12 @@ package:
 
 custom:
   #secrets: ${file(secrets.json)}
+  customDomain:
+    domainName: api.chikachika-app.com
+    basePath: ""
+    certificateName: "*.chikachika-app.com"
+    stage: ${self:provider.stage}
+    createRoute53Record: true
   apigwBinary:
     types:           #list of mime-types 
        - 'multipart/form-data'
@@ -1102,3 +1108,4 @@ plugins:
   - serverless-offline-sqs
   - serverless-plugin-scripts
   - serverless-latest-layer-version
+  - serverless-domain-manager

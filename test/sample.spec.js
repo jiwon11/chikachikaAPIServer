@@ -27,7 +27,7 @@ describe("GET search", () => {
           Authorization: USERTOKEN,
         },
       })
-      .then((response) => response);
+      .then((response) => console.log(response));
     expect(res.status).toBe(200);
   });
 });
