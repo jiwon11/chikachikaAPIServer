@@ -8,13 +8,13 @@ console.log("stage:", stage);
 var USERTOKEN;
 var API_ENDPOINT;
 if (stage === "test") {
-  API_ENDPOINT = "test-api.chikachika-app.com";
+  API_ENDPOINT = "https://test-api.chikachika-app.com";
   USERTOKEN = process.env.USERTOKEN;
 } else if (stage === "dev") {
-  API_ENDPOINT = "dev-api.chikachika-app.com";
+  API_ENDPOINT = "https://dev-api.chikachika-app.com";
   USERTOKEN = process.env.USERTOKEN;
 } else if (stage === "prod") {
-  API_ENDPOINT = "api.chikachika-app.com";
+  API_ENDPOINT = "https://api.chikachika-app.com";
   USERTOKEN = process.env.USERTOKEN;
 }
 
