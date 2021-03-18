@@ -315,6 +315,11 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
               },
             },
             {
+              address: {
+                [Sequelize.Op.like]: `%${query}%`,
+              },
+            },
+            {
               "$city.fullCityName$": {
                 [Sequelize.Op.like]: `%${query}%`,
               },

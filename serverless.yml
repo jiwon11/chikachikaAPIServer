@@ -3,6 +3,11 @@ service: chikachika-API-serverless
 org: jiwon112
 
 useDotenv: true
+configValidationMode: error
+
+package:
+  exclude:
+    - node_modules/**
 
 custom:
   #secrets: ${file(secrets.json)}
@@ -20,10 +25,6 @@ custom:
     hooks:
       'deploy:finalize': npm run jest -- -stage=${opt:stage, 'dev'}
 
-dashboard:
-  lambda:
-    enabled: true
-
 provider:
   name: aws
   runtime: nodejs12.x
@@ -36,7 +37,6 @@ provider:
     apiGateway: true
     lambda: true
   apiGateway:
-    shouldStartNameWithService: true,
     minimumCompressionSize: 1024
     binaryMediaTypes:
       - 'multipart/form-data'
@@ -53,6 +53,7 @@ provider:
             - sqs:*
           Resource: arn:aws:sqs:*:*:*
   environment:
+    NODE_PATH: "./:/opt/node_modules"
     JWT_SECRET: ${param:JWT_SECRET}
     NCP_access_token: ${param:NCP_access_token}
     NCP_secret_key: ${param:NCP_secret_key}
@@ -78,9 +79,13 @@ provider:
 functions:
   verify-token:
     handler: services/authorize.verifyToken
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
   api:
     name: ${self:service}-${self:provider.stage}
     handler: api/app.handler # ${DIR}/${FILE}.${MODULE}
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: api/{proxy+}
@@ -94,6 +99,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   getUserInfo:
     handler: services/user.getUserInfo
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: userInfo
@@ -107,6 +114,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   keywordSearchResults:
     handler: services/search.keywordSearchResults
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: search/{type}
@@ -120,6 +129,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   getUserProfile:
     handler: services/user.getUserProfile
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: user/profile
@@ -133,6 +144,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   allTagItems:
     handler: services/search.allTagItems
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: search/allTagItems/{purpose}
@@ -154,6 +167,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   postRecentSearch:
     handler: services/recentSearch.postRecentSearch
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: search/recent
@@ -167,6 +182,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   getRecentSearch:
     handler: services/recentSearch.getRecent
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: search/recent
@@ -180,6 +197,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   delRecentSearch:
     handler: services/recentSearch.delRecent
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: search/recent
@@ -193,6 +212,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   reviewSearch:
     handler: services/search.reviews
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: search/reviews
@@ -206,6 +227,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   keywordClinicSearch:
     handler: services/search.keywordClinicSearch
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: clinics
@@ -234,6 +257,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   aroundClinics:
     handler: services/around.clinics
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: around/clinics
@@ -262,6 +287,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   treatmentSearch:
     handler: services/search.treatmentItems
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: search/treatments
@@ -275,6 +302,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   diseaseSearch:
     handler: services/search.diseaseItems
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: search/disease
@@ -288,6 +317,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   clinicSearch:
     handler: services/search.dentalClinics
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: search/clinics
@@ -306,6 +337,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   symptomSearch:
     handler: services/search.symptomItems
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: search/symptoms
@@ -319,6 +352,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   login:
     handler: services/login.handler
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: login
@@ -326,6 +361,8 @@ functions:
           cors: true
   sendTokenToPhoneNumber:
     handler: services/register.sendTokenToPhoneNumber
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: sendTokenToPhoneNumber
@@ -333,6 +370,8 @@ functions:
           cors: true
   verify_phoneNumber:
     handler: services/register.verifyPhoneNumber
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: verifyPhoneNumber
@@ -340,6 +379,8 @@ functions:
           cors: true
   register:
     handler: services/register.handler
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: register
@@ -347,6 +388,8 @@ functions:
           cors: true
   social_login:
     handler: services/social_login.handler
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: social_login
@@ -354,6 +397,8 @@ functions:
           cors: true
   socialUserCheck:
     handler: services/social_login.socialUserCheck
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: socialUserCheck
@@ -361,6 +406,8 @@ functions:
           cors: true
   deleteUser:
     handler: services/user.deleteUser
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: withdrawal
@@ -373,6 +420,8 @@ functions:
               identitySource: method.request.header.Authorization
   searchCities:
     handler: services/residence.searchCities
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: search/cities
@@ -387,6 +436,8 @@ functions:
               - name: request.querystring.offset
   citiesBycurrentLocation:
     handler: services/residence.citiesBycurrentLocation
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: search/cities/currentLocation
@@ -400,6 +451,8 @@ functions:
               - name: request.querystring.long
   addUserResidence:
     handler: services/residence.addUserResidence
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: residence
@@ -413,6 +466,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   changeUserResidence:
     handler: services/residence.changeUserResidence
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: residence
@@ -426,6 +481,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   deleteUserResidence:
     handler: services/residence.deleteUserResidence
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: residence
@@ -439,6 +496,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   getUserResidence:
     handler: services/residence.getUserResidence
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: residence
@@ -452,6 +511,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   nowUserResidence:
     handler: services/residence.userResidenceNow
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: residence/now
@@ -465,6 +526,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   addLikeReview:
     handler: services/like.addLikeReview
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: like/review
@@ -478,6 +541,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   removeLikeReview:
     handler: services/like.removeLikeReview
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: like/review
@@ -491,6 +556,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   addLikeCommunity:
     handler: services/like.addLikeCommunity
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: like/communityPost
@@ -504,6 +571,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   removeLikeCommunity:
     handler: services/like.removeLikeCommunity
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: like/communityPost
@@ -517,6 +586,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   addScrapReview:
     handler: services/scrap.addScrapReview
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: scrap/review
@@ -530,6 +601,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   removeScrapeReview:
     handler: services/scrap.removeScrapReview
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: scrap/review
@@ -543,6 +616,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   addScrapCommunity:
     handler: services/scrap.addScrapCommunities
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: scrap/communityPost
@@ -556,6 +631,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   removeScrapCommunity:
     handler: services/scrap.removeScrapCommunities
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: scrap/communityPost
@@ -569,6 +646,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   addScrapClinic:
     handler: services/scrap.addScrapClinic
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: scrap/clinic
@@ -582,6 +661,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   removeScrapClinic:
     handler: services/scrap.removeScrapClinic
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: scrap/clinic
@@ -595,6 +676,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   getScrapClinic:
     handler: services/scrap.getScrapClinic
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: scrap/clinic
@@ -608,6 +691,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   detailClinics:
     handler: services/dentalClinic.detailClinics
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: clinic/detail
@@ -626,6 +711,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   userScrapClinics:
     handler: services/dentalClinic.userScrapClinics
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: clinic/detail/scrap
@@ -639,6 +726,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   ClinicsReviews:
     handler: services/dentalClinic.clinicReviews
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: clinic/detail/reviews
@@ -652,6 +741,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   updateNotificationConfig:
     handler: services/setting.updateNotificationConfig
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: notificationConfig
@@ -665,6 +756,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   keywordClinicAutoComplete:
     handler: services/search.keywordClinicAutoComplete
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: clinic/keyword
@@ -683,6 +776,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   redienceClinics:
     handler: services/around.redienceClinics
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: residence/clinics
@@ -699,6 +794,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   getNotifications:
     handler: services/notification.getNotifications
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: notifications
@@ -712,6 +809,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   delNotifications:
     handler: services/notification.delNotifications
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: notifications
@@ -725,6 +824,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   postClinicReport:
     handler: services/report.postClinicReport
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: reports/clinics
@@ -738,6 +839,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   residenceClinicsAndReviews:
     handler: services/residence.residenceClinicsAndReviews
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: residence/clinicsAndReviews
@@ -751,6 +854,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   postAppointment:
     handler: services/appointment.postAppointment
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: appointment
@@ -764,6 +869,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   getAppointment:
     handler: services/appointment.getAppointment
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: appointment
@@ -777,6 +884,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   removeAppointment:
     handler: services/appointment.removeAppointment
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: appointment
@@ -790,6 +899,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   residenceClinicReviews:
     handler: services/main.residenceClinicReviews
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: residenceClinicReviews
@@ -803,6 +914,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   postReports:
     handler: services/report.reports
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: reports
@@ -816,6 +929,8 @@ functions:
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   verifyBillsAdmin:
     handler: services/admin.verifyBills
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: admin/verifyBills/{purpose}
@@ -823,48 +938,64 @@ functions:
           cors: true
   pushNotifiactionCommentTaskWorker:
     handler: services/notificationTaskWorker.comment
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - sqs: 
           arn: arn:aws:sqs:ap-northeast-1:751612718299:commentNotification-${opt:stage, 'dev'}
           enabled: true
   pushNotifiactionReplyTaskWorker:
     handler: services/notificationTaskWorker.reply
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - sqs: 
           arn: arn:aws:sqs:ap-northeast-1:751612718299:replyNotification-${opt:stage, 'dev'}
           enabled: true
   pushNotifiactionLikeTaskWorker:
     handler: services/notificationTaskWorker.like
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - sqs: 
           arn: arn:aws:sqs:ap-northeast-1:751612718299:likeNotification-${opt:stage, 'dev'}
           enabled: true
   pushNotifiactionReportTaskWorker:
     handler: services/notificationTaskWorker.report
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - sqs: 
           arn: arn:aws:sqs:ap-northeast-1:751612718299:reportNotification-${opt:stage, 'dev'}.fifo
           enabled: true
   billsVerifyTaskWorker:
     handler: services/notificationTaskWorker.billsVerify
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - sqs: 
           arn: arn:aws:sqs:ap-northeast-1:751612718299:billsVerify-${self:provider.stage}.fifo
           enabled: true
   deleteSQSMessageTaskWorker:
     handler: services/notificationTaskWorker.deleteSQSMessage
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - sqs: 
           arn: arn:aws:sqs:ap-northeast-1:751612718299:ReceiverDeadLetterQueue-${self:provider.stage}
           enabled: true
   deleteFifoSQSMessageTaskWorker:
     handler: services/notificationTaskWorker.deleteFifoSQSMessage
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - sqs: 
           arn: arn:aws:sqs:ap-northeast-1:751612718299:FifoReceiverDeadLetterQueue-${self:provider.stage}.fifo
           enabled: true
   subwayAroundClinics:
     handler: services/main.subwayAroundClinics
+    layers:
+      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:1
     events:
       - http:
           path: home/subwayAroundClinics
@@ -968,3 +1099,4 @@ plugins:
   - serverless-prune-plugin
   - serverless-offline-sqs
   - serverless-plugin-scripts
+  - serverless-latest-layer-version
