@@ -14,6 +14,7 @@ module.exports.phone = async function checkPhoneNumber(phoneNumber) {
     token: token,
     phoneNumber: phoneNumber,
   });
+  /*
   const accessKey = process.env.NCP_access_token;
   const secretKey = process.env.NCP_secret_key;
   const serviceID = process.env.NCP_serviceID;
@@ -53,16 +54,15 @@ module.exports.phone = async function checkPhoneNumber(phoneNumber) {
     },
   };
   const response = await axios.post(`https://sens.apigw.ntruss.com/sms/v2/services/${serviceID}/messages`, requestBody, axiosConfig);
+  */
   try {
-    /*
     const message = await client.messages.create({
       body: `[치카치카]인증번호 [${token}]를 입력해주세요.`,
       messagingServiceSid: "MGb740d131f110fba2beb052ff9f12b4be",
       to: `+82${phoneNumber}`,
     });
-    */
-    console.log(response);
-    if (response.status === 202) {
+    console.log(message);
+    if (message.status === "accepted") {
       const existUser = await User.findOne({
         where: {
           phoneNumber: phoneNumber,
