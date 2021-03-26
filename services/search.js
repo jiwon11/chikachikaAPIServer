@@ -128,7 +128,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
     });
     if (user) {
       console.log(event.queryStringParameters);
-      const { lat, long, sq, iq, sort, days, time, wantParking, holiday, tagCategory, tagId } = event.queryStringParameters;
+      const { lat, long, query, sort, days, time, wantParking, holiday, tagCategory, tagId } = event.queryStringParameters;
       const limit = parseInt(event.queryStringParameters.limit);
       const offset = parseInt(event.queryStringParameters.offset);
       if (!sq) {
@@ -142,8 +142,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
           const [search, created] = await db.Search_record.findOrCreate({
             where: {
               userId: user.id,
-              inputQuery: iq,
-              searchQuery: sq,
+              query: query,
               category: tagCategory,
               targetId: null,
               route: "keywordClinicSearch",
@@ -153,8 +152,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
             await db.Search_record.update(
               {
                 userId: user.id,
-                inputQuery: iq,
-                searchQuery: sq,
+                query: query,
                 category: tagCategory,
                 targetId: tagId,
                 route: "keywordClinicSearch",
