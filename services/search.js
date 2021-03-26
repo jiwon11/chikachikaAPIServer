@@ -2,7 +2,6 @@ const jwt = require("jsonwebtoken");
 const db = require("../utils/models");
 const Sequelize = require("sequelize");
 const moment = require("moment");
-const communityQueryClass = require("../utils/Class/community");
 
 module.exports.treatmentItems = async function treatmentItems(event) {
   try {
@@ -454,17 +453,14 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
   try {
     const token = event.headers.Authorization;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const type = event.pathParameters.type;
     const userId = decoded.id;
-    const sq = event.queryStringParameters.sq;
-    const iq = event.queryStringParameters.iq;
+    const resultType = event.pathParameters.type;
+    const query = event.queryStringParameters.query;
     const limit = parseInt(event.queryStringParameters.limit);
     const offset = parseInt(event.queryStringParameters.offset);
     const order = event.queryStringParameters.order;
     const region = event.queryStringParameters.region;
     const cityId = event.queryStringParameters.cityId;
-    const tagCategory = event.queryStringParameters.tagCategory;
-    const tagId = event.queryStringParameters.tagId;
     const lat = event.queryStringParameters.lat;
     const long = event.queryStringParameters.long;
     const user = await db.User.findOne({
@@ -494,27 +490,27 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
           body: { statusText: "Bad Request", message: "유효하지 않는 쿼리입니다." },
         };
       }
-      switch (type) {
+      switch (resultType) {
         case "community":
           const communityType = event.queryStringParameters.type === "All" ? ["Question", "FreeTalk"] : [event.queryStringParameters.type];
-          const communityResult = await db.Community.getKeywordSearchAll(db, communityType, sq, tagCategory, tagId, userId, clusterQuery, offset, limit, order);
-          console.log(`${type} results Num: ${communityResult.length}`);
+          const communityResult = await db.Community.getKeywordSearchAll(db, communityType, query, userId, clusterQuery, offset, limit, order);
+          console.log(`${resultType} results Num: ${communityResult.length}`);
           return {
             statusCode: 200,
             body: JSON.stringify(communityResult),
           };
         case "review":
           console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
-          const reviewResult = await db.Review.getKeywordSearchAll(db, userId, sq, tagCategory, tagId, clusterQuery, limit, offset, order);
-          console.log(`${type} results Num: ${reviewResult.length}`);
+          const reviewResult = await db.Review.getKeywordSearchAll(db, userId, query, clusterQuery, limit, offset, order);
+          console.log(`${resultType} results Num: ${reviewResult.length}`);
           return {
             statusCode: 200,
             body: JSON.stringify(reviewResult),
           };
         case "clinic":
           console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
-          const clinicResult = await db.Dental_clinic.getKeywordSearchAll(db, lat, long, sq, tagCategory, tagId, clusterQuery, limit, offset, order);
-          console.log(`${type} results Num: ${clinicResult.length}`);
+          const clinicResult = await db.Dental_clinic.getKeywordSearchAll(db, lat, long, query, clusterQuery, limit, offset, order);
+          console.log(`${resultType} results Num: ${clinicResult.length}`);
           return {
             statusCode: 200,
             body: JSON.stringify(clinicResult),
