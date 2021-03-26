@@ -374,6 +374,33 @@ module.exports.allTagItems = async function allTagItems(event) {
       }
       treatment.setDataValue("category", "treatment");
     });
+    const diseases = await db.Disease_item.findAll({
+      where: {
+        [Sequelize.Op.or]: [
+          {
+            usualName: {
+              [Sequelize.Op.like]: `%${query}%`,
+            },
+          },
+          {
+            technicalName: {
+              [Sequelize.Op.like]: `%${query}%`,
+            },
+          },
+        ],
+      },
+      attributes: ["id", "usualName", "technicalName"],
+      order: [["usualName", "ASC"]],
+      limit: 3,
+    });
+    diseases.forEach((disease) => {
+      if (disease.dataValues.usualName.substr(0, queryLen) === query) {
+        disease.setDataValue("initialLetterContained", true);
+      } else {
+        disease.setDataValue("initialLetterContained", false);
+      }
+      disease.setDataValue("category", "disease");
+    });
     const sido = await db.Sido.findAll({
       attributes: ["id", "name", ["fullName", "locationName"]],
       where: {
