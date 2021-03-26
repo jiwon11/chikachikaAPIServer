@@ -95,7 +95,7 @@ const conclustionAndLunchTimeCalFunc = function (day, nowTime, todayHoliday, hol
     holidayTreatmentQuery,
   };
 };
-const clinicIncludeModels = function (db, query, tagCategory, tagId, clusterQuery) {
+const clinicIncludeModels = function (db, query, clusterQuery) {
   var includeModels;
   var residenceQuery;
   if (clusterQuery === undefined) {
@@ -130,54 +130,6 @@ const clinicIncludeModels = function (db, query, tagCategory, tagId, clusterQuer
       order: [["represent", "DESC"]],
     },
   ];
-  console.log("query:", query, "//", "tagCategory:", tagCategory);
-  if (tagCategory === "city") {
-    let modelIdx = includeModels.findIndex((model) => model.model === db.City);
-    includeModels[modelIdx].where.push({
-      [Sequelize.Op.or]: [
-        {
-          fullCityName: {
-            [Sequelize.Op.like]: `%${query}%`,
-          },
-        },
-        {
-          id: tagId,
-        },
-      ],
-    });
-  } else if (tagCategory === "treatment") {
-    let modelIdx = includeModels.findIndex((model) => model.model === db.Review);
-    includeModels[modelIdx].include[0].where = {
-      [Sequelize.Op.or]: [
-        {
-          usualName: {
-            [Sequelize.Op.like]: `%${query}%`,
-          },
-        },
-        {
-          technicalName: {
-            [Sequelize.Op.like]: `%${query}%`,
-          },
-        },
-      ],
-    };
-  } else if (tagCategory === "disease") {
-    let modelIdx = includeModels.findIndex((model) => model.model === db.Review);
-    includeModels[modelIdx].include[1].where = {
-      [Sequelize.Op.or]: [
-        {
-          usualName: {
-            [Sequelize.Op.like]: `%${query}%`,
-          },
-        },
-        {
-          technicalName: {
-            [Sequelize.Op.like]: `%${query}%`,
-          },
-        },
-      ],
-    };
-  }
   return includeModels;
 };
 
@@ -550,7 +502,7 @@ module.exports.NewestReviewsInResidence = async function (db, emdCity, day, nowT
   });
 };
 
-module.exports.getKeywordSearchAll = async function (db, lat, long, query, tagCategory, tagId, clusterQuery, limit, offset, order) {
+module.exports.getKeywordSearchAll = async function (db, lat, long, query, clusterQuery, limit, offset, order) {
   console.log(clusterQuery);
   var orderQuery;
   if (order === "distance") {
@@ -603,19 +555,12 @@ module.exports.getKeywordSearchAll = async function (db, lat, long, query, tagCa
     ],
     [accuracyPointQuery, "accuracyPoint"],
   ];
-  const includeModels = clinicIncludeModels(db, query, tagCategory, tagId, clusterQuery);
-  var whereQuery;
-  if (tagCategory === "clinic") {
-    whereQuery = {
-      id: tagId,
-    };
-  } else if (tagCategory === "general") {
-    whereQuery = {
-      originalName: {
-        [Sequelize.Op.like]: `%${query}%`,
-      },
-    };
-  }
+  const includeModels = clinicIncludeModels(db, query, clusterQuery);
+  const whereQuery = {
+    originalName: {
+      [Sequelize.Op.like]: `%${query}%`,
+    },
+  };
   var results = await this.findAll({
     attributes: attributesList,
     where: whereQuery,

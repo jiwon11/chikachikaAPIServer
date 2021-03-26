@@ -161,14 +161,13 @@ functions:
       - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:latest
     events:
       - http:
-          path: search/allTagItems/{purpose}
+          path: search/allTagItems
           method: get
           cors: true
           caching:
             enabled: true
             ttlInSeconds: 300 # overrides the global setting for ttlInSeconds
             cacheKeyParameters:
-              - name: request.path.purpose
               - name: request.querystring.q
               - name: request.querystring.offset
               - name: request.querystring.limit
