@@ -375,54 +375,6 @@ module.exports.allTagItems = async function allTagItems(event) {
       }
       treatment.setDataValue("category", "treatment");
     });
-    const diseases = await db.Disease_item.findAll({
-      where: {
-        [Sequelize.Op.or]: [
-          {
-            usualName: {
-              [Sequelize.Op.like]: `%${query}%`,
-            },
-          },
-          {
-            technicalName: {
-              [Sequelize.Op.like]: `%${query}%`,
-            },
-          },
-        ],
-      },
-      attributes: ["id", "usualName", "technicalName"],
-      order: [["usualName", "ASC"]],
-      limit: 3,
-    });
-    diseases.forEach((disease) => {
-      if (disease.dataValues.usualName.substr(0, queryLen) === query) {
-        disease.setDataValue("initialLetterContained", true);
-      } else {
-        disease.setDataValue("initialLetterContained", false);
-      }
-      disease.setDataValue("category", "disease");
-    });
-    /*
-    const generaltags = await db.GeneralTag.findAll({
-      where: {
-        name: {
-          [Sequelize.Op.like]: `${query}%`,
-        },
-      },
-      attributes: ["id", "name"],
-      order: [["name", "ASC"]],
-      limit: 5,
-    });
-    generaltags.forEach((generaltag) => {
-      if (generaltag.dataValues.name.substr(0, queryLen) === query) {
-        generaltag.setDataValue("initialLetterContained", true);
-      } else {
-        generaltag.setDataValue("initialLetterContained", false);
-      }
-      generaltag.setDataValue("category", "general");
-    });
-    */
-    // 통합검색 시, 자동완성용 API
     const sido = await db.Sido.findAll({
       attributes: ["id", "name", ["fullName", "locationName"]],
       where: {
