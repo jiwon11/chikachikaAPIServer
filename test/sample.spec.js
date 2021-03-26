@@ -22,13 +22,13 @@ axios.defaults.adapter = require("axios/lib/adapters/http");
 describe("GET search", () => {
   test("GET search Treatments", async () => {
     const res = await axios
-      .get(`${API_ENDPOINT}/search/treatments?q=${encodeURIComponent("스케일링")}`, {
+      .get(`${API_ENDPOINT}/search/review?query=${encodeURIComponent("충치")}&lat=37.29404121591071&long=127.04600809585094&type=All&limit=10&offset=0&order=accuracy&region=all&cityId=-1`, {
         headers: {
           Authorization: USERTOKEN,
         },
       })
       .then((response) => response);
-    console.log(res);
+    console.log(res.data);
     expect(res.status).toBe(200);
   });
 });
