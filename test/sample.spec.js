@@ -20,7 +20,7 @@ if (stage === "test") {
 
 axios.defaults.adapter = require("axios/lib/adapters/http");
 describe("GET search", () => {
-  test("GET search Treatments", async () => {
+  test("GET search keyWaord Search", async () => {
     const res = await axios
       .get(`${API_ENDPOINT}/search/review?query=${encodeURIComponent("충치")}&lat=37.29404121591071&long=127.04600809585094&type=All&limit=10&offset=0&order=accuracy&region=all&cityId=-1`, {
         headers: {
@@ -28,7 +28,7 @@ describe("GET search", () => {
         },
       })
       .then((response) => response);
-    console.log(res.data);
+    console.log(res);
     expect(res.status).toBe(200);
   });
 });
