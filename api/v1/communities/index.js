@@ -131,6 +131,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
             tagArray.push({ name: disease.usualName, category: "disease", id: disease.id });
           } else {
             let city = await db.City.findOne({
+              attributes: [[Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), "cityName"]],
               where: {
                 [Sequelize.Op.or]: [
                   Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), {
@@ -145,7 +146,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
                   index: hashtags.indexOf(hashtag) + 1,
                 },
               });
-              tagArray.push({ name: city.name, category: "city", id: city.id });
+              tagArray.push({ name: city.cityName, category: "city", id: city.id });
             } else {
               let generalTag = await db.GeneralTag.findOne({
                 where: {
