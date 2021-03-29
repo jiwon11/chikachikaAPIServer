@@ -472,11 +472,8 @@ module.exports.NewestReviewsInResidence = async function (db, emdCity, day, nowT
     ],
     order: [
       Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL) DESC`),
-      Sequelize.literal(
-        `(SELECT ROUND(((SELECT AVG(starRate_cost) FROM reviews where reviews.dentalClinicId = dental_clinic.id)+(SELECT AVG(starRate_treatment) FROM reviews where reviews.dentalClinicId = dental_clinic.id)+(SELECT AVG(starRate_service) FROM reviews where reviews.dentalClinicId = dental_clinic.id))/3,1)) DESC`
-      ),
       [db.Review, "certifiedBill", "DESC"],
-      Sequelize.literal(`(SELECT ROUND((starRate_cost + starRate_treatment + starRate_service)/3,1)) DESC`),
+      Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE) DESC`),
     ],
     subQuery: false,
   });
