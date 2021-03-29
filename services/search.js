@@ -128,7 +128,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
     });
     if (user) {
       console.log(event.queryStringParameters);
-      const { lat, long, query, sort, days, time, wantParking, holiday, tagCategory, tagId } = event.queryStringParameters;
+      const { lat, long, sq, iq, sort, days, time, wantParking, holiday, tagCategory, tagId } = event.queryStringParameters;
       const limit = parseInt(event.queryStringParameters.limit);
       const offset = parseInt(event.queryStringParameters.offset);
       if (!sq) {
