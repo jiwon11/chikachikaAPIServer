@@ -65,7 +65,7 @@ const reviewIncludeModels = function (db, viewType, query, clusterQuery, appendM
           "img_name",
           [Sequelize.fn("CONCAT", `${cloudFrontUrl}`, Sequelize.col("img_name"), "?w=686&h=700&f=jpeg&q=100"), "img_thumbNail"],
           "index",
-          "img_before_after",
+          "imgDate",
           "img_width",
           "img_height",
         ],

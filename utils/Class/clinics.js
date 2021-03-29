@@ -375,7 +375,7 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
         "surgeonNum",
       ],
       [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
-      [sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
+      [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
       [accuracyPointQuery, "accuracyPoint"],
     ];
   }

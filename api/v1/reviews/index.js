@@ -100,7 +100,7 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
     }
     const review = await db.Review.create({
       certifiedBill: false,
-      recommend: recommend === "true" ? true : false,
+      recommend: recommend === true ? true : false,
       totalCost: parseInt(totalCost),
       treatmentDate: parseTreatmentDate,
       userId: req.user.id,
@@ -156,7 +156,7 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
           img_size: paragraph.size,
           index: paragraphs.indexOf(paragraph) + 1,
           description: paragraph.description,
-          img_before_after: paragraph.imgBeforeAfter,
+          imgDate: paragraph.imgDate,
           img_width: paragraph.width,
           img_height: paragraph.height,
           reviewId: review.id,
@@ -290,7 +290,7 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
               img_size: paragraph.size,
               index: paragraphs.indexOf(paragraph) + 1,
               description: paragraph.description,
-              img_before_after: paragraph.imgBeforeAfter,
+              imgDate: paragraph.imgDate,
               reviewId: review.id,
               img_width: paragraph.width,
               img_height: paragraph.height,
