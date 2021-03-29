@@ -524,7 +524,7 @@ module.exports.getKeywordSearchAll = async function (db, lat, long, query, clust
     [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
     conclustionAndLunchTime.conclustionNow,
     conclustionAndLunchTime.lunchTimeNow,
-    [sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
+    [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
     [accuracyPointQuery, "accuracyPoint"],
   ];
   const includeModels = clinicIncludeModels(db, query, clusterQuery);

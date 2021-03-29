@@ -308,7 +308,7 @@ module.exports.getUserReviewsAll = async function (db, targetUserId, userId, lim
   });
 };
 
-module.exports.getKeywordSearchAll = async function (db, userId, query, clusterQuery, limitQuery, offsetQuery, order) {
+module.exports.getKeywordSearchAll = async function (db, userId, query, clusterQuery, limitQuery, offsetQuery, order, correctionStatus) {
   var orderQuery;
   if (order === "createdAt") {
     orderQuery = ["createdAt", "DESC"];
@@ -317,6 +317,29 @@ module.exports.getKeywordSearchAll = async function (db, userId, query, clusterQ
       Sequelize.literal("(((SELECT COUNT(*) FROM Like_Review WHERE Like_Review.likedReviewId = review.id)*3)+ (SELECT COUNT(*) FROM ViewReviews WHERE ViewReviews.viewedReviewId = review.id)) DESC"),
     ];
   }
+  var correctionStatusQuery;
+  if (correctionStatus === "all") {
+    correctionStatusQuery = {
+      correctionStartDate: {
+        [Sequelize.Op.not]: null,
+      },
+    };
+  } else if (correctionStatus === "cpt") {
+    correctionStatusQuery = {
+      correctionEndDate: {
+        [Sequelize.Op.not]: null,
+      },
+    };
+  } else if (correctionStatus === "ing") {
+    correctionStatusQuery = {
+      correctionEndDate: {
+        [Sequelize.Op.is]: null,
+      },
+      correctionStartDate: {
+        [Sequelize.Op.not]: null,
+      },
+    };
+  }
   const whereQuery = {
     [Sequelize.Op.and]: [
       {
@@ -324,6 +347,7 @@ module.exports.getKeywordSearchAll = async function (db, userId, query, clusterQ
           [Sequelize.Op.not]: null,
         },
       },
+      correctionStatusQuery,
       {
         [Sequelize.Op.or]: [
           {

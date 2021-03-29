@@ -360,7 +360,7 @@ module.exports.billsVerify = async function billsVerify(event) {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: `*추천 여부* : ${review.dataValues.recommend} \n *치료일자* : ${review.dataValues.treatmentDate} \n *총금액* : ${review.dataValues.totalCost}`,
+                text: `*추천 여부* : ${review.dataValues.recommend} \n *총금액* : ${review.dataValues.totalCost}`,
               },
             },
             {
