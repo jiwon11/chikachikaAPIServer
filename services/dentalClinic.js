@@ -40,15 +40,7 @@ module.exports.detailClinics = async function detailClinics(event) {
               : day !== "Sun" && todayHoliday.length === 0
               ? [sequelize.literal(`sat_TOL_start <= "${nowTime}" AND sat_TOL_end >= "${nowTime}"`), "lunchTimeNow"]
               : [sequelize.literal(`1 != 1`), "lunchNow"],
-            [
-              sequelize.literal(
-                `(SELECT ROUND(((SELECT AVG(starRate_cost) FROM reviews where reviews.dentalClinicId = dental_clinic.id)+(SELECT AVG(starRate_treatment) FROM reviews where reviews.dentalClinicId = dental_clinic.id)+(SELECT AVG(starRate_service) FROM reviews where reviews.dentalClinicId = dental_clinic.id))/3,1))`
-              ),
-              "reviewAVGStarRate",
-            ],
-            [sequelize.literal(`(SELECT ROUND((SELECT AVG(starRate_cost) FROM reviews where reviews.dentalClinicId = dental_clinic.id),1))`), "reviewCostAVGStarRate"],
-            [sequelize.literal(`(SELECT ROUND((SELECT AVG(starRate_treatment) FROM reviews where reviews.dentalClinicId = dental_clinic.id),1))`), "reviewTreatmentAVGStarRate"],
-            [sequelize.literal(`(SELECT ROUND((SELECT AVG(starRate_service) FROM reviews where reviews.dentalClinicId = dental_clinic.id),1))`), "reviewServiceAVGStarRate"],
+            [sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
           ],
         },
         include: [
@@ -120,12 +112,7 @@ module.exports.detailClinics = async function detailClinics(event) {
         reviewNum: clinic.get("reviewNum"),
         conclustionNow: clinic.get("conclustionNow"),
         lunchTimeNow: clinic.get("lunchTimeNow"),
-        reviewAVGStarRate: {
-          all: clinic.get("reviewAVGStarRate"),
-          cost: clinic.get("reviewCostAVGStarRate"),
-          treatment: clinic.get("reviewTreatmentAVGStarRate"),
-          service: clinic.get("reviewServiceAVGStarRate"),
-        },
+        recommendNum: clinic.get("recommendNum"),
       };
       const clinicInfoBody = {};
       const clinicTreatmentTime = {
@@ -188,7 +175,7 @@ module.exports.detailClinics = async function detailClinics(event) {
         parkingNotice: clinic.parking_others_notice,
       };
       const clinicReviewImg = await db.Review_content.findAll({
-        attributes: ["id", "img_url", "index", "img_before_after", "createdAt", "img_width", "img_height"],
+        attributes: ["id", "img_url", "index", "imgDate", "createdAt", "img_width", "img_height"],
         where: {
           img_url: {
             [Sequelize.Op.not]: null,

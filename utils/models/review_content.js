@@ -26,8 +26,8 @@ module.exports = (sequelize, DataTypes) =>
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      img_before_after: {
-        type: DataTypes.STRING,
+      imgDate: {
+        type: DataTypes.DATEONLY,
         allowNull: true,
       },
       img_width: {

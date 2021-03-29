@@ -3,16 +3,8 @@ module.exports = (sequelize, DataTypes) => {
   const review = sequelize.define(
     "review",
     {
-      starRate_cost: {
-        type: DataTypes.DOUBLE,
-        allowNull: false,
-      },
-      starRate_treatment: {
-        type: DataTypes.DOUBLE,
-        allowNull: false,
-      },
-      starRate_service: {
-        type: DataTypes.DOUBLE,
+      recommend: {
+        type: DataTypes.BOOLEAN,
         allowNull: false,
       },
       certifiedBill: {

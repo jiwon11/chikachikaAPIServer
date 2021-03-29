@@ -89,7 +89,7 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
     const paragraphs = JSON.parse(req.body.paragraphs);
     console.log("paragraphs: ", paragraphs);
     const body = req.body.body;
-    const { starRate_cost, starRate_treatment, starRate_service, treatments, dentalClinicId, totalCost, treatmentDate, diseases } = JSON.parse(body);
+    const { recommend, treatments, dentalClinicId, totalCost, treatmentDate, diseases } = JSON.parse(body);
     console.log(`treatmentDate : ${treatmentDate}`);
     var parseTreatmentDate;
     if (treatmentDate !== "undefined" && treatmentDate) {
@@ -100,9 +100,7 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
     }
     const review = await db.Review.create({
       certifiedBill: false,
-      starRate_cost: parseFloat(starRate_cost),
-      starRate_service: parseFloat(starRate_service),
-      starRate_treatment: parseFloat(starRate_treatment),
+      recommend: recommend === true ? true : false,
       totalCost: parseInt(totalCost),
       treatmentDate: parseTreatmentDate,
       userId: req.user.id,
@@ -158,7 +156,7 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
           img_size: paragraph.size,
           index: paragraphs.indexOf(paragraph) + 1,
           description: paragraph.description,
-          img_before_after: paragraph.imgBeforeAfter,
+          imgDate: paragraph.imgDate,
           img_width: paragraph.width,
           img_height: paragraph.height,
           reviewId: review.id,
@@ -204,7 +202,7 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
     const userId = req.user.id;
     const paragraphs = JSON.parse(req.body.paragraphs);
     const body = req.body.body;
-    const { starRate_cost, starRate_treatment, starRate_service, certified_bill, treatments, dentalClinicId, totalCost, treatmentDate, diseases } = JSON.parse(body);
+    const { recommend, certified_bill, treatments, dentalClinicId, totalCost, treatmentDate, diseases } = JSON.parse(body);
     const review = await db.Review.findOne({
       where: {
         id: reviewId,
@@ -234,9 +232,7 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
         });
         await review.update({
           certifiedBill: certified_bill,
-          starRate_cost: parseFloat(starRate_cost),
-          starRate_service: parseFloat(starRate_service),
-          starRate_treatment: parseFloat(starRate_treatment),
+          recommend: recommend === "true" ? true : false,
           totalCost: parseInt(totalCost),
           treatmentDate: parseTreatmentDate,
           userId: req.user.id,
@@ -294,7 +290,7 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
               img_size: paragraph.size,
               index: paragraphs.indexOf(paragraph) + 1,
               description: paragraph.description,
-              img_before_after: paragraph.imgBeforeAfter,
+              imgDate: paragraph.imgDate,
               reviewId: review.id,
               img_width: paragraph.width,
               img_height: paragraph.height,
