@@ -248,12 +248,7 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
       [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
       conclustionAndLunchTime.conclustionNow,
       conclustionAndLunchTime.lunchTimeNow,
-      [
-        Sequelize.literal(
-          `(SELECT ROUND(((SELECT AVG(starRate_cost) FROM reviews where reviews.dentalClinicId = dental_clinic.id)+(SELECT AVG(starRate_treatment) FROM reviews where reviews.dentalClinicId = dental_clinic.id)+(SELECT AVG(starRate_service) FROM reviews where reviews.dentalClinicId = dental_clinic.id))/3,1))`
-        ),
-        "reviewAVGStarRate",
-      ],
+      [sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
       [accuracyPointQuery, "accuracyPoint"],
     ];
   } else if (type === "keyword") {
@@ -347,12 +342,7 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
       [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
       conclustionAndLunchTime.conclustionNow,
       conclustionAndLunchTime.lunchTimeNow,
-      [
-        Sequelize.literal(
-          `(SELECT ROUND(((SELECT AVG(starRate_cost) FROM reviews where reviews.dentalClinicId = dental_clinic.id)+(SELECT AVG(starRate_treatment) FROM reviews where reviews.dentalClinicId = dental_clinic.id)+(SELECT AVG(starRate_service) FROM reviews where reviews.dentalClinicId = dental_clinic.id))/3,1))`
-        ),
-        "reviewAVGStarRate",
-      ],
+      [sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
       [accuracyPointQuery, "accuracyPoint"],
     ];
   } else if (type === "residence") {
@@ -385,12 +375,7 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
         "surgeonNum",
       ],
       [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
-      [
-        Sequelize.literal(
-          `(SELECT ROUND(((SELECT AVG(starRate_cost) FROM reviews where reviews.dentalClinicId = dental_clinic.id)+(SELECT AVG(starRate_treatment) FROM reviews where reviews.dentalClinicId = dental_clinic.id)+(SELECT AVG(starRate_service) FROM reviews where reviews.dentalClinicId = dental_clinic.id))/3,1))`
-        ),
-        "reviewAVGStarRate",
-      ],
+      [sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
       [accuracyPointQuery, "accuracyPoint"],
     ];
   }
@@ -437,12 +422,7 @@ module.exports.NewestReviewsInResidence = async function (db, emdCity, day, nowT
         "distance(km)",
       ],
       [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
-      [
-        Sequelize.literal(
-          `(SELECT ROUND(((SELECT AVG(starRate_cost) FROM reviews where reviews.dentalClinicId = dental_clinic.id)+(SELECT AVG(starRate_treatment) FROM reviews where reviews.dentalClinicId = dental_clinic.id)+(SELECT AVG(starRate_service) FROM reviews where reviews.dentalClinicId = dental_clinic.id))/3,1))`
-        ),
-        "reviewAVGStarRate",
-      ],
+      [sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
       //[accuracyPointQuery, "accuracyPoint"],
     ],
     include: [
@@ -463,8 +443,8 @@ module.exports.NewestReviewsInResidence = async function (db, emdCity, day, nowT
           "totalCost",
           "dentalClinicId",
           "certifiedBill",
+          "recommend",
           "createdAt",
-          [Sequelize.literal(`(SELECT ROUND((starRate_cost + starRate_treatment + starRate_service)/3,1))`), "AVGStarRate"],
           [Sequelize.literal(`IF((SELECT COUNT(*) FROM reviewBills where reviewBills.reviewId=reviews.id AND reviewBills.deletedAt IS NULL)>0,TRUE,FALSE)`), "verifyBills"],
         ],
         required: true,
@@ -547,12 +527,7 @@ module.exports.getKeywordSearchAll = async function (db, lat, long, query, clust
     [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
     conclustionAndLunchTime.conclustionNow,
     conclustionAndLunchTime.lunchTimeNow,
-    [
-      Sequelize.literal(
-        `(SELECT ROUND(((SELECT AVG(starRate_cost) FROM reviews where reviews.dentalClinicId = dental_clinic.id)+(SELECT AVG(starRate_treatment) FROM reviews where reviews.dentalClinicId = dental_clinic.id)+(SELECT AVG(starRate_service) FROM reviews where reviews.dentalClinicId = dental_clinic.id))/3,1))`
-      ),
-      "reviewAVGStarRate",
-    ],
+    [sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
     [accuracyPointQuery, "accuracyPoint"],
   ];
   const includeModels = clinicIncludeModels(db, query, clusterQuery);
