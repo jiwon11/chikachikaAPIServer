@@ -248,7 +248,7 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
       [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
       conclustionAndLunchTime.conclustionNow,
       conclustionAndLunchTime.lunchTimeNow,
-      [sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
+      [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
       [accuracyPointQuery, "accuracyPoint"],
     ];
   } else if (type === "keyword") {
@@ -342,7 +342,7 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
       [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
       conclustionAndLunchTime.conclustionNow,
       conclustionAndLunchTime.lunchTimeNow,
-      [sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
+      [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
       [accuracyPointQuery, "accuracyPoint"],
     ];
   } else if (type === "residence") {
@@ -422,7 +422,7 @@ module.exports.NewestReviewsInResidence = async function (db, emdCity, day, nowT
         "distance(km)",
       ],
       [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
-      [sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
+      [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
       //[accuracyPointQuery, "accuracyPoint"],
     ],
     include: [
