@@ -332,17 +332,12 @@ module.exports.allTagItems = async function allTagItems(event) {
           [Sequelize.Op.like]: `${query}%`,
         },
       },
-      attributes: ["id", "originalName"],
+      attributes: [["originalName", "name"]],
       group: ["originalName"],
       order: [["originalName", "ASC"]],
       limit: 5,
     });
     clinics.forEach((clinic) => {
-      if (clinic.dataValues.originalName.substr(0, queryLen) === query) {
-        clinic.setDataValue("initialLetterContained", true);
-      } else {
-        clinic.setDataValue("initialLetterContained", false);
-      }
       clinic.setDataValue("category", "clinic");
     });
     const treatments = await db.Treatment_item.findAll({
@@ -360,16 +355,11 @@ module.exports.allTagItems = async function allTagItems(event) {
           },
         ],
       },
-      attributes: ["id", "usualName", "technicalName"],
+      attributes: [["usualName", "name"]],
       order: [["usualName", "ASC"]],
       limit: 3,
     });
     treatments.forEach((treatment) => {
-      if (treatment.dataValues.usualName.substr(0, queryLen) === query) {
-        treatment.setDataValue("initialLetterContained", true);
-      } else {
-        treatment.setDataValue("initialLetterContained", false);
-      }
       treatment.setDataValue("category", "treatment");
     });
     const diseases = await db.Disease_item.findAll({
@@ -387,20 +377,15 @@ module.exports.allTagItems = async function allTagItems(event) {
           },
         ],
       },
-      attributes: ["id", "usualName", "technicalName"],
+      attributes: [["usualName", "name"]],
       order: [["usualName", "ASC"]],
       limit: 3,
     });
     diseases.forEach((disease) => {
-      if (disease.dataValues.usualName.substr(0, queryLen) === query) {
-        disease.setDataValue("initialLetterContained", true);
-      } else {
-        disease.setDataValue("initialLetterContained", false);
-      }
       disease.setDataValue("category", "disease");
     });
     const sido = await db.Sido.findAll({
-      attributes: ["id", "name", ["fullName", "locationName"]],
+      attributes: ["name", ["fullName", "name"]],
       where: {
         fullName: {
           [Sequelize.Op.like]: `%${query}%`,
@@ -408,18 +393,8 @@ module.exports.allTagItems = async function allTagItems(event) {
       },
       order: [["fullName", "ASC"]],
     });
-    sido.forEach((sido) => {
-      if (sido.dataValues.name.substr(0, queryLen) === query) {
-        sido.setDataValue("initialLetterContained", true);
-      } else {
-        sido.setDataValue("initialLetterContained", false);
-      }
-      sido.setDataValue("isEMD", false);
-    });
     const sigungu = await db.Sigungu.findAll({
-      attributes: [
-        [Sequelize.fn("CONCAT", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', 1))"), "(", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', 2))"), ")"), "locationName"],
-      ],
+      attributes: [[Sequelize.fn("CONCAT", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', 1))"), "(", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', 2))"), ")"), "name"]],
       where: {
         fullName: {
           [Sequelize.Op.like]: `%${query}%`,
@@ -427,37 +402,28 @@ module.exports.allTagItems = async function allTagItems(event) {
       },
       limit: 5,
       order: [["fullName", "ASC"]],
-    });
-    sigungu.forEach((sigungu) => {
-      if (sigungu.dataValues.locationName.substr(0, queryLen) === query) {
-        sigungu.setDataValue("initialLetterContained", true);
-      } else {
-        sigungu.setDataValue("initialLetterContained", false);
-      }
-      sigungu.setDataValue("isEMD", false);
     });
     const cities = await db.City.findAll({
       where: Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
         [Sequelize.Op.like]: `%${query}%`,
       }),
-      attributes: [[Sequelize.literal("CONCAT(emdName, '(',REPLACE(sigungu,' ', '-'),')')"), "locationName"]],
+      attributes: [[Sequelize.literal("CONCAT(emdName, '(',REPLACE(sigungu,' ', '-'),')')"), "name"]],
       group: Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")),
       limit: 5,
     });
-    cities.forEach((city) => {
-      if (city.dataValues.locationName.substr(0, queryLen) === query) {
-        city.setDataValue("initialLetterContained", true);
-      } else {
-        city.setDataValue("initialLetterContained", false);
-      }
-      city.setDataValue("isEMD", true);
-    });
     const locations = cities.concat(sido, sigungu);
     locations.forEach((location) => location.setDataValue("category", "city"));
-    const sortLoations = locations.sort(function async(a, b) {
+    const sortLocations = locations.sort(function async(a, b) {
       return a.dataValues.fullName < b.dataValues.fullName ? -1 : a.dataValues.fullName > b.dataValues.fullName ? 1 : 0;
     });
-    var mergeResults = sortLoations.concat(treatments, clinics, diseases);
+    var mergeResults = sortLocations.concat(treatments, clinics, diseases);
+    mergeResults.forEach((result) => {
+      if (result.dataValues.name.substr(0, queryLen) === query) {
+        result.setDataValue("initialLetterContained", true);
+      } else {
+        result.setDataValue("initialLetterContained", false);
+      }
+    });
     mergeResults = mergeResults.sort(function async(a, b) {
       return b.dataValues.initialLetterContained - a.dataValues.initialLetterContained;
     });
