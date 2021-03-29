@@ -345,12 +345,7 @@ module.exports.allTagItems = async function allTagItems(event) {
         [Sequelize.Op.or]: [
           {
             usualName: {
-              [Sequelize.Op.like]: `${query}%`,
-            },
-          },
-          {
-            technicalName: {
-              [Sequelize.Op.like]: `${query}%`,
+              [Sequelize.Op.like]: `%${query}%`,
             },
           },
         ],
@@ -367,11 +362,6 @@ module.exports.allTagItems = async function allTagItems(event) {
         [Sequelize.Op.or]: [
           {
             usualName: {
-              [Sequelize.Op.like]: `%${query}%`,
-            },
-          },
-          {
-            technicalName: {
               [Sequelize.Op.like]: `%${query}%`,
             },
           },

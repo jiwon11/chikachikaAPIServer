@@ -25,7 +25,6 @@ const communityImgUpload = multer({
 
 router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, next) => {
   try {
-    console.log(req.body);
     const description = req.body.description;
     const type = req.body.type;
     const wantDentistHelp = req.body.type;
@@ -43,7 +42,6 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
         },
       },
     });
-    console.log("images: ", images);
     const communityPost = await db.Community.create({
       description: description,
       wantDentistHelp: wantDentistHelp === "true",
@@ -51,6 +49,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
       userId: req.user.id,
       cityId: city[0].id,
     });
+    console.time("create coomunity image");
     await Promise.all(
       images.map((image) =>
         db.Community_img.create({
@@ -66,6 +65,8 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
         })
       )
     );
+    console.timeEnd("create coomunity image");
+    console.time("find tag");
     var hashtags = [];
     const regex = /\{\{[가-힣|ㄱ-ㅎ|ㅏ-ㅣ|0-9|a-zA-Z|(|)|([\{\}\[\]\/?.,;:|\)*~`!^\-_+<>@\#$%&\\\=\(\'\")]*\}\}/gm;
     let m;
@@ -82,7 +83,9 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
         }
       });
     }
+    console.timeEnd("find tag");
     tagArray = [];
+    console.time("create tagging Array");
     for (const hashtag of hashtags) {
       console.log(hashtag);
       let clinic = await db.Dental_clinic.findOne({
@@ -131,7 +134,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
             tagArray.push({ name: disease.usualName, category: "disease", id: disease.id });
           } else {
             let city = await db.City.findOne({
-              attributes: [[Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), "cityName"]],
+              attributes: { include: [[Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), "cityName"]] },
               where: {
                 [Sequelize.Op.or]: [
                   Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), {
@@ -146,7 +149,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
                   index: hashtags.indexOf(hashtag) + 1,
                 },
               });
-              tagArray.push({ name: city.cityName, category: "city", id: city.id });
+              tagArray.push({ name: city.get("cityName"), category: "city", id: city.id });
             } else {
               let generalTag = await db.GeneralTag.findOne({
                 where: {
@@ -176,6 +179,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
         }
       }
     }
+    console.timeEnd("create tagging Array");
     await communityPost.update({
       tagArray: { tagArray: tagArray },
     });
@@ -401,6 +405,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
             tagArray.push({ name: disease.usualName, category: "disease", id: disease.id });
           } else {
             let city = await db.City.findOne({
+              attributes: { include: [[Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), "cityName"]] },
               where: {
                 [Sequelize.Op.or]: [
                   Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), {
@@ -415,7 +420,7 @@ router.put("/", getUserInToken, communityImgUpload.none(), async (req, res, next
                   index: hashtags.indexOf(hashtag) + 1,
                 },
               });
-              tagArray.push({ name: city.name, category: "city", id: city.id });
+              tagArray.push({ name: city.get("cityName"), category: "city", id: city.id });
             } else {
               let generalTag = await db.GeneralTag.findOne({
                 where: {
