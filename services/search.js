@@ -526,7 +526,8 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
           };
         case "review":
           console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
-          const reviewResult = await db.Review.getKeywordSearchAll(db, userId, query, clusterQuery, limit, offset, order);
+          const correctionStatus = event.queryStringParameters.correctionStatus;
+          const reviewResult = await db.Review.getKeywordSearchAll(db, userId, query, clusterQuery, limit, offset, order, correctionStatus);
           console.log(`${resultType} results Num: ${reviewResult.length}`);
           return {
             statusCode: 200,

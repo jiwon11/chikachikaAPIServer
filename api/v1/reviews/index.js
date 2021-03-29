@@ -89,20 +89,14 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
     const paragraphs = JSON.parse(req.body.paragraphs);
     console.log("paragraphs: ", paragraphs);
     const body = req.body.body;
-    const { recommend, treatments, dentalClinicId, totalCost, treatmentDate, diseases } = JSON.parse(body);
-    console.log(`treatmentDate : ${treatmentDate}`);
-    var parseTreatmentDate;
-    if (treatmentDate !== "undefined" && treatmentDate) {
-      parseTreatmentDate = new Date(treatmentDate);
-      console.log(`parseTreatmentDate : ${parseTreatmentDate}`);
-    } else {
-      parseTreatmentDate = moment().tz(process.env.TZ);
-    }
+    const { recommend, treatments, dentalClinicId, totalCost, correctionStartDate, correctionEndDate, diseases } = JSON.parse(body);
+    console.log(`correctionStartDate : ${correctionStartDate}, correctionEndDate: ${correctionEndDate}`);
     const review = await db.Review.create({
       certifiedBill: false,
       recommend: recommend === true ? true : false,
       totalCost: parseInt(totalCost),
-      treatmentDate: parseTreatmentDate,
+      correctionStartDate: correctionStartDate,
+      correctionEndDate: correctionEndDate,
       userId: req.user.id,
       dentalClinicId: dentalClinicId,
     });
@@ -202,7 +196,7 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
     const userId = req.user.id;
     const paragraphs = JSON.parse(req.body.paragraphs);
     const body = req.body.body;
-    const { recommend, certified_bill, treatments, dentalClinicId, totalCost, treatmentDate, diseases } = JSON.parse(body);
+    const { recommend, treatments, dentalClinicId, totalCost, correctionStartDate, correctionEndDate, diseases } = JSON.parse(body);
     const review = await db.Review.findOne({
       where: {
         id: reviewId,
@@ -213,12 +207,6 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
     });
     if (review) {
       if (review.userId === req.user.id) {
-        var parseTreatmentDate;
-        if (treatmentDate !== "undefined" && treatmentDate) {
-          parseTreatmentDate = new Date(treatmentDate);
-        } else {
-          parseTreatmentDate = moment().tz(process.env.TZ);
-        }
         await db.Review_content.destroy({
           where: {
             reviewId: review.id,
@@ -234,7 +222,8 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
           certifiedBill: certified_bill,
           recommend: recommend === "true" ? true : false,
           totalCost: parseInt(totalCost),
-          treatmentDate: parseTreatmentDate,
+          correctionStartDate: correctionStartDate,
+          correctionEndDate: correctionEndDate,
           userId: req.user.id,
           dentalClinicId: dentalClinicId,
         });
