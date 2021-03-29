@@ -394,7 +394,7 @@ module.exports.allTagItems = async function allTagItems(event) {
       order: [["fullName", "ASC"]],
     });
     const sigungu = await db.Sigungu.findAll({
-      attributes: [[Sequelize.fn("CONCAT", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', 1))"), "(", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', 2))"), ")"), "name"]],
+      attributes: [[Sequelize.fn("CONCAT", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', -1))"), "(", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', 1))"), ")"), "name"]],
       where: {
         fullName: {
           [Sequelize.Op.like]: `%${query}%`,
@@ -483,7 +483,7 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
       }
       switch (resultType) {
         case "community":
-          const communityType = event.queryStringParameters.type === "All" ? ["Question", "FreeTalk"] : [event.queryStringParameters.type];
+          const communityType = event.queryStringParameters.communityType === "All" ? ["Question", "FreeTalk"] : [event.queryStringParameters.communityType];
           const communityResult = await db.Community.getKeywordSearchAll(db, communityType, query, userId, clusterQuery, offset, limit, order);
           console.log(`${resultType} results Num: ${communityResult.length}`);
           return {
