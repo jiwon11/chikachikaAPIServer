@@ -128,23 +128,22 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
     });
     if (user) {
       console.log(event.queryStringParameters);
-      const { lat, long, sq, iq, sort, days, time, wantParking, holiday, tagCategory, tagId } = event.queryStringParameters;
+      const { lat, long, query, sort, days, time, wantParking, holiday, tagCategory } = event.queryStringParameters;
       const limit = parseInt(event.queryStringParameters.limit);
       const offset = parseInt(event.queryStringParameters.offset);
-      if (!sq) {
+      if (!query) {
         return {
           statusCode: 400,
           body: `{"statusText": "Bad Request","message": "검색어를 입력해주새요."}`,
         };
       }
       if (user) {
-        if (iq !== "") {
+        if (query !== "") {
           const [search, created] = await db.Search_record.findOrCreate({
             where: {
               userId: user.id,
               query: query,
               category: tagCategory,
-              targetId: null,
               route: "keywordClinicSearch",
             },
           });
@@ -154,7 +153,6 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
                 userId: user.id,
                 query: query,
                 category: tagCategory,
-                targetId: tagId,
                 route: "keywordClinicSearch",
               },
               {
@@ -208,7 +206,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
       const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
       const day = weekDay[today.day()];
       console.log(day, nowTime);
-      const clinics = await db.Dental_clinic.searchAll(db, "keyword", sq, nowTime, day, week, lat, long, null, null, limit, offset, sort, wantParking, holiday);
+      const clinics = await db.Dental_clinic.searchAll(db, "keyword", query, nowTime, day, week, lat, long, null, null, limit, offset, sort, wantParking, holiday);
       let response = {
         statusCode: 200,
         body: JSON.stringify(clinics),

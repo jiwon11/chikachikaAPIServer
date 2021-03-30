@@ -261,16 +261,6 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
                 [Sequelize.Op.like]: `%${query}%`,
               },
             },
-            {
-              address: {
-                [Sequelize.Op.like]: `%${query}%`,
-              },
-            },
-            {
-              "$city.fullCityName$": {
-                [Sequelize.Op.like]: `%${query}%`,
-              },
-            },
             Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("city.emdName"), "(", Sequelize.col("city.sigungu"), ")"), {
               [Sequelize.Op.like]: `%${query}%`,
             }),
@@ -538,16 +528,6 @@ module.exports.getKeywordSearchAll = async function (db, lat, long, query, clust
     [Sequelize.Op.or]: [
       {
         originalName: {
-          [Sequelize.Op.like]: `%${query}%`,
-        },
-      },
-      {
-        address: {
-          [Sequelize.Op.like]: `%${query}%`,
-        },
-      },
-      {
-        "$city.fullCityName$": {
           [Sequelize.Op.like]: `%${query}%`,
         },
       },
