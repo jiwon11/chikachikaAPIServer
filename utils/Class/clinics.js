@@ -271,6 +271,12 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
                 [Sequelize.Op.like]: `%${query}%`,
               },
             },
+            Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("city.emdName"), "(", Sequelize.col("city.sigungu"), ")"), {
+              [Sequelize.Op.like]: `%${query}%`,
+            }),
+            Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("city.sigungu"), "(", Sequelize.col("city.sido"), ")"), {
+              [Sequelize.Op.like]: `%${query}%`,
+            }),
           ],
         },
       ],
@@ -529,9 +535,29 @@ module.exports.getKeywordSearchAll = async function (db, lat, long, query, clust
   ];
   const includeModels = clinicIncludeModels(db, query, clusterQuery);
   const whereQuery = {
-    originalName: {
-      [Sequelize.Op.like]: `%${query}%`,
-    },
+    [Sequelize.Op.or]: [
+      {
+        originalName: {
+          [Sequelize.Op.like]: `%${query}%`,
+        },
+      },
+      {
+        address: {
+          [Sequelize.Op.like]: `%${query}%`,
+        },
+      },
+      {
+        "$city.fullCityName$": {
+          [Sequelize.Op.like]: `%${query}%`,
+        },
+      },
+      Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("city.emdName"), "(", Sequelize.col("city.sigungu"), ")"), {
+        [Sequelize.Op.like]: `%${query}%`,
+      }),
+      Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("city.sigungu"), "(", Sequelize.col("city.sido"), ")"), {
+        [Sequelize.Op.like]: `%${query}%`,
+      }),
+    ],
   };
   var results = await this.findAll({
     attributes: attributesList,
