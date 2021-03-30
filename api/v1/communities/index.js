@@ -133,23 +133,33 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
             });
             tagArray.push({ name: disease.usualName, category: "disease", id: disease.id });
           } else {
-            let city = await db.City.findOne({
-              attributes: { include: [[Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), "cityName"]] },
+            let city = await db.City.findAll({
+              attributes: { exclude: ["geometry"] },
               where: {
                 [Sequelize.Op.or]: [
                   Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.fn("REPLACE", Sequelize.col("sigungu"), " ", "-"), ")"), {
                     [Sequelize.Op.like]: `${hashtag}`,
                   }),
+                  Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sigungu"), "(", Sequelize.fn("REPLACE", Sequelize.col("sido"), " ", "-"), ")"), {
+                    [Sequelize.Op.like]: `${hashtag}`,
+                  }),
+                  {
+                    sido: {
+                      [Sequelize.Op.like]: `${hashtag}`,
+                    },
+                  },
                 ],
               },
             });
             if (city) {
-              await communityPost.addCityTag(city, {
-                through: {
-                  index: hashtags.indexOf(hashtag) + 1,
-                },
-              });
-              tagArray.push({ name: city.get("cityName"), category: "city", id: city.id });
+              if (city.length === 1) {
+                await communityPost.addCityTag(city[0], {
+                  through: {
+                    index: hashtags.indexOf(hashtag) + 1,
+                  },
+                });
+              }
+              tagArray.push({ name: hashtag, category: "city", id: city.id });
             } else {
               let generalTag = await db.GeneralTag.findOne({
                 where: {

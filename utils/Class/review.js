@@ -353,6 +353,9 @@ module.exports.getKeywordSearchAll = async function (db, userId, query, clusterQ
           {
             "$dental_clinic.originalName$": `${query}`,
           },
+          {
+            "$dental_clinic.address$": `%${query}%`,
+          },
           Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("dental_clinic.city.emdName"), "(", Sequelize.col("dental_clinic.city.sigungu"), ")"), {
             [Sequelize.Op.like]: `%${query}%`,
           }),
