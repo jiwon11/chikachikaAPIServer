@@ -333,7 +333,7 @@ module.exports.billsVerify = async function billsVerify(event) {
         },
       },
       attributes: { include: reviewQueryClass.reviewIncludeAttributes("") },
-      include: reviewQueryClass.reviewIncludeModels(db, "detail", null, null, null, null, {
+      include: reviewQueryClass.reviewIncludeModels(db, "detail", null, null, {
         model: db.ReviewBills,
       }),
       order: [
@@ -393,7 +393,7 @@ module.exports.billsVerify = async function billsVerify(event) {
             },
             {
               type: "image",
-              image_url: review.reviewBills[0].dataValues.img_url,
+              image_url: review.reviewBills ? review.reviewBills[0].dataValues.img_url : null,
               alt_text: "inspiration",
             },
             {
