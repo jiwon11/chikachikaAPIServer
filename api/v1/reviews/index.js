@@ -100,45 +100,49 @@ router.post("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) 
       userId: req.user.id,
       dentalClinicId: dentalClinicId,
     });
-    for (const treatment of treatments) {
-      const treatmentItem = await db.Treatment_item.findOne({
-        where: {
-          id: treatment.id,
-        },
-      });
-      if (treatmentItem) {
-        await review.addTreatmentItem(treatmentItem, {
-          through: {
-            cost: treatment.cost,
-            index: treatments.indexOf(treatment) + 1,
+    if (treatments.length > 0) {
+      for (const treatment of treatments) {
+        const treatmentItem = await db.Treatment_item.findOne({
+          where: {
+            id: treatment.id,
           },
         });
-      } else {
-        console.log(treatmentItem);
-        return res.status(404).json({
-          statusCode: 404,
-          body: { statusText: "Unaccepted", message: "진료 항목을 찾을 수 없습니다." },
-        });
+        if (treatmentItem) {
+          await review.addTreatmentItem(treatmentItem, {
+            through: {
+              cost: treatment.cost,
+              index: treatments.indexOf(treatment) + 1,
+            },
+          });
+        } else {
+          console.log(treatmentItem);
+          return res.status(404).json({
+            statusCode: 404,
+            body: { statusText: "Unaccepted", message: "진료 항목을 찾을 수 없습니다." },
+          });
+        }
       }
     }
-    for (const disease of diseases) {
-      const diseaseItem = await db.Disease_item.findOne({
-        where: {
-          id: disease.id,
-        },
-      });
-      if (diseaseItem) {
-        await review.addDiseaseItem(diseaseItem, {
-          through: {
-            index: diseases.indexOf(disease) + 1,
+    if (diseases.length > 0) {
+      for (const disease of diseases) {
+        const diseaseItem = await db.Disease_item.findOne({
+          where: {
+            id: disease.id,
           },
         });
-      } else {
-        console.log(diseaseItem);
-        return res.status(404).json({
-          statusCode: 404,
-          body: { statusText: "Unaccepted", message: "질병 항목을 찾을 수 없습니다." },
-        });
+        if (diseaseItem) {
+          await review.addDiseaseItem(diseaseItem, {
+            through: {
+              index: diseases.indexOf(disease) + 1,
+            },
+          });
+        } else {
+          console.log(diseaseItem);
+          return res.status(404).json({
+            statusCode: 404,
+            body: { statusText: "Unaccepted", message: "질병 항목을 찾을 수 없습니다." },
+          });
+        }
       }
     }
     const contents = await Promise.all(
