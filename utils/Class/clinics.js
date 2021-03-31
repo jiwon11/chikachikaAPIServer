@@ -261,7 +261,7 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
                 [Sequelize.Op.like]: `%${query}%`,
               },
             },
-            Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("city.emdName"), "(", Sequelize.col("city.sigungu"), ")"), {
+            Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("city.emdName"), "(", Sequelize.literal("(SELECT SUBSTRING_INDEX(city.sigungu, ' ', 1))"), ")"), {
               [Sequelize.Op.like]: `%${query}%`,
             }),
             Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("city.sigungu"), "(", Sequelize.col("city.sido"), ")"), {
@@ -531,7 +531,7 @@ module.exports.getKeywordSearchAll = async function (db, lat, long, query, clust
           [Sequelize.Op.like]: `%${query}%`,
         },
       },
-      Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("city.emdName"), "(", Sequelize.col("city.sigungu"), ")"), {
+      Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("city.emdName"), "(", Sequelize.literal("(SELECT SUBSTRING_INDEX(city.sigungu, ' ', 1))"), ")"), {
         [Sequelize.Op.like]: `%${query}%`,
       }),
       Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("city.sigungu"), "(", Sequelize.col("city.sido"), ")"), {
