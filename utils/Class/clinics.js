@@ -95,7 +95,7 @@ const conclustionAndLunchTimeCalFunc = function (day, nowTime, todayHoliday, hol
     holidayTreatmentQuery,
   };
 };
-const clinicIncludeModels = function (db, query, clusterQuery) {
+const clinicIncludeModels = function (db, clusterQuery) {
   var includeModels;
   var residenceQuery;
   if (clusterQuery === undefined) {
@@ -523,7 +523,7 @@ module.exports.getKeywordSearchAll = async function (db, lat, long, query, clust
     [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
     [accuracyPointQuery, "accuracyPoint"],
   ];
-  const includeModels = clinicIncludeModels(db, query, clusterQuery);
+  const includeModels = clinicIncludeModels(db, clusterQuery);
   const whereQuery = {
     [Sequelize.Op.or]: [
       {
@@ -543,6 +543,71 @@ module.exports.getKeywordSearchAll = async function (db, lat, long, query, clust
     attributes: attributesList,
     where: whereQuery,
     include: includeModels,
+    order: orderQuery,
+    limit: limit,
+    offset: offset,
+  });
+  results = JSON.parse(JSON.stringify(results));
+  results.forEach((result) => {
+    delete result.city;
+    delete result.reviews;
+  });
+  return results;
+};
+
+module.exports.getClinicByAttributes = async function (db, attrType, clusterQuery, lat, long, maplat, maplong, sort, nowTime, day, limit, offset) {
+  const todayHoliday = await todayHolidayFunc(db, today);
+  const conclustionAndLunchTime = conclustionAndLunchTimeCalFunc(day, nowTime, todayHoliday, "false");
+  var whereQuery;
+  if (attrType === "night") {
+    whereQuery = {
+      [Sequelize.Op.and]: [
+        Sequelize.where(Sequelize.literal(`${day}_Consulation_end_time`), {
+          [Sequelize.Op.gte]: "18:00:00",
+        }),
+        Sequelize.where(Sequelize.literal(`${day}_Consulation_end_time`), {
+          [Sequelize.Op.ne]: "00:00:00",
+        }),
+      ],
+    };
+  } else if (attrType === "surgeon") {
+    whereQuery = {
+      societySpecialist: true,
+    };
+  } else if (attrType === "transparent") {
+    whereQuery = {
+      dentalTransparent: true,
+    };
+  }
+  var orderQuery;
+  if (sort === "distance") {
+    orderQuery = Sequelize.literal("accuracyPoint DESC");
+  } else if (sort === "accuracy") {
+    orderQuery = Sequelize.literal("`distance(km)` ASC");
+  }
+  var results = await this.findAll({
+    attributes: [
+      "id",
+      "originalName",
+      conclustionAndLunchTime.conclustionNow,
+      conclustionAndLunchTime.lunchTimeNow,
+      conclustionAndLunchTime.TOLTimeConfident,
+      conclustionAndLunchTime.confidentConsulationTime,
+      conclustionAndLunchTime.startTime,
+      conclustionAndLunchTime.endTime,
+      [Sequelize.literal(`SUBSTRING_INDEX(address, ' ', 4)`), "modifiedAddress"],
+      [
+        Sequelize.literal(
+          `(SELECT IF(geographLat != '' ,ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2), -1))`
+        ),
+        "distance(km)",
+      ],
+      [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
+      [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
+      [accuracyPointQuery, "accuracyPoint"],
+    ],
+    where: whereQuery,
+    include: clinicIncludeModels(db, clusterQuery),
     order: orderQuery,
     limit: limit,
     offset: offset,
