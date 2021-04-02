@@ -223,7 +223,7 @@ router.put("/", getUserInToken, reviewImgUpload.none(), async (req, res, next) =
           force: true,
         });
         await review.update({
-          certifiedBill: certified_bill,
+          certifiedBill: review.certified_bill,
           recommend: recommend === "true" ? true : false,
           totalCost: parseInt(totalCost),
           correctionStartDate: correctionStartDate,
