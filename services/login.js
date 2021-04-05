@@ -1,5 +1,5 @@
 const { verifyPhoneNumberFunc } = require("../utils/verify");
-const { User, NotificationConfig, City } = require("../utils/models");
+const { User, City } = require("../utils/models");
 const jwt = require("jsonwebtoken");
 const cloudFrontUrl = process.env.cloudFrontUrl;
 

@@ -1,5 +1,4 @@
 const { User, NotificationConfig } = require("../utils/models");
-const jwt = require("jsonwebtoken");
 
 module.exports.updateNotificationConfig = async function updateNotificationConfig(event) {
   try {

@@ -1,7 +1,6 @@
 const db = require("../utils/models");
 const { sequelize, Sequelize } = require("../utils/models");
 const axios = require("axios");
-const jwt = require("jsonwebtoken");
 const AWS = require("aws-sdk");
 const moment = require("moment");
 const s3 = new AWS.S3({
