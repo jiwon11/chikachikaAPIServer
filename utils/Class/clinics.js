@@ -142,7 +142,7 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
   if (sort === "d") {
     orderQuery = Sequelize.literal("`distance(km)` ASC");
   } else if (sort === "a") {
-    rderQuery = Sequelize.literal("accuracyPoint DESC");
+    orderQuery = Sequelize.literal("accuracyPoint DESC");
   }
   var parkingQuery;
   if (type !== "residence") {
@@ -167,44 +167,35 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
   var attrWhereQuery;
   if (type === "around") {
     const radius = 2;
-    attrWhereQuery = Sequelize.literal(
-      `(6371*acos(cos(radians(${maplat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${maplong}))+sin(radians(${maplat}))*sin(radians(geographLat))))<=${radius}`
-    );
+    attrWhereQuery = [
+      Sequelize.literal(`(6371*acos(cos(radians(${maplat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${maplong}))+sin(radians(${maplat}))*sin(radians(geographLat))))<=${radius}`),
+    ];
   } else if (type === "keyword") {
-    attrWhereQuery = {
-      [Sequelize.Op.and]: [
-        {
-          [Sequelize.Op.or]: [
-            {
-              originalName: {
-                [Sequelize.Op.like]: `%${query}%`,
-              },
+    attrWhereQuery = [
+      {
+        [Sequelize.Op.or]: [
+          {
+            originalName: {
+              [Sequelize.Op.like]: `%${query}%`,
             },
-            Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("city.emdName"), "(", Sequelize.literal("(SELECT SUBSTRING_INDEX(city.sigungu, ' ', 1))"), ")"), {
-              [Sequelize.Op.like]: `%${query}%`,
-            }),
-            Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("city.sigungu"), "(", Sequelize.col("city.sido"), ")"), {
-              [Sequelize.Op.like]: `%${query}%`,
-            }),
-          ],
-        },
-      ],
-    };
-  } else if (type === "residence") {
-    whereQuery = {
-      [Sequelize.Op.and]: [
-        {
-          cityId: {
-            [Sequelize.Op.or]: query,
           },
+          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("city.emdName"), "(", Sequelize.literal("(SELECT SUBSTRING_INDEX(city.sigungu, ' ', 1))"), ")"), {
+            [Sequelize.Op.like]: `%${query}%`,
+          }),
+          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("city.sigungu"), "(", Sequelize.col("city.sido"), ")"), {
+            [Sequelize.Op.like]: `%${query}%`,
+          }),
+        ],
+      },
+    ];
+  } else if (type === "residence") {
+    attrWhereQuery = [
+      {
+        cityId: {
+          [Sequelize.Op.or]: query,
         },
-        /*
-        Sequelize.where(Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), {
-          [Sequelize.Op.gt]: 0,
-        }),
-        */
-      ],
-    };
+      },
+    ];
   }
   var nightQuery;
   if (night === "t") {
@@ -228,7 +219,7 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
     };
   }
   whereQuery = {
-    attrWhereQuery,
+    [Sequelize.Op.and]: attrWhereQuery,
     nightQuery,
     dentalTransparent: transparent === "t" ? true : false,
     societySpecialist: surgeon === "t" ? true : false,
@@ -326,86 +317,6 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
     order: orderQuery,
     limit: limit,
     offset: offset,
-  });
-};
-
-module.exports.NewestReviewsInResidence = async function (db, emdCity, day, nowTime, lat, long) {
-  const todayHoliday = await todayHolidayFunc(db, today);
-  const conclustionAndLunchTime = conclustionAndLunchTimeCalFunc(day, nowTime, todayHoliday, undefined);
-  return await this.findAll({
-    attributes: [
-      "id",
-      "originalName",
-      //"dentalTransparent",
-      [Sequelize.literal(`SUBSTRING_INDEX(address, ' ', 4)`), "modifiedAddress"],
-      //conclustionAndLunchTime.startTime,
-      //conclustionAndLunchTime.endTime,
-      //conclustionAndLunchTime.TOLTimeAttrStart,
-      //conclustionAndLunchTime.TOLTimeAttrEnd,
-      //conclustionAndLunchTime.TOLTimeConfident,
-      //conclustionAndLunchTime.confidentConsulationTime,
-      //conclustionAndLunchTime.weekend_non_consulation_notice,
-      [
-        Sequelize.literal(
-          `(SELECT IF(geographLat != '' ,ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2), -1))`
-        ),
-        "distance(km)",
-      ],
-      [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
-      [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
-      //[accuracyPointQuery, "accuracyPoint"],
-    ],
-    include: [
-      {
-        model: db.City,
-        required: true,
-        attributes: ["id", "sido", "sigungu", "emdName"],
-        where: {
-          sido: emdCity.sido,
-          sigungu: emdCity.sigungu,
-          emdName: emdCity.emdName,
-        },
-      },
-      {
-        model: db.Review,
-        attributes: [
-          "id",
-          "totalCost",
-          "dentalClinicId",
-          "certifiedBill",
-          "recommend",
-          "createdAt",
-          [Sequelize.literal(`IF((SELECT COUNT(*) FROM reviewBills where reviewBills.reviewId=reviews.id AND reviewBills.deletedAt IS NULL)>0,TRUE,FALSE)`), "verifyBills"],
-        ],
-        required: true,
-        include: [
-          {
-            model: db.User,
-            attributes: [
-              "id",
-              "nickname",
-              "profileImg",
-              "userProfileImgKeyValue",
-              [Sequelize.fn("CONCAT", `${cloudFrontUrl}`, Sequelize.col("userProfileImgKeyValue"), "?w=150&h=150&f=png&q=100"), "img_thumbNail"],
-            ],
-          },
-          {
-            model: db.Treatment_item,
-            as: "TreatmentItems",
-            attributes: ["id", "usualName"],
-            through: {
-              attributes: [],
-            },
-          },
-        ],
-      },
-    ],
-    order: [
-      Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL) DESC`),
-      [db.Review, "certifiedBill", "DESC"],
-      Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE) DESC`),
-    ],
-    subQuery: false,
   });
 };
 

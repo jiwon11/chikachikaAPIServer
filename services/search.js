@@ -111,7 +111,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
     });
     if (user) {
       console.log(event.queryStringParameters);
-      const { lat, long, query, sort, days, time, wantParking, holiday, tagCategory } = event.queryStringParameters;
+      const { lat, long, query, sort, days, time, wantParking, holiday, tagCategory, transparent, surgeon, night } = event.queryStringParameters;
       const limit = parseInt(event.queryStringParameters.limit);
       const offset = parseInt(event.queryStringParameters.offset);
       if (!query) {
@@ -189,7 +189,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
       const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
       const day = weekDay[today.day()];
       console.log(day, nowTime);
-      const clinics = await db.Dental_clinic.searchAll(db, "keyword", query, nowTime, day, week, lat, long, null, null, limit, offset, sort, wantParking, holiday);
+      const clinics = await db.Dental_clinic.searchAll(db, "keyword", query, nowTime, day, week, lat, long, null, null, limit, offset, sort, wantParking, holiday, transparent, surgeon, night);
       let response = {
         statusCode: 200,
         body: JSON.stringify(clinics),
