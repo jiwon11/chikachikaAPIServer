@@ -3,7 +3,7 @@ const db = require("../utils/models");
 const Sequelize = require("sequelize");
 const moment = require("moment");
 
-module.exports.treatmentItems = async function treatmentItems(event) {
+module.exports.treatmentAndDiseaseItems = async function treatmentAndDiseaseItems(event) {
   try {
     const query = event.queryStringParameters.q;
     const treatments = await db.Treatment_item.findAll({
@@ -14,17 +14,24 @@ module.exports.treatmentItems = async function treatmentItems(event) {
               [Sequelize.Op.like]: `%${query}%`,
             },
           },
+        ],
+      },
+    });
+    const diseases = await db.Disease_item.findAll({
+      where: {
+        [Sequelize.Op.or]: [
           {
-            technicalName: {
+            usualName: {
               [Sequelize.Op.like]: `%${query}%`,
             },
           },
         ],
       },
     });
+    const results = treatments.concat(diseases);
     let response = {
       statusCode: 200,
-      body: JSON.stringify(treatments),
+      body: JSON.stringify(results),
     };
     return response;
   } catch (err) {
@@ -62,30 +69,6 @@ module.exports.diseaseItems = async function diseaseItems(event) {
     return response;
   } catch (err) {
     console.info("Error", err);
-    return {
-      statusCode: 500,
-      body: `{"statusText": "Server error","message": "${err.message}"}`,
-    };
-  }
-};
-
-module.exports.symptomItems = async function symptomItems(event) {
-  try {
-    const query = event.queryStringParameters.q;
-    const symptoms = await db.Symptom_item.findAll({
-      where: {
-        name: {
-          [Sequelize.Op.like]: `${query}%`,
-        },
-      },
-    });
-    let response = {
-      statusCode: 200,
-      body: JSON.stringify(symptoms),
-    };
-    return response;
-  } catch (err) {
-    console.info("Error login", err);
     return {
       statusCode: 500,
       body: `{"statusText": "Server error","message": "${err.message}"}`,

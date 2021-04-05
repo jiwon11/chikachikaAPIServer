@@ -137,21 +137,12 @@ const accuracyPointQuery = Sequelize.literal(
   `(IF(CD_Num > 0 OR SD_Num > 0 OR RE_Num > 0 OR IN_Num > 0, 1, 0))+(IF(Mon_Consulation_start_time > "00:00:00", 1, 0))+ (IF(Sat_Consulation_start_time > "00:00:00", 1, 0)) + (IF(parking_allow_num>0, 1, 0))+(IF(holiday_treatment_start_time IS NOT NULL, 1, 0))+(IF(description IS NOT NULL, 1, 0))+(IF(dentalTransparent IS TRUE, 1, 0))+(IF((SELECT COUNT(*) FROM Clinic_subjects where dentalClinicId = dental_clinic.id)>0,1,0))+(IF((SELECT COUNT(*) FROM Clinic_special_treatment where dentalClinicId = dental_clinic.id)>0,1,0))+(IF((SELECT COUNT(*) FROM dentalClinicProfileImgs where dentalClinicId = dental_clinic.id AND dentalClinicProfileImgs.deletedAt IS NOT NULL)>0,1,0))`
 );
 
-module.exports.SearchAll = async function (db, type, query, nowTime, day, week, lat, long, maplat, maplong, limit, offset, sort, wantParking, holidayTreatment) {
+module.exports.SearchAll = async function (db, type, query, nowTime, day, week, lat, long, maplat, maplong, limit, offset, sort, wantParking, holidayTreatment, transparent, surgeon, night) {
   var orderQuery;
-  if (sort === "distance") {
-    orderQuery = [
-      [
-        Sequelize.literal(`ROUND((6371*acos(cos(radians(${maplat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${maplong}))+sin(radians(${maplat}))*sin(radians(geographLat)))),2)`),
-        "ASC",
-      ],
-    ];
-  } else if (sort === "accuracy") {
-    orderQuery = [
-      [Sequelize.literal(`IF(telNumber IS NOT NULL,1,0)`), "ASC"],
-      [accuracyPointQuery, "DESC"],
-      ["name", "ASC"],
-    ];
+  if (sort === "d") {
+    orderQuery = Sequelize.literal("`distance(km)` ASC");
+  } else if (sort === "a") {
+    rderQuery = Sequelize.literal("accuracyPoint DESC");
   }
   var parkingQuery;
   if (type !== "residence") {
@@ -173,86 +164,14 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
   const todayHoliday = await todayHolidayFunc(db, today);
   const conclustionAndLunchTime = conclustionAndLunchTimeCalFunc(day, nowTime, todayHoliday, holidayTreatment);
   var whereQuery;
-  var attributesList;
+  var attrWhereQuery;
   if (type === "around") {
     const radius = 2;
-    whereQuery = {
-      [Sequelize.Op.all]: Sequelize.literal(
-        `(6371*acos(cos(radians(${maplat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${maplong}))+sin(radians(${maplat}))*sin(radians(geographLat))))<=${radius}`
-      ),
-      parking_allow_num: parkingQuery,
-      holiday_treatment_start_time: conclustionAndLunchTime.holidayTreatmentQuery,
-      Mon_Consulation_start_time: {
-        [Sequelize.Op.lte]: week.mon === null ? "24:00:00" : week.mon,
-      },
-      Mon_Consulation_end_time: {
-        [Sequelize.Op.gte]: week.mon === null ? "00:00:00" : week.mon,
-      },
-      Tus_Consulation_start_time: {
-        [Sequelize.Op.lte]: week.tus === null ? "24:00:00" : week.tus,
-      },
-      Tus_Consulation_end_time: {
-        [Sequelize.Op.gte]: week.tus === null ? "00:00:00" : week.tus,
-      },
-      Wed_Consulation_start_time: {
-        [Sequelize.Op.lte]: week.wed === null ? "24:00:00" : week.wed,
-      },
-      Wed_Consulation_end_time: {
-        [Sequelize.Op.gte]: week.wed === null ? "00:00:00" : week.wed,
-      },
-      Thu_Consulation_start_time: {
-        [Sequelize.Op.lte]: week.thu === null ? "24:00:00" : week.thu,
-      },
-      Thu_Consulation_end_time: {
-        [Sequelize.Op.gte]: week.thu === null ? "00:00:00" : week.thu,
-      },
-      Fri_Consulation_start_time: {
-        [Sequelize.Op.lte]: week.fri === null ? "24:00:00" : week.fri,
-      },
-      Fri_Consulation_end_time: {
-        [Sequelize.Op.gte]: week.fri === null ? "00:00:00" : week.fri,
-      },
-      sat_Consulation_start_time: {
-        [Sequelize.Op.lte]: week.sat === null ? "24:00:00" : week.sat,
-      },
-      Sat_Consulation_end_time: {
-        [Sequelize.Op.gte]: week.sat === null ? "00:00:00" : week.sat,
-      },
-    };
-    attributesList = [
-      "id",
-      //"name",
-      "originalName",
-      "local",
-      "address",
-      [Sequelize.literal(`SUBSTRING_INDEX(address, ' ', 4)`), "modifiedAddress"],
-      "telNumber",
-      "website",
-      "geographLong",
-      "geographLat",
-      "holiday_treatment_start_time",
-      "holiday_treatment_end_time",
-      conclustionAndLunchTime.startTime,
-      conclustionAndLunchTime.endTime,
-      conclustionAndLunchTime.TOLTimeAttrStart,
-      conclustionAndLunchTime.TOLTimeAttrEnd,
-      conclustionAndLunchTime.TOLTimeConfident,
-      conclustionAndLunchTime.confidentConsulationTime,
-      conclustionAndLunchTime.weekend_non_consulation_notice,
-      [
-        Sequelize.literal(
-          `(SELECT IF(geographLat != '' ,ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2), -1))`
-        ),
-        "distance(km)",
-      ],
-      [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
-      conclustionAndLunchTime.conclustionNow,
-      conclustionAndLunchTime.lunchTimeNow,
-      [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
-      [accuracyPointQuery, "accuracyPoint"],
-    ];
+    attrWhereQuery = Sequelize.literal(
+      `(6371*acos(cos(radians(${maplat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${maplong}))+sin(radians(${maplat}))*sin(radians(geographLat))))<=${radius}`
+    );
   } else if (type === "keyword") {
-    whereQuery = {
+    attrWhereQuery = {
       [Sequelize.Op.and]: [
         {
           [Sequelize.Op.or]: [
@@ -270,77 +189,7 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
           ],
         },
       ],
-      parking_allow_num: parkingQuery,
-      holiday_treatment_start_time: conclustionAndLunchTime.holidayTreatmentQuery,
-      Mon_Consulation_start_time: {
-        [Sequelize.Op.lte]: week.mon === null ? "24:00:00" : week.mon,
-      },
-      Mon_Consulation_end_time: {
-        [Sequelize.Op.gte]: week.mon === null ? "00:00:00" : week.mon,
-      },
-      Tus_Consulation_start_time: {
-        [Sequelize.Op.lte]: week.tus === null ? "24:00:00" : week.tus,
-      },
-      Tus_Consulation_end_time: {
-        [Sequelize.Op.gte]: week.tus === null ? "00:00:00" : week.tus,
-      },
-      Wed_Consulation_start_time: {
-        [Sequelize.Op.lte]: week.wed === null ? "24:00:00" : week.wed,
-      },
-      Wed_Consulation_end_time: {
-        [Sequelize.Op.gte]: week.wed === null ? "00:00:00" : week.wed,
-      },
-      Thu_Consulation_start_time: {
-        [Sequelize.Op.lte]: week.thu === null ? "24:00:00" : week.thu,
-      },
-      Thu_Consulation_end_time: {
-        [Sequelize.Op.gte]: week.thu === null ? "00:00:00" : week.thu,
-      },
-      Fri_Consulation_start_time: {
-        [Sequelize.Op.lte]: week.fri === null ? "24:00:00" : week.fri,
-      },
-      Fri_Consulation_end_time: {
-        [Sequelize.Op.gte]: week.fri === null ? "00:00:00" : week.fri,
-      },
-      sat_Consulation_start_time: {
-        [Sequelize.Op.lte]: week.sat === null ? "24:00:00" : week.sat,
-      },
-      Sat_Consulation_end_time: {
-        [Sequelize.Op.gte]: week.sat === null ? "00:00:00" : week.sat,
-      },
     };
-    attributesList = [
-      "id",
-      //"name",
-      "originalName",
-      "local",
-      "address",
-      [Sequelize.literal(`SUBSTRING_INDEX(address, ' ', 4)`), "modifiedAddress"],
-      "telNumber",
-      "website",
-      "geographLong",
-      "geographLat",
-      "holiday_treatment_start_time",
-      "holiday_treatment_end_time",
-      conclustionAndLunchTime.startTime,
-      conclustionAndLunchTime.endTime,
-      conclustionAndLunchTime.TOLTimeAttrStart,
-      conclustionAndLunchTime.TOLTimeAttrEnd,
-      conclustionAndLunchTime.TOLTimeConfident,
-      conclustionAndLunchTime.confidentConsulationTime,
-      conclustionAndLunchTime.weekend_non_consulation_notice,
-      [
-        Sequelize.literal(
-          `(SELECT IF(geographLat != '' ,ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2), -1))`
-        ),
-        "distance(km)",
-      ],
-      [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
-      conclustionAndLunchTime.conclustionNow,
-      conclustionAndLunchTime.lunchTimeNow,
-      [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
-      [accuracyPointQuery, "accuracyPoint"],
-    ];
   } else if (type === "residence") {
     whereQuery = {
       [Sequelize.Op.and]: [
@@ -356,25 +205,110 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
         */
       ],
     };
-    attributesList = [
-      "id",
-      //"name",
-      "originalName",
-      [Sequelize.literal(`SUBSTRING_INDEX(address, ' ', 4)`), "modifiedAddress"],
-      "local",
-      "address",
-      "dentalTransparent",
-      [
-        Sequelize.literal(
-          `CONVERT(IF((SELECT SUM(SpecialistDentist_NUM) FROM Clinic_subjects where Clinic_subjects.dentalClinicId = dental_clinic.id) IS NULL,SD_Num,(SELECT SUM(SpecialistDentist_NUM) FROM Clinic_subjects where Clinic_subjects.dentalClinicId = dental_clinic.id)),signed integer)`
-        ),
-        "surgeonNum",
-      ],
-      [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
-      [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
-      [accuracyPointQuery, "accuracyPoint"],
-    ];
   }
+  var nightQuery;
+  if (night === "t") {
+    nightQuery = {
+      [Sequelize.Op.and]: [
+        Sequelize.where(Sequelize.literal(`${day}_Consulation_end_time`), {
+          [Sequelize.Op.gte]: "18:00:00",
+        }),
+        Sequelize.where(Sequelize.literal(`${day}_Consulation_end_time`), {
+          [Sequelize.Op.ne]: "00:00:00",
+        }),
+      ],
+    };
+  } else {
+    nightQuery = {
+      [Sequelize.Op.and]: [
+        Sequelize.where(Sequelize.literal(`${day}_Consulation_end_time`), {
+          [Sequelize.Op.gte]: "00:00:00",
+        }),
+      ],
+    };
+  }
+  whereQuery = {
+    attrWhereQuery,
+    nightQuery,
+    dentalTransparent: transparent === "t" ? true : false,
+    societySpecialist: surgeon === "t" ? true : false,
+    parking_allow_num: parkingQuery,
+    holiday_treatment_start_time: conclustionAndLunchTime.holidayTreatmentQuery,
+    Mon_Consulation_start_time: {
+      [Sequelize.Op.lte]: week.mon === null ? "24:00:00" : week.mon,
+    },
+    Mon_Consulation_end_time: {
+      [Sequelize.Op.gte]: week.mon === null ? "00:00:00" : week.mon,
+    },
+    Tus_Consulation_start_time: {
+      [Sequelize.Op.lte]: week.tus === null ? "24:00:00" : week.tus,
+    },
+    Tus_Consulation_end_time: {
+      [Sequelize.Op.gte]: week.tus === null ? "00:00:00" : week.tus,
+    },
+    Wed_Consulation_start_time: {
+      [Sequelize.Op.lte]: week.wed === null ? "24:00:00" : week.wed,
+    },
+    Wed_Consulation_end_time: {
+      [Sequelize.Op.gte]: week.wed === null ? "00:00:00" : week.wed,
+    },
+    Thu_Consulation_start_time: {
+      [Sequelize.Op.lte]: week.thu === null ? "24:00:00" : week.thu,
+    },
+    Thu_Consulation_end_time: {
+      [Sequelize.Op.gte]: week.thu === null ? "00:00:00" : week.thu,
+    },
+    Fri_Consulation_start_time: {
+      [Sequelize.Op.lte]: week.fri === null ? "24:00:00" : week.fri,
+    },
+    Fri_Consulation_end_time: {
+      [Sequelize.Op.gte]: week.fri === null ? "00:00:00" : week.fri,
+    },
+    sat_Consulation_start_time: {
+      [Sequelize.Op.lte]: week.sat === null ? "24:00:00" : week.sat,
+    },
+    Sat_Consulation_end_time: {
+      [Sequelize.Op.gte]: week.sat === null ? "00:00:00" : week.sat,
+    },
+  };
+  const attributesList = [
+    "id",
+    //"name",
+    "originalName",
+    "local",
+    "address",
+    [Sequelize.literal(`SUBSTRING_INDEX(address, ' ', 4)`), "modifiedAddress"],
+    "telNumber",
+    "website",
+    "geographLong",
+    "geographLat",
+    "holiday_treatment_start_time",
+    "holiday_treatment_end_time",
+    conclustionAndLunchTime.startTime,
+    conclustionAndLunchTime.endTime,
+    conclustionAndLunchTime.TOLTimeAttrStart,
+    conclustionAndLunchTime.TOLTimeAttrEnd,
+    conclustionAndLunchTime.TOLTimeConfident,
+    conclustionAndLunchTime.confidentConsulationTime,
+    conclustionAndLunchTime.weekend_non_consulation_notice,
+    [
+      Sequelize.literal(
+        `(SELECT IF(geographLat != '' ,ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2), -1))`
+      ),
+      "distance(km)",
+    ],
+    [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL)`), "reviewNum"],
+    conclustionAndLunchTime.conclustionNow,
+    conclustionAndLunchTime.lunchTimeNow,
+    [Sequelize.literal(`(SELECT COUNT(*) FROM reviews where reviews.dentalClinicId = dental_clinic.id AND reviews.deletedAt IS NULL AND reviews.recommend IS TRUE)`), "recommendNum"],
+    [accuracyPointQuery, "accuracyPoint"],
+    [
+      Sequelize.literal(
+        `CONVERT(IF((SELECT SUM(SpecialistDentist_NUM) FROM Clinic_subjects where Clinic_subjects.dentalClinicId = dental_clinic.id) IS NULL,SD_Num,(SELECT SUM(SpecialistDentist_NUM) FROM Clinic_subjects where Clinic_subjects.dentalClinicId = dental_clinic.id)),signed integer)`
+      ),
+      "surgeonNum",
+    ],
+  ];
   return await this.findAll({
     attributes: attributesList,
     where: whereQuery,
@@ -580,9 +514,9 @@ module.exports.getClinicByAttributes = async function (db, attrType, clusterQuer
     };
   }
   var orderQuery;
-  if (sort === "distance") {
+  if (sort === "d") {
     orderQuery = Sequelize.literal("accuracyPoint DESC");
-  } else if (sort === "accuracy") {
+  } else if (sort === "a") {
     orderQuery = Sequelize.literal("`distance(km)` ASC");
   }
   var results = await this.findAll({

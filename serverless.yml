@@ -302,12 +302,12 @@ functions:
               identitySource: method.request.header.Authorization
               resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   treatmentSearch:
-    handler: services/search.treatmentItems
+    handler: services/search.treatmentAndDiseaseItems
     layers:
       - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:latest
     events:
       - http:
-          path: search/treatments
+          path: search/treatmentsAndDiseases
           method: get
           cors: true
           authorizer:
@@ -937,35 +937,6 @@ functions:
           path: reports
           method: post
           cors: true
-          authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
-  getClinicByAttributes:
-    handler: services/main.getClinicByAttributes
-    layers:
-      - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:latest
-    events:
-      - http:
-          path: clinic/{attrType}
-          method: get
-          cors: true
-          caching:
-            enabled: true
-            ttlInSeconds: 300 # overrides the global setting for ttlInSeconds
-            cacheKeyParameters:
-              - name: request.path.attrType
-              - name: request.querystring.region
-              - name: request.querystring.cityId
-              - name: request.querystring.lat
-              - name: request.querystring.long
-              - name: request.querystring.maplat
-              - name: request.querystring.maplong
-              - name: request.querystring.sort
-              - name: request.querystring.limit
-              - name: request.querystring.offset
           authorizer:
               name: verify-token
               # this tells the lambda where to take the information from,
