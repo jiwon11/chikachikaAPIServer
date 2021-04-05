@@ -34,7 +34,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
         id: req.user.id,
       },
     });
-    const city = await user.getResidences({
+    const userResidence = await user.getResidences({
       attributes: ["id"],
       through: {
         where: {
@@ -42,12 +42,16 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
         },
       },
     });
+    var cityId;
+    if (userResidence.length > 0) {
+      cityId = userResidence[0].id;
+    }
     const communityPost = await db.Community.create({
       description: description,
       wantDentistHelp: wantDentistHelp === "true",
       type: type,
       userId: req.user.id,
-      cityId: city[0].id,
+      cityId: cityId,
     });
     console.time("create coomunity image");
     await Promise.all(
