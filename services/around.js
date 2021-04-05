@@ -1,6 +1,4 @@
-const jwt = require("jsonwebtoken");
 const db = require("../utils/models");
-const Sequelize = require("sequelize");
 const moment = require("moment");
 module.exports.clinics = async function clinics(event) {
   try {

@@ -1,5 +1,4 @@
 const db = require("../utils/models");
-const Sequelize = require("sequelize");
 const moment = require("moment");
 require("moment/locale/ko");
 module.exports.postAppointment = async function postAppointment(event) {

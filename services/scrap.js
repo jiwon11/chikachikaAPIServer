@@ -1,4 +1,3 @@
-const jwt = require("jsonwebtoken");
 const { User, Review, Community, Dental_clinic, Sequelize, DentalClinicProfileImg } = require("../utils/models");
 
 module.exports.addScrapReview = async function addScrapReview(event) {

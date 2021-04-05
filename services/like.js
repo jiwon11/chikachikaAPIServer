@@ -1,4 +1,3 @@
-const jwt = require("jsonwebtoken");
 const { User, Review, Community, Sequelize } = require("../utils/models");
 const likeConsumer = require("../utils/Class/SQSconsumer").like;
 

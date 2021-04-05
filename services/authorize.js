@@ -1,5 +1,4 @@
 const jwt = require("jsonwebtoken");
-const { User } = require("../utils/models");
 function generateAuthResponse(principalId, effect, methodArn) {
   const policyDocument = generatePolicyDocument(effect, methodArn);
   var authResponse = {};
