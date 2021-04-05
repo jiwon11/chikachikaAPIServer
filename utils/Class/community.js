@@ -25,9 +25,6 @@ const communityIncludeAttributes = function (userId) {
 module.exports.communityIncludeAttributes = communityIncludeAttributes;
 
 const communityIncludeModels = function (db, clusterQuery, appendModels) {
-  if (clusterQuery === undefined) {
-    clusterQuery = { createdAt: { [Sequelize.Op.not]: null } };
-  }
   var models = [
     {
       model: db.User,
@@ -148,6 +145,16 @@ module.exports.getAll = async function (db, userId, type, clusterQuery, order, o
   return await this.findAll({
     where: {
       type: type,
+      cityId: {
+        [Sequelize.Op.or]: [
+          {
+            [Sequelize.Op.is]: null,
+          },
+          {
+            [Sequelize.Op.not]: null,
+          },
+        ],
+      },
       userId: {
         [Sequelize.Op.not]: null,
       },
