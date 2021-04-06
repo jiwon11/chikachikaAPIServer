@@ -8,7 +8,7 @@ module.exports.comment = async function (body) {
     const messageBody = JSON.stringify(body);
     let params = {
       MessageBody: messageBody,
-      QueueUrl: `https://sqs.ap-northeast-1.amazonaws.com/751612718299/commentNotification`,
+      QueueUrl: `https://sqs.ap-northeast-1.amazonaws.com/751612718299/commentNotification-${process.env.stage}`,
     };
     const data = await sqs.sendMessage(params).promise();
     console.info("SQS Send Message Success", data.MessageId);
@@ -31,7 +31,7 @@ module.exports.reply = async function (body) {
     const messageBody = JSON.stringify(body);
     let params = {
       MessageBody: messageBody,
-      QueueUrl: `https://sqs.ap-northeast-1.amazonaws.com/751612718299/replyNotification`,
+      QueueUrl: `https://sqs.ap-northeast-1.amazonaws.com/751612718299/replyNotification-${process.env.stage}`,
     };
     const data = await sqs.sendMessage(params).promise();
     console.info("SQS Send Message Success", data.MessageId);
@@ -54,7 +54,7 @@ module.exports.like = async function (body) {
     const messageBody = JSON.stringify(body);
     let params = {
       MessageBody: messageBody,
-      QueueUrl: `https://sqs.ap-northeast-1.amazonaws.com/751612718299/likeNotification`,
+      QueueUrl: `https://sqs.ap-northeast-1.amazonaws.com/751612718299/likeNotification-${process.env.stage}`,
     };
     const data = await sqs.sendMessage(params).promise();
     console.info("SQS Send Message Success", data.MessageId);
@@ -80,7 +80,7 @@ module.exports.report = async function (body) {
     console.log(messageGroupId);
     let params = {
       MessageBody: messageBody,
-      QueueUrl: `https://sqs.ap-northeast-1.amazonaws.com/751612718299/reportNotification.fifo`,
+      QueueUrl: `https://sqs.ap-northeast-1.amazonaws.com/751612718299/reportNotification-${process.env.stage}.fifo`,
       MessageGroupId: messageGroupId,
       MessageDeduplicationId: messageDeduplicationId,
     };
@@ -108,7 +108,7 @@ module.exports.billsVerify = async function billsVerify(body) {
     console.log(messageBody);
     let params = {
       MessageBody: messageBody,
-      QueueUrl: `https://sqs.ap-northeast-1.amazonaws.com/751612718299/billsVerify.fifo`,
+      QueueUrl: `https://sqs.ap-northeast-1.amazonaws.com/751612718299/billsVerify-${process.env.stage}.fifo`,
       MessageGroupId: messageGroupId,
       MessageDeduplicationId: messageDeduplicationId,
     };
