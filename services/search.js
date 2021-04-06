@@ -371,7 +371,7 @@ module.exports.allTagItems = async function allTagItems(event) {
       ],
       where: {
         [Sequelize.Op.or]: [
-          Sequelize.where(Sequelize.literal("name"), {
+          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', -1))"), "(", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', 1))"), ")"), {
             [Sequelize.Op.like]: `%${query}%`,
           }),
           {
