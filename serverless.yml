@@ -2,6 +2,7 @@ app: chikachika
 service: chikachika-API-serverless
 org: jiwon112
 
+frameworkVersion: "2"
 useDotenv: true
 configValidationMode: error
 
