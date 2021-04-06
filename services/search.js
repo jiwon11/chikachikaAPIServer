@@ -385,9 +385,16 @@ module.exports.allTagItems = async function allTagItems(event) {
       order: Sequelize.literal("initialLetterContained DESC"),
     });
     const cities = await db.City.findAll({
-      where: Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
-        [Sequelize.Op.like]: `%${query}%`,
-      }),
+      where: {
+        [Sequelize.Op.or]: [
+          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
+            [Sequelize.Op.like]: `%${query}%`,
+          }),
+          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.col("sigungu"), ")"), {
+            [Sequelize.Op.like]: `%${query}%`,
+          }),
+        ],
+      },
       attributes: [
         [Sequelize.literal("CONCAT(emdName, '(',(SELECT SUBSTRING_INDEX(sigungu, ' ', 1)),')')"), "name"],
         [Sequelize.literal(`(IF((((SELECT SUBSTR((SELECT name),1,${queryLen}))='${query}')), TRUE, FALSE))`), "initialLetterContained"],
@@ -543,9 +550,16 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
       order: Sequelize.literal("initialLetterContained DESC"),
     });
     const cities = await db.City.findAll({
-      where: Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
-        [Sequelize.Op.like]: `%${query}%`,
-      }),
+      where: {
+        [Sequelize.Op.or]: [
+          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
+            [Sequelize.Op.like]: `%${query}%`,
+          }),
+          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.col("sigungu"), ")"), {
+            [Sequelize.Op.like]: `%${query}%`,
+          }),
+        ],
+      },
       attributes: [
         [Sequelize.literal("CONCAT(emdName, '(',(SELECT SUBSTRING_INDEX(sigungu, ' ', 1)),')')"), "name"],
         [Sequelize.literal(`(IF((((SELECT SUBSTR((SELECT name),1,${queryLen}))='${query}')), TRUE, FALSE))`), "initialLetterContained"],

@@ -74,35 +74,24 @@ module.exports.subwayAroundClinics = async function subwayAroundClinics(event) {
 module.exports.getClinicByAttributes = async function getClinicByAttributes(event) {
   try {
     const attrType = event.pathParameters.attrType;
-    const { region, cityId, lat, long, maplat, maplong, sort } = event.queryStringParameters;
+    const { cityId, lat, long, sort } = event.queryStringParameters;
     const limit = parseInt(event.queryStringParameters.limit);
     const offset = parseInt(event.queryStringParameters.offset);
-    var clusterQuery;
-    if (region === "residence") {
-      var userResidence = await db.City.findOne({
-        where: {
-          id: cityId,
-        },
-      });
-      clusterQuery = userResidence.newTownId
-        ? {
-            newTownId: userResidence.newTownId,
-          }
-        : {
-            sido: userResidence.sido,
-            sigungu: userResidence.sigungu,
-          };
-    } else if (region !== "all") {
-      return {
-        statusCode: 400,
-        body: { statusText: "Bad Request", message: "유효하지 않는 쿼리입니다." },
-      };
-    }
-    var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
-    const today = moment().tz(process.env.TZ);
-    const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
-    const day = weekDay[today.day()];
-    const results = await db.Dental_clinic.getClinicByAttributes(db, attrType, clusterQuery, lat, long, maplat, maplong, sort, nowTime, day, limit, offset);
+    var userResidence = await db.City.findOne({
+      where: {
+        id: cityId,
+      },
+    });
+    const clusterQuery = userResidence.newTownId
+      ? {
+          newTownId: userResidence.newTownId,
+        }
+      : {
+          sido: userResidence.sido,
+          sigungu: userResidence.sigungu,
+        };
+    console.log(clusterQuery);
+    const results = await db.Dental_clinic.getClinicByAttributes(db, attrType, clusterQuery, lat, long, sort, limit, offset);
     return {
       statusCode: 200,
       body: JSON.stringify(results),
