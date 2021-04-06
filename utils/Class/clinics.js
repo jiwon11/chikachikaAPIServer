@@ -147,6 +147,8 @@ const clinicIncludeAttributes = function (lat, long, conclustionAndLunchTime) {
     "geographLat",
     "holiday_treatment_start_time",
     "holiday_treatment_end_time",
+    "dentalTransparent",
+    "societySpecialist",
     conclustionAndLunchTime.startTime,
     conclustionAndLunchTime.endTime,
     conclustionAndLunchTime.TOLTimeAttrStart,
