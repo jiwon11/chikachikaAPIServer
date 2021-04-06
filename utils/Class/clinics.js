@@ -404,26 +404,7 @@ module.exports.getClinicByAttributes = async function (db, attrType, clusterQuer
   const todayHoliday = await todayHolidayFunc(db, today);
   const conclustionAndLunchTime = conclustionAndLunchTimeCalFunc(day, nowTime, todayHoliday, "false");
   var whereQuery;
-  if (attrType === "night") {
-    whereQuery = {
-      [Sequelize.Op.and]: [
-        Sequelize.where(Sequelize.literal(`${day}_Consulation_end_time`), {
-          [Sequelize.Op.gte]: "18:00:00",
-        }),
-        Sequelize.where(Sequelize.literal(`${day}_Consulation_end_time`), {
-          [Sequelize.Op.ne]: "00:00:00",
-        }),
-      ],
-    };
-  } else if (attrType === "surgeon") {
-    whereQuery = {
-      societySpecialist: true,
-    };
-  } else if (attrType === "transparent") {
-    whereQuery = {
-      dentalTransparent: true,
-    };
-  } else if (attrType === "old") {
+  if (attrType === "old") {
     whereQuery = {
       launchDate: {
         [Sequelize.Op.lte]: moment(today).subtract("10", "y").format("YYYY-MM-DD"),
@@ -432,10 +413,11 @@ module.exports.getClinicByAttributes = async function (db, attrType, clusterQuer
   }
   var orderQuery;
   if (sort === "d") {
-    orderQuery = Sequelize.literal("accuracyPoint DESC");
-  } else if (sort === "a") {
     orderQuery = Sequelize.literal("`distance(km)` ASC");
+  } else if (sort === "a") {
+    orderQuery = Sequelize.literal("accuracyPoint DESC");
   }
+  console.time("find Query");
   var results = await this.findAll({
     attributes: [
       "id",
@@ -464,6 +446,7 @@ module.exports.getClinicByAttributes = async function (db, attrType, clusterQuer
     limit: limit,
     offset: offset,
   });
+  console.timeEnd("find Query");
   results = JSON.parse(JSON.stringify(results));
   results.forEach((result) => {
     delete result.city;
