@@ -400,7 +400,7 @@ module.exports.getKeywordSearchAll = async function (db, lat, long, query, clust
   return results;
 };
 
-module.exports.getClinicByAttributes = async function (db, attrType, clusterQuery, lat, long, maplat, maplong, sort, nowTime, day, limit, offset) {
+module.exports.getClinicByAttributes = async function (db, attrType, clusterQuery, lat, long, sort, limit, offset) {
   const todayHoliday = await todayHolidayFunc(db, today);
   const conclustionAndLunchTime = conclustionAndLunchTimeCalFunc(day, nowTime, todayHoliday, "false");
   var whereQuery;
@@ -423,6 +423,12 @@ module.exports.getClinicByAttributes = async function (db, attrType, clusterQuer
     whereQuery = {
       dentalTransparent: true,
     };
+  } else if (attrType === "old") {
+    whereQuery = {
+      launchDate: {
+        [Sequelize.Op.lte]: moment(today).subtract("10", "y").format("YYYY-MM-DD"),
+      },
+    };
   }
   var orderQuery;
   if (sort === "d") {
@@ -434,6 +440,7 @@ module.exports.getClinicByAttributes = async function (db, attrType, clusterQuer
     attributes: [
       "id",
       "originalName",
+      "launchDate",
       conclustionAndLunchTime.conclustionNow,
       conclustionAndLunchTime.lunchTimeNow,
       conclustionAndLunchTime.TOLTimeConfident,
