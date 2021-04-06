@@ -366,12 +366,12 @@ module.exports.allTagItems = async function allTagItems(event) {
     });
     const sigungu = await db.Sigungu.findAll({
       attributes: [
-        [Sequelize.fn("CONCAT", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', -1))"), "(", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', 1))"), ")"), "name"],
+        [Sequelize.fn("CONCAT", Sequelize.col("name"), "(", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', 1))"), ")"), "name"],
         [Sequelize.literal(`(IF((((SELECT SUBSTR((SELECT name),1,${queryLen}))='${query}')), TRUE, FALSE))`), "initialLetterContained"],
       ],
       where: {
         [Sequelize.Op.or]: [
-          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', -1))"), "(", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', 1))"), ")"), {
+          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("name"), "(", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', 1))"), ")"), {
             [Sequelize.Op.like]: `%${query}%`,
           }),
           {
@@ -531,12 +531,12 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
     });
     const sigungu = await db.Sigungu.findAll({
       attributes: [
-        [Sequelize.fn("CONCAT", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', -1))"), "(", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', 1))"), ")"), "name"],
+        [Sequelize.fn("CONCAT", Sequelize.col("name"), "(", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', 1))"), ")"), "name"],
         [Sequelize.literal(`(IF((((SELECT SUBSTR((SELECT name),1,${queryLen}))='${query}')), TRUE, FALSE))`), "initialLetterContained"],
       ],
       where: {
         [Sequelize.Op.or]: [
-          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', -1))"), "(", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', 1))"), ")"), {
+          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("name"), "(", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', 1))"), ")"), {
             [Sequelize.Op.like]: `%${query}%`,
           }),
           {
