@@ -78,6 +78,7 @@ module.exports.getClinicByAttributes = async function getClinicByAttributes(even
     const limit = parseInt(event.queryStringParameters.limit);
     const offset = parseInt(event.queryStringParameters.offset);
     var userResidence = await db.City.findOne({
+      attributes: ["id", "sido", "sigungu", "sido", "newTownId"],
       where: {
         id: cityId,
       },
