@@ -11,7 +11,7 @@ package:
 
 custom:
   #secrets: ${file(secrets.json)}
-  enabled:
+  caheEnabled:
     dev: false
     test: false
     prod: true
@@ -30,7 +30,7 @@ custom:
     types:           #list of mime-types 
        - 'multipart/form-data'
   apiGatewayCaching:
-    enabled: ${self:custom.enabled.${self:custom.stage}, false}
+    enabled: ${self:custom.caheEnabled.${self:custom.stage}, false}
     clusterSize: '0.5' # defaults to '0.5'
     ttlInSeconds: 300 # defaults to the maximum allowed: 3600
   prune:
