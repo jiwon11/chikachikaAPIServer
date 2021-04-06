@@ -22,7 +22,7 @@ custom:
     test: test-api.chikachika-app.com
     dev: dev-api.chikachika-app.com
   customDomain:
-    domainName: ${self:custom.domains.${self:custom.stage}}
+    domainName: ${self:custom.domains.${opt:stage}}
     basePath: ""
     certificateName: "*.chikachika-app.com"
     stage: ${self:provider.stage}
