@@ -178,6 +178,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: false,
       },
+      societySpecialist: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
     },
     {
       timestamps: true,
@@ -189,5 +194,6 @@ module.exports = (sequelize, DataTypes) => {
   dentalClinic.searchAll = clinicQueryClass.SearchAll;
   dentalClinic.NewestReviewsInResidence = clinicQueryClass.NewestReviewsInResidence;
   dentalClinic.getKeywordSearchAll = clinicQueryClass.getKeywordSearchAll;
+  dentalClinic.getClinicByAttributes = clinicQueryClass.getClinicByAttributes;
   return dentalClinic;
 };

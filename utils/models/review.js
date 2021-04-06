@@ -3,16 +3,8 @@ module.exports = (sequelize, DataTypes) => {
   const review = sequelize.define(
     "review",
     {
-      starRate_cost: {
-        type: DataTypes.DOUBLE,
-        allowNull: false,
-      },
-      starRate_treatment: {
-        type: DataTypes.DOUBLE,
-        allowNull: false,
-      },
-      starRate_service: {
-        type: DataTypes.DOUBLE,
+      recommend: {
+        type: DataTypes.BOOLEAN,
         allowNull: false,
       },
       certifiedBill: {
@@ -23,9 +15,13 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         defaultValue: 0,
       },
-      treatmentDate: {
+      correctionStartDate: {
         type: DataTypes.DATEONLY,
         allowNull: false,
+      },
+      correctionEndDate: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
       },
       totalCost: {
         type: DataTypes.INTEGER,

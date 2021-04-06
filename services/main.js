@@ -70,3 +70,38 @@ module.exports.subwayAroundClinics = async function subwayAroundClinics(event) {
     };
   }
 };
+
+module.exports.getClinicByAttributes = async function getClinicByAttributes(event) {
+  try {
+    const attrType = event.pathParameters.attrType;
+    const { cityId, lat, long, sort } = event.queryStringParameters;
+    const limit = parseInt(event.queryStringParameters.limit);
+    const offset = parseInt(event.queryStringParameters.offset);
+    var userResidence = await db.City.findOne({
+      attributes: ["id", "sido", "sigungu", "sido", "newTownId"],
+      where: {
+        id: cityId,
+      },
+    });
+    const clusterQuery = userResidence.newTownId
+      ? {
+          newTownId: userResidence.newTownId,
+        }
+      : {
+          sido: userResidence.sido,
+          sigungu: userResidence.sigungu,
+        };
+    console.log(clusterQuery);
+    const results = await db.Dental_clinic.getClinicByAttributes(db, attrType, clusterQuery, lat, long, sort, limit, offset);
+    return {
+      statusCode: 200,
+      body: JSON.stringify(results),
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};

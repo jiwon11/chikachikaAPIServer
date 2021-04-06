@@ -9,7 +9,6 @@ const reviewIncludeAttributes = function (userId) {
       ),
       "reviewDescriptions",
     ],
-    [Sequelize.literal(`(SELECT ROUND((starRate_cost + starRate_treatment + starRate_service)/3,1))`), "AVGStarRate"],
     [
       Sequelize.literal(
         "(SELECT COUNT(*) FROM review_comments WHERE review_comments.reviewId = review.id AND review_comments.deletedAt IS null) + (SELECT COUNT(*) FROM Review_reply LEFT JOIN review_comments AS replys ON replys.id = Review_reply.replyId LEFT JOIN review_comments AS comments ON comments.id = Review_reply.commentId where comments.reviewId=review.id AND replys.deletedAt IS NULL AND comments.deletedAt IS NULL)"
@@ -37,7 +36,7 @@ const reviewIncludeAttributes = function (userId) {
 };
 module.exports.reviewIncludeAttributes = reviewIncludeAttributes;
 
-const reviewIncludeModels = function (db, viewType, query, tagCategory, tagId, clusterQuery, appendModels) {
+const reviewIncludeModels = function (db, viewType, query, clusterQuery, appendModels) {
   var includeModels;
   var residenceClincQuery;
   if (clusterQuery === undefined) {
@@ -66,7 +65,7 @@ const reviewIncludeModels = function (db, viewType, query, tagCategory, tagId, c
           "img_name",
           [Sequelize.fn("CONCAT", `${cloudFrontUrl}`, Sequelize.col("img_name"), "?w=686&h=700&f=jpeg&q=100"), "img_thumbNail"],
           "index",
-          "img_before_after",
+          "imgDate",
           "img_width",
           "img_height",
         ],
@@ -116,61 +115,6 @@ const reviewIncludeModels = function (db, viewType, query, tagCategory, tagId, c
     ];
     if (appendModels) {
       includeModels.push(appendModels);
-    }
-    if (query) {
-      console.log("query:", query, "//", "tagCategory:", tagCategory);
-      if (tagCategory === "city") {
-        if (tagId === "") {
-          let modelIdx = includeModels.findIndex((model) => model.model === db.Dental_clinic);
-          includeModels[modelIdx].where = {
-            local: {
-              [Sequelize.Op.like]: `%${query}%`,
-            },
-          };
-        } else {
-          let modelIdx = includeModels.findIndex((model) => model.model === db.Dental_clinic);
-          includeModels[modelIdx].include[0].where = {
-            id: tagId,
-          };
-        }
-      } else if (tagCategory === "treatment") {
-        let modelIdx = includeModels.findIndex((model) => model.as === "TreatmentItems");
-        includeModels[modelIdx].where = {
-          [Sequelize.Op.or]: [
-            {
-              usualName: {
-                [Sequelize.Op.like]: `%${query}%`,
-              },
-            },
-            {
-              technicalName: {
-                [Sequelize.Op.like]: `%${query}%`,
-              },
-            },
-          ],
-        };
-      } else if (tagCategory === "clinic") {
-        let modelIdx = includeModels.findIndex((model) => model.model === db.Dental_clinic);
-        includeModels[modelIdx].where = {
-          id: tagId,
-        };
-      } else if (tagCategory === "disease") {
-        let modelIdx = includeModels.findIndex((model) => model.as === "DiseaseItems");
-        includeModels[modelIdx].where = {
-          [Sequelize.Op.or]: [
-            {
-              usualName: {
-                [Sequelize.Op.like]: `%${query}%`,
-              },
-            },
-            {
-              technicalName: {
-                [Sequelize.Op.like]: `%${query}%`,
-              },
-            },
-          ],
-        };
-      }
     }
   } else if (viewType === "detail") {
     includeModels = [
@@ -364,7 +308,7 @@ module.exports.getUserReviewsAll = async function (db, targetUserId, userId, lim
   });
 };
 
-module.exports.getKeywordSearchAll = async function (db, userId, query, tagCategory, tagId, clusterQuery, limitQuery, offsetQuery, order) {
+module.exports.getKeywordSearchAll = async function (db, userId, query, clusterQuery, limitQuery, offsetQuery, order, correctionStatus) {
   var orderQuery;
   if (order === "createdAt") {
     orderQuery = ["createdAt", "DESC"];
@@ -373,16 +317,72 @@ module.exports.getKeywordSearchAll = async function (db, userId, query, tagCateg
       Sequelize.literal("(((SELECT COUNT(*) FROM Like_Review WHERE Like_Review.likedReviewId = review.id)*3)+ (SELECT COUNT(*) FROM ViewReviews WHERE ViewReviews.viewedReviewId = review.id)) DESC"),
     ];
   }
-  return this.findAll({
-    where: {
-      userId: {
+  var correctionStatusQuery;
+  if (correctionStatus === "all") {
+    correctionStatusQuery = {
+      correctionStartDate: {
         [Sequelize.Op.not]: null,
       },
-    },
+    };
+  } else if (correctionStatus === "cpt") {
+    correctionStatusQuery = {
+      correctionEndDate: {
+        [Sequelize.Op.not]: null,
+      },
+    };
+  } else if (correctionStatus === "ing") {
+    correctionStatusQuery = {
+      correctionEndDate: {
+        [Sequelize.Op.is]: null,
+      },
+      correctionStartDate: {
+        [Sequelize.Op.not]: null,
+      },
+    };
+  }
+  const whereQuery = {
+    [Sequelize.Op.and]: [
+      {
+        userId: {
+          [Sequelize.Op.not]: null,
+        },
+      },
+      correctionStatusQuery,
+      {
+        [Sequelize.Op.or]: [
+          {
+            "$dental_clinic.originalName$": `${query}`,
+          },
+          {
+            "$dental_clinic.address$": `%${query}%`,
+          },
+          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("dental_clinic.city.emdName"), "(", Sequelize.col("dental_clinic.city.sigungu"), ")"), {
+            [Sequelize.Op.like]: `%${query}%`,
+          }),
+          {
+            "$TreatmentItems.usualName$": `${query}`,
+          },
+          {
+            "$DiseaseItems.usualName$": `${query}`,
+          },
+          Sequelize.where(
+            Sequelize.literal(
+              "(SELECT GROUP_CONCAT(description ORDER BY review_contents.index ASC SEPARATOR ',') FROM review_contents WHERE review_contents.reviewId = review.id AND review_contents.deletedAt IS NULL)"
+            ),
+            {
+              [Sequelize.Op.like]: `%${query}%`,
+            }
+          ),
+        ],
+      },
+    ],
+  };
+  return this.findAll({
+    where: whereQuery,
     attributes: {
       include: reviewIncludeAttributes(userId),
     },
-    include: reviewIncludeModels(db, "list", query, tagCategory, tagId, clusterQuery, undefined),
+    include: reviewIncludeModels(db, "list", query, clusterQuery, undefined),
     order: [orderQuery, ["TreatmentItems", db.Review_treatment_item, "index", "ASC"], ["DiseaseItems", db.Review_disease_item, "index", "ASC"]],
     limit: limitQuery,
     offset: offsetQuery,

@@ -1,5 +1,4 @@
 const db = require("../utils/models");
-const { sequelize, Sequelize } = require("../utils/models");
 const pushFcm = require("./notificationTaskWorker").pushFcm;
 
 module.exports.verifyBills = async function verifyBills(event) {

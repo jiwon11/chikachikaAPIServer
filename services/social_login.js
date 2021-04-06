@@ -66,7 +66,7 @@ module.exports.socialUserCheck = async function socialUserCheck(event) {
 
 module.exports.handler = async function social_login(event) {
   console.log(event.body);
-  const { phoneNumber, nickname, fcmToken, provider, certifiedPhoneNumber, email, socialId, profileImg, gender, cityId } = JSON.parse(event.body);
+  const { phoneNumber, nickname, fcmToken, provider, certifiedPhoneNumber, email, socialId, profileImg, gender } = JSON.parse(event.body);
   const birthdate = event.body.birthdate | (event.body.birthdate !== "") ? event.body.birthdate : undefined;
   try {
     if (phoneNumber !== "") {
@@ -102,6 +102,7 @@ module.exports.handler = async function social_login(event) {
       comment: true,
       event: true,
     });
+    /*
     const city = await City.findOne({
       attributes: ["id", "emdName"],
       where: {
@@ -113,6 +114,7 @@ module.exports.handler = async function social_login(event) {
         now: true,
       },
     });
+    */
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1y" });
     const userResidences = await user.getResidences({
       attributes: ["id", "sido", "sigungu", "emdName"],

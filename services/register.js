@@ -1,5 +1,5 @@
 const { phone, verifyPhoneNumberFunc } = require("../utils/verify");
-const { User, Phone_verify, NotificationConfig, City } = require("../utils/models");
+const { User, NotificationConfig } = require("../utils/models");
 const jwt = require("jsonwebtoken");
 const cloudFrontUrl = process.env.cloudFrontUrl;
 /**
@@ -48,7 +48,7 @@ module.exports.verifyPhoneNumber = async function verifyPhoneNumber(event) {
  */
 module.exports.handler = async function registerUser(event) {
   try {
-    const { userPhoneNumber, nickname, fcmToken, provider, certifiedPhoneNumber, cityId } = JSON.parse(event.body);
+    const { userPhoneNumber, nickname, fcmToken, provider, certifiedPhoneNumber } = JSON.parse(event.body);
     const overlapPhoneNumber = await User.findOne({
       where: {
         phoneNumber: userPhoneNumber,
@@ -77,6 +77,7 @@ module.exports.handler = async function registerUser(event) {
       comment: true,
       event: true,
     });
+    /*
     const city = await City.findOne({
       attributes: ["id", "emdName"],
       where: {
@@ -88,6 +89,7 @@ module.exports.handler = async function registerUser(event) {
         now: true,
       },
     });
+    */
     const userResidences = await user.getResidences({
       attributes: ["id", "sido", "sigungu", "emdName"],
       joinTableAttributes: ["now"],

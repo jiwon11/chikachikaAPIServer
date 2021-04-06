@@ -333,7 +333,7 @@ module.exports.billsVerify = async function billsVerify(event) {
         },
       },
       attributes: { include: reviewQueryClass.reviewIncludeAttributes("") },
-      include: reviewQueryClass.reviewIncludeModels(db, "detail", null, null, null, null, {
+      include: reviewQueryClass.reviewIncludeModels(db, "detail", null, null, {
         model: db.ReviewBills,
       }),
       order: [
@@ -360,7 +360,7 @@ module.exports.billsVerify = async function billsVerify(event) {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: `*가격 별점* : ${review.dataValues.starRate_cost}, *서비스 별점* : ${review.dataValues.starRate_service}, *치료 별점* : ${review.dataValues.starRate_treatment} \n *치료일자* : ${review.dataValues.treatmentDate} \n *총금액* : ${review.dataValues.totalCost}`,
+                text: `*추천 여부* : ${review.dataValues.recommend} \n *총금액* : ${review.dataValues.totalCost}`,
               },
             },
             {
@@ -393,7 +393,7 @@ module.exports.billsVerify = async function billsVerify(event) {
             },
             {
               type: "image",
-              image_url: review.reviewBills[0].dataValues.img_url,
+              image_url: review.reviewBills ? review.reviewBills[0].dataValues.img_url : null,
               alt_text: "inspiration",
             },
             {

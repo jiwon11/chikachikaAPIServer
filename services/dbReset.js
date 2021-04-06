@@ -723,3 +723,41 @@ module.exports.subwayImport = async function subwayImport(event) {
     };
   }
 };
+module.exports.addtreatmentItems = async function addtreatmentItems(event) {
+  try {
+    const treatmentItems = require("../dental_clinic_json/treatments.json");
+    for (const treatment of treatmentItems) {
+      if (treatment.technicalName !== "") {
+        const exTreatment = await db.Treatment_item.findOne({
+          where: {
+            technicalName: treatment.technicalName,
+          },
+        });
+        if (!exTreatment) {
+          await db.Treatment_item.create({
+            technicalName: treatment.technicalName,
+            usualName: treatment.usualName ? treatment.usualName : treatment.technicalName,
+            engTechnicalName: treatment.engTechnicalName,
+          });
+        } else {
+          await exTreatment.update({
+            technicalName: treatment.technicalName,
+            usualName: treatment.usualName ? treatment.usualName : treatment.technicalName,
+            engTechnicalName: treatment.engTechnicalName,
+          });
+        }
+        console.log(treatment.technicalName);
+      }
+    }
+    return {
+      statusCode: 200,
+      body: `{"message": ${treatmentItems}}`,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      statusCode: 500,
+      body: `{"statusText": "Server error","message": "${error.message}"}`,
+    };
+  }
+};

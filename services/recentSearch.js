@@ -7,28 +7,19 @@ module.exports.postRecentSearch = async function postRecentSearch(event) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userId = decoded.id;
     const tagCategory = event.queryStringParameters.tagCategory;
-    const sq = event.queryStringParameters.sq;
-    const iq = event.queryStringParameters.iq;
-    var targetId;
-    if (tagCategory === "city") {
-      targetId = null;
-    } else {
-      targetId = event.queryStringParameters.targetId;
-    }
+    const query = event.queryStringParameters.query;
     const user = await db.User.findOne({
       where: {
         id: userId,
       },
     });
     if (user) {
-      if (iq !== "") {
+      if (query !== "") {
         const [search, created] = await db.Search_record.findOrCreate({
           where: {
             userId: user.id,
-            inputQuery: iq,
-            searchQuery: sq,
+            query: query,
             category: tagCategory,
-            targetId: targetId,
             route: "keywordSearch",
           },
         });
@@ -36,10 +27,8 @@ module.exports.postRecentSearch = async function postRecentSearch(event) {
           await db.Search_record.update(
             {
               userId: user.id,
-              inputQuery: iq,
-              searchQuery: sq,
+              query: query,
               category: tagCategory,
-              targetId: targetId,
               route: "keywordSearch",
             },
             {
@@ -90,7 +79,7 @@ module.exports.getRecent = async function getRecentSearch(event) {
         userId: decoded.id,
         route: route,
       },
-      attributes: ["id", "searchQuery", "inputQuery", "category", "targetId", "updatedAt"],
+      attributes: ["id", "query", "category", "updatedAt"],
       order: [["updatedAt", "DESC"]],
     });
     return {

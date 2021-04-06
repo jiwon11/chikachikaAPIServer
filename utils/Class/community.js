@@ -24,10 +24,7 @@ const communityIncludeAttributes = function (userId) {
 };
 module.exports.communityIncludeAttributes = communityIncludeAttributes;
 
-const communityIncludeModels = function (db, clusterQuery, query, tagCategory, tagId, appendModels) {
-  if (clusterQuery === undefined) {
-    clusterQuery = { createdAt: { [Sequelize.Op.not]: null } };
-  }
+const communityIncludeModels = function (db, clusterQuery, appendModels) {
   var models = [
     {
       model: db.User,
@@ -116,67 +113,6 @@ const communityIncludeModels = function (db, clusterQuery, query, tagCategory, t
   if (appendModels) {
     models.push(appendModels);
   }
-  if (query) {
-    if (tagCategory === "city") {
-      let modelIdx = models.findIndex((model) => model.as === "CityTags");
-      console.log(modelIdx);
-      if (tagId === "") {
-        models[modelIdx].where = {
-          fullCityName: {
-            [Sequelize.Op.like]: `%${query}%`,
-          },
-        };
-      } else {
-        models[modelIdx].where = {
-          id: tagId,
-        };
-      }
-    } else if (tagCategory === "general") {
-      let modelIdx = models.findIndex((model) => model.as === "GeneralTags");
-      models[modelIdx].where = {
-        name: {
-          [Sequelize.Op.like]: `%${query}%`,
-        },
-      };
-    } else if (tagCategory === "treatment") {
-      let modelIdx = models.findIndex((model) => model.as === "TreatmentItems");
-      models[modelIdx].where = {
-        [Sequelize.Op.or]: [
-          {
-            usualName: {
-              [Sequelize.Op.like]: `%${query}%`,
-            },
-          },
-          {
-            technicalName: {
-              [Sequelize.Op.like]: `%${query}%`,
-            },
-          },
-        ],
-      };
-    } else if (tagCategory === "clinic") {
-      let modelIdx = models.findIndex((model) => model.as === "Clinics");
-      models[modelIdx].where = {
-        id: tagId,
-      };
-    } else if (tagCategory === "disease") {
-      let modelIdx = models.findIndex((model) => model.as === "DiseaseItems");
-      models[modelIdx].where = {
-        [Sequelize.Op.or]: [
-          {
-            usualName: {
-              [Sequelize.Op.like]: `%${query}%`,
-            },
-          },
-          {
-            technicalName: {
-              [Sequelize.Op.like]: `%${query}%`,
-            },
-          },
-        ],
-      };
-    }
-  }
   return models;
 };
 module.exports.communityIncludeModels = communityIncludeModels;
@@ -209,6 +145,16 @@ module.exports.getAll = async function (db, userId, type, clusterQuery, order, o
   return await this.findAll({
     where: {
       type: type,
+      cityId: {
+        [Sequelize.Op.or]: [
+          {
+            [Sequelize.Op.is]: null,
+          },
+          {
+            [Sequelize.Op.not]: null,
+          },
+        ],
+      },
       userId: {
         [Sequelize.Op.not]: null,
       },
@@ -244,7 +190,7 @@ module.exports.getUserCommunityPostAll = async function (db, type, userId, targe
   });
 };
 
-module.exports.getKeywordSearchAll = async function (db, communityType, query, tagCategory, tagId, userId, clusterQuery, offsetQuery, limitQuery, order) {
+module.exports.getKeywordSearchAll = async function (db, communityType, query, userId, clusterQuery, offsetQuery, limitQuery, order) {
   var orderQuery;
   if (order === "createdAt") {
     orderQuery = ["createdAt", "DESC"];
@@ -264,9 +210,14 @@ module.exports.getKeywordSearchAll = async function (db, communityType, query, t
         {
           type: communityType,
         },
+        {
+          description: {
+            [Sequelize.Op.like]: `%${query}%`,
+          },
+        },
       ],
     },
-    include: communityIncludeModels(db, clusterQuery, query, tagCategory, tagId),
+    include: communityIncludeModels(db, clusterQuery),
     order: [orderQuery],
     limit: limitQuery,
     offset: offsetQuery,

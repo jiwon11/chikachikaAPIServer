@@ -2,12 +2,13 @@ const jwt = require("jsonwebtoken");
 const db = require("../utils/models");
 const Sequelize = require("sequelize");
 const moment = require("moment");
-const communityQueryClass = require("../utils/Class/community");
 
-module.exports.treatmentItems = async function treatmentItems(event) {
+module.exports.treatmentAndDiseaseItems = async function treatmentAndDiseaseItems(event) {
   try {
     const query = event.queryStringParameters.q;
+    const queryLen = query.length;
     const treatments = await db.Treatment_item.findAll({
+      attributes: ["id", ["usualName", "name"]],
       where: {
         [Sequelize.Op.or]: [
           {
@@ -15,17 +16,43 @@ module.exports.treatmentItems = async function treatmentItems(event) {
               [Sequelize.Op.like]: `%${query}%`,
             },
           },
+        ],
+      },
+    });
+    treatments.forEach((treatment) => {
+      treatment.setDataValue("category", "treatment");
+    });
+    const diseases = await db.Disease_item.findAll({
+      attributes: ["id", ["usualName", "name"]],
+      where: {
+        [Sequelize.Op.or]: [
           {
-            technicalName: {
+            usualName: {
               [Sequelize.Op.like]: `%${query}%`,
             },
           },
         ],
       },
     });
+    diseases.forEach((disease) => {
+      disease.setDataValue("category", "disease");
+    });
+    const mergeResults = treatments.concat(diseases);
+    mergeResults.forEach((result) => {
+      if (result.dataValues.category !== "city") {
+        if (result.dataValues.name.substr(0, queryLen) === query) {
+          result.setDataValue("initialLetterContained", 1);
+        } else {
+          result.setDataValue("initialLetterContained", 0);
+        }
+      }
+    });
+    const sortResults = mergeResults.sort(function async(a, b) {
+      return b.dataValues.initialLetterContained - a.dataValues.initialLetterContained;
+    });
     let response = {
       statusCode: 200,
-      body: JSON.stringify(treatments),
+      body: JSON.stringify(sortResults),
     };
     return response;
   } catch (err) {
@@ -70,30 +97,6 @@ module.exports.diseaseItems = async function diseaseItems(event) {
   }
 };
 
-module.exports.symptomItems = async function symptomItems(event) {
-  try {
-    const query = event.queryStringParameters.q;
-    const symptoms = await db.Symptom_item.findAll({
-      where: {
-        name: {
-          [Sequelize.Op.like]: `${query}%`,
-        },
-      },
-    });
-    let response = {
-      statusCode: 200,
-      body: JSON.stringify(symptoms),
-    };
-    return response;
-  } catch (err) {
-    console.info("Error login", err);
-    return {
-      statusCode: 500,
-      body: `{"statusText": "Server error","message": "${err.message}"}`,
-    };
-  }
-};
-
 module.exports.dentalClinics = async function dentalClinics(event) {
   try {
     const query = event.queryStringParameters.q;
@@ -129,24 +132,22 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
     });
     if (user) {
       console.log(event.queryStringParameters);
-      const { lat, long, sq, iq, sort, days, time, wantParking, holiday, tagCategory, tagId } = event.queryStringParameters;
+      const { lat, long, query, sort, days, time, wantParking, holiday, tagCategory, transparent, surgeon, night } = event.queryStringParameters;
       const limit = parseInt(event.queryStringParameters.limit);
       const offset = parseInt(event.queryStringParameters.offset);
-      if (!sq) {
+      if (!query) {
         return {
           statusCode: 400,
           body: `{"statusText": "Bad Request","message": "검색어를 입력해주새요."}`,
         };
       }
       if (user) {
-        if (iq !== "") {
+        if (query !== "") {
           const [search, created] = await db.Search_record.findOrCreate({
             where: {
               userId: user.id,
-              inputQuery: iq,
-              searchQuery: sq,
+              query: query,
               category: tagCategory,
-              targetId: null,
               route: "keywordClinicSearch",
             },
           });
@@ -154,10 +155,8 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
             await db.Search_record.update(
               {
                 userId: user.id,
-                inputQuery: iq,
-                searchQuery: sq,
+                query: query,
                 category: tagCategory,
-                targetId: tagId,
                 route: "keywordClinicSearch",
               },
               {
@@ -211,7 +210,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
       const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
       const day = weekDay[today.day()];
       console.log(day, nowTime);
-      const clinics = await db.Dental_clinic.searchAll(db, "keyword", sq, nowTime, day, week, lat, long, null, null, limit, offset, sort, wantParking, holiday);
+      const clinics = await db.Dental_clinic.searchAll(db, "keyword", query, nowTime, day, week, lat, long, null, null, limit, offset, sort, wantParking, holiday, transparent, surgeon, night);
       let response = {
         statusCode: 200,
         body: JSON.stringify(clinics),
@@ -327,10 +326,7 @@ module.exports.reviews = async function reviewSearch(event) {
 
 module.exports.allTagItems = async function allTagItems(event) {
   try {
-    const token = event.headers.Authorization;
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const query = event.queryStringParameters.q;
-    const purpose = event.pathParameters.purpose;
     const queryLen = query.length;
     const clinics = await db.Dental_clinic.findAll({
       where: {
@@ -338,16 +334,12 @@ module.exports.allTagItems = async function allTagItems(event) {
           [Sequelize.Op.like]: `${query}%`,
         },
       },
-      attributes: ["id", "name", "originalName", "address", "local"],
+      attributes: [["originalName", "name"]],
+      group: ["originalName"],
       order: [["originalName", "ASC"]],
       limit: 5,
     });
     clinics.forEach((clinic) => {
-      if (clinic.dataValues.originalName.substr(0, queryLen) === query) {
-        clinic.setDataValue("initialLetterContained", true);
-      } else {
-        clinic.setDataValue("initialLetterContained", false);
-      }
       clinic.setDataValue("category", "clinic");
     });
     const treatments = await db.Treatment_item.findAll({
@@ -355,26 +347,16 @@ module.exports.allTagItems = async function allTagItems(event) {
         [Sequelize.Op.or]: [
           {
             usualName: {
-              [Sequelize.Op.like]: `${query}%`,
-            },
-          },
-          {
-            technicalName: {
-              [Sequelize.Op.like]: `${query}%`,
+              [Sequelize.Op.like]: `%${query}%`,
             },
           },
         ],
       },
-      attributes: ["id", "usualName", "technicalName"],
+      attributes: [["usualName", "name"]],
       order: [["usualName", "ASC"]],
       limit: 3,
     });
     treatments.forEach((treatment) => {
-      if (treatment.dataValues.usualName.substr(0, queryLen) === query) {
-        treatment.setDataValue("initialLetterContained", true);
-      } else {
-        treatment.setDataValue("initialLetterContained", false);
-      }
       treatment.setDataValue("category", "treatment");
     });
     const diseases = await db.Disease_item.findAll({
@@ -382,134 +364,78 @@ module.exports.allTagItems = async function allTagItems(event) {
         [Sequelize.Op.or]: [
           {
             usualName: {
-              [Sequelize.Op.like]: `${query}%`,
-            },
-          },
-          {
-            technicalName: {
-              [Sequelize.Op.like]: `${query}%`,
+              [Sequelize.Op.like]: `%${query}%`,
             },
           },
         ],
       },
-      attributes: ["id", "usualName", "technicalName"],
+      attributes: [["usualName", "name"]],
       order: [["usualName", "ASC"]],
       limit: 3,
     });
     diseases.forEach((disease) => {
-      if (disease.dataValues.usualName.substr(0, queryLen) === query) {
-        disease.setDataValue("initialLetterContained", true);
-      } else {
-        disease.setDataValue("initialLetterContained", false);
-      }
       disease.setDataValue("category", "disease");
     });
-    const generaltags = await db.GeneralTag.findAll({
+    const sido = await db.Sido.findAll({
+      attributes: ["name", ["fullName", "name"], [Sequelize.literal(`(IF((((SELECT SUBSTR((SELECT name),1,${queryLen}))='${query}')), TRUE, FALSE))`), "initialLetterContained"]],
       where: {
-        name: {
-          [Sequelize.Op.like]: `${query}%`,
+        fullName: {
+          [Sequelize.Op.like]: `%${query}%`,
         },
       },
-      attributes: ["id", "name"],
-      order: [["name", "ASC"]],
+      order: Sequelize.literal("initialLetterContained DESC"),
+    });
+    const sigungu = await db.Sigungu.findAll({
+      attributes: [
+        [Sequelize.fn("CONCAT", Sequelize.col("name"), "(", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', 1))"), ")"), "name"],
+        [Sequelize.literal(`(IF((((SELECT SUBSTR((SELECT name),1,${queryLen}))='${query}')), TRUE, FALSE))`), "initialLetterContained"],
+      ],
+      where: {
+        [Sequelize.Op.or]: [
+          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("name"), "(", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', 1))"), ")"), {
+            [Sequelize.Op.like]: `%${query}%`,
+          }),
+          {
+            fullName: {
+              [Sequelize.Op.like]: `%${query}%`,
+            },
+          },
+        ],
+      },
+      limit: 5,
+      order: Sequelize.literal("initialLetterContained DESC"),
+    });
+    const cities = await db.City.findAll({
+      where: {
+        [Sequelize.Op.or]: [
+          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
+            [Sequelize.Op.like]: `%${query}%`,
+          }),
+          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.col("sigungu"), ")"), {
+            [Sequelize.Op.like]: `%${query}%`,
+          }),
+        ],
+      },
+      attributes: [
+        [Sequelize.literal("CONCAT(emdName, '(',(SELECT SUBSTRING_INDEX(sigungu, ' ', 1)),')')"), "name"],
+        [Sequelize.literal(`(IF((((SELECT SUBSTR((SELECT name),1,${queryLen}))='${query}')), TRUE, FALSE))`), "initialLetterContained"],
+      ],
+      group: Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")),
+      order: Sequelize.literal("initialLetterContained DESC"),
       limit: 5,
     });
-    generaltags.forEach((generaltag) => {
-      if (generaltag.dataValues.name.substr(0, queryLen) === query) {
-        generaltag.setDataValue("initialLetterContained", true);
-      } else {
-        generaltag.setDataValue("initialLetterContained", false);
+    const locations = cities.concat(sido, sigungu);
+    locations.forEach((location) => location.setDataValue("category", "city"));
+    var mergeResults = locations.concat(treatments, clinics, diseases);
+    mergeResults.forEach((result) => {
+      if (result.dataValues.category !== "city") {
+        if (result.dataValues.name.substr(0, queryLen) === query) {
+          result.setDataValue("initialLetterContained", 1);
+        } else {
+          result.setDataValue("initialLetterContained", 0);
+        }
       }
-      generaltag.setDataValue("category", "general");
     });
-    var cities;
-    var sido = [];
-    var sigungu = [];
-    if (purpose === "autoComplete") {
-      // 수다방 글 작성 시, 자동완성용 API
-      cities = await db.City.findAll({
-        where: Sequelize.where(Sequelize.literal("CONCAT(emdName, '(',REPLACE(sigungu,' ', '-'),')')"), {
-          [Sequelize.Op.like]: `${query}%`,
-        }),
-        attributes: [
-          "id",
-          "sido",
-          "sigungu",
-          "emdName",
-          [Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), "fullAddress"],
-          [Sequelize.literal("CONCAT(emdName, '(',REPLACE(sigungu,' ', '-'),')')"), "cityName"],
-        ],
-        group: Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")),
-        limit: 5,
-      });
-      cities.forEach((city) => {
-        if (city.dataValues.emdName.substr(0, queryLen) === query) {
-          city.setDataValue("initialLetterContained", true);
-        } else {
-          city.setDataValue("initialLetterContained", false);
-        }
-        city.setDataValue("isEMD", true);
-      });
-    } else if (purpose === "keywordSearch") {
-      // 통합검색 시, 자동완성용 API
-      sido = await db.Sido.findAll({
-        attributes: ["id", "name", ["fullName", "fullAddress"]],
-        where: {
-          fullName: {
-            [Sequelize.Op.like]: `%${query}%`,
-          },
-        },
-        order: [["fullName", "ASC"]],
-      });
-      sido.forEach((sido) => {
-        if (sido.dataValues.name.substr(0, queryLen) === query) {
-          sido.setDataValue("initialLetterContained", true);
-        } else {
-          sido.setDataValue("initialLetterContained", false);
-        }
-        sido.setDataValue("isEMD", false);
-      });
-      sigungu = await db.Sigungu.findAll({
-        attributes: ["id", "name", ["fullName", "fullAddress"]],
-        where: {
-          fullName: {
-            [Sequelize.Op.like]: `%${query}%`,
-          },
-        },
-        limit: 5,
-        order: [["fullName", "ASC"]],
-      });
-      sigungu.forEach((sigungu) => {
-        if (sigungu.dataValues.name.substr(0, queryLen) === query) {
-          sigungu.setDataValue("initialLetterContained", true);
-        } else {
-          sigungu.setDataValue("initialLetterContained", false);
-        }
-        sigungu.setDataValue("isEMD", false);
-      });
-      cities = await db.City.findAll({
-        where: Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
-          [Sequelize.Op.like]: `%${query}%`,
-        }),
-        attributes: ["id", ["emdName", "name"], "sido", "sigungu", [Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), "fullAddress"]],
-        group: Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")),
-        limit: 5,
-      });
-      cities.forEach((city) => {
-        if (city.dataValues.name.substr(0, queryLen) === query) {
-          city.setDataValue("initialLetterContained", true);
-        } else {
-          city.setDataValue("initialLetterContained", false);
-        }
-        city.setDataValue("isEMD", true);
-      });
-    }
-    cities = cities.concat(sido, sigungu);
-    cities.forEach((city) => city.setDataValue("category", "city"));
-    cities = cities.sort(function async(a, b) {
-      return a.dataValues.fullName < b.dataValues.fullName ? -1 : a.dataValues.fullName > b.dataValues.fullName ? 1 : 0;
-    });
-    var mergeResults = cities.concat(treatments, generaltags, clinics, diseases);
     mergeResults = mergeResults.sort(function async(a, b) {
       return b.dataValues.initialLetterContained - a.dataValues.initialLetterContained;
     });
@@ -530,17 +456,14 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
   try {
     const token = event.headers.Authorization;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const type = event.pathParameters.type;
     const userId = decoded.id;
-    const sq = event.queryStringParameters.sq;
-    const iq = event.queryStringParameters.iq;
+    const resultType = event.pathParameters.type;
+    const query = event.queryStringParameters.query;
     const limit = parseInt(event.queryStringParameters.limit);
     const offset = parseInt(event.queryStringParameters.offset);
     const order = event.queryStringParameters.order;
     const region = event.queryStringParameters.region;
     const cityId = event.queryStringParameters.cityId;
-    const tagCategory = event.queryStringParameters.tagCategory;
-    const tagId = event.queryStringParameters.tagId;
     const lat = event.queryStringParameters.lat;
     const long = event.queryStringParameters.long;
     const user = await db.User.findOne({
@@ -570,27 +493,28 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
           body: { statusText: "Bad Request", message: "유효하지 않는 쿼리입니다." },
         };
       }
-      switch (type) {
+      switch (resultType) {
         case "community":
-          const communityType = event.queryStringParameters.type === "All" ? ["Question", "FreeTalk"] : [event.queryStringParameters.type];
-          const communityResult = await db.Community.getKeywordSearchAll(db, communityType, sq, tagCategory, tagId, userId, clusterQuery, offset, limit, order);
-          console.log(`${type} results Num: ${communityResult.length}`);
+          const communityType = event.queryStringParameters.communityType === "All" ? ["Question", "FreeTalk"] : [event.queryStringParameters.communityType];
+          const communityResult = await db.Community.getKeywordSearchAll(db, communityType, query, userId, clusterQuery, offset, limit, order);
+          console.log(`${resultType} results Num: ${communityResult.length}`);
           return {
             statusCode: 200,
             body: JSON.stringify(communityResult),
           };
         case "review":
           console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
-          const reviewResult = await db.Review.getKeywordSearchAll(db, userId, sq, tagCategory, tagId, clusterQuery, limit, offset, order);
-          console.log(`${type} results Num: ${reviewResult.length}`);
+          const correctionStatus = event.queryStringParameters.correctionStatus;
+          const reviewResult = await db.Review.getKeywordSearchAll(db, userId, query, clusterQuery, limit, offset, order, correctionStatus);
+          console.log(`${resultType} results Num: ${reviewResult.length}`);
           return {
             statusCode: 200,
             body: JSON.stringify(reviewResult),
           };
         case "clinic":
           console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
-          const clinicResult = await db.Dental_clinic.getKeywordSearchAll(db, lat, long, sq, tagCategory, tagId, clusterQuery, limit, offset, order);
-          console.log(`${type} results Num: ${clinicResult.length}`);
+          const clinicResult = await db.Dental_clinic.getKeywordSearchAll(db, lat, long, query, clusterQuery, limit, offset, order);
+          console.log(`${resultType} results Num: ${clinicResult.length}`);
           return {
             statusCode: 200,
             body: JSON.stringify(clinicResult),
@@ -618,93 +542,76 @@ module.exports.keywordClinicAutoComplete = async function keywordClinicAutoCompl
     const { query } = event.queryStringParameters;
     const queryLen = query.length;
     const sido = await db.Sido.findAll({
-      attributes: ["id", "name", ["fullName", "fullAddress"]],
+      attributes: ["name", ["fullName", "name"], [Sequelize.literal(`(IF((((SELECT SUBSTR((SELECT name),1,${queryLen}))='${query}')), TRUE, FALSE))`), "initialLetterContained"]],
       where: {
         fullName: {
           [Sequelize.Op.like]: `%${query}%`,
         },
       },
-      order: [["fullName", "ASC"]],
-    });
-    sido.forEach((sido) => {
-      sido.setDataValue("category", "city");
-      if (sido.dataValues.name.substr(0, queryLen) === query) {
-        sido.setDataValue("initialLetterContained", true);
-      } else {
-        sido.setDataValue("initialLetterContained", false);
-      }
-      sido.setDataValue("isEMD", false);
+      order: Sequelize.literal("initialLetterContained DESC"),
     });
     const sigungu = await db.Sigungu.findAll({
-      attributes: ["id", "name", ["fullName", "fullAddress"]],
-      where: {
-        fullName: {
-          [Sequelize.Op.like]: `%${query}%`,
-        },
-      },
-      order: [["fullName", "ASC"]],
-      limit: 5,
-    });
-    sigungu.forEach((sigungu) => {
-      sigungu.setDataValue("category", "city");
-      if (sigungu.dataValues.name.substr(0, queryLen) === query) {
-        sigungu.setDataValue("initialLetterContained", true);
-      } else {
-        sigungu.setDataValue("initialLetterContained", false);
-      }
-      sigungu.setDataValue("isEMD", false);
-    });
-    const emd = await db.City.findAll({
       attributes: [
-        "id",
-        ["emdName", "name"],
-        "sido",
-        "sigungu",
-        [Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), "fullAddress"],
-        [Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("adCity")), "adFullAddress"],
+        [Sequelize.fn("CONCAT", Sequelize.col("name"), "(", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', 1))"), ")"), "name"],
+        [Sequelize.literal(`(IF((((SELECT SUBSTR((SELECT name),1,${queryLen}))='${query}')), TRUE, FALSE))`), "initialLetterContained"],
       ],
-      where: Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
-        [Sequelize.Op.like]: `%${query}%`,
-      }),
+      where: {
+        [Sequelize.Op.or]: [
+          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("name"), "(", Sequelize.literal("(SELECT SUBSTRING_INDEX(fullName, ' ', 1))"), ")"), {
+            [Sequelize.Op.like]: `%${query}%`,
+          }),
+          {
+            fullName: {
+              [Sequelize.Op.like]: `%${query}%`,
+            },
+          },
+        ],
+      },
+      limit: 5,
+      order: Sequelize.literal("initialLetterContained DESC"),
+    });
+    const cities = await db.City.findAll({
+      where: {
+        [Sequelize.Op.or]: [
+          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")), {
+            [Sequelize.Op.like]: `%${query}%`,
+          }),
+          Sequelize.where(Sequelize.fn("CONCAT", Sequelize.col("emdName"), "(", Sequelize.col("sigungu"), ")"), {
+            [Sequelize.Op.like]: `%${query}%`,
+          }),
+        ],
+      },
+      attributes: [
+        [Sequelize.literal("CONCAT(emdName, '(',(SELECT SUBSTRING_INDEX(sigungu, ' ', 1)),')')"), "name"],
+        [Sequelize.literal(`(IF((((SELECT SUBSTR((SELECT name),1,${queryLen}))='${query}')), TRUE, FALSE))`), "initialLetterContained"],
+      ],
       group: Sequelize.fn("CONCAT", Sequelize.col("sido"), " ", Sequelize.col("sigungu"), " ", Sequelize.col("emdName")),
-      order: [["fullCityName", "ASC"]],
+      order: Sequelize.literal("initialLetterContained DESC"),
       limit: 5,
     });
-    emd.forEach((emd) => {
-      emd.setDataValue("category", "city");
-      if (emd.dataValues.name.substr(0, queryLen) === query) {
-        emd.setDataValue("initialLetterContained", true);
-      } else {
-        emd.setDataValue("initialLetterContained", false);
-      }
-      emd.setDataValue("isEMD", true);
+    const locations = cities.concat(sido, sigungu);
+    locations.forEach((location) => location.setDataValue("category", "city"));
+    const sortLocations = locations.sort(function async(a, b) {
+      return b.dataValues.initialLetterContained - a.dataValues.initialLetterContained;
     });
-    const cities = sido.concat(sigungu, emd);
     const clinics = await db.Dental_clinic.findAll({
-      attributes: ["id", "name", "originalName", "address", "local"],
       where: {
-        originalName: {
-          [Sequelize.Op.like]: `%${query}%`,
+        name: {
+          [Sequelize.Op.like]: `${query}%`,
         },
       },
+      attributes: [["originalName", "name"]],
+      group: ["originalName"],
       order: [["originalName", "ASC"]],
       limit: 5,
     });
     clinics.forEach((clinic) => {
-      if (clinic.dataValues.name.substr(0, queryLen) === query) {
-        clinic.setDataValue("initialLetterContained", true);
-      } else {
-        clinic.setDataValue("initialLetterContained", false);
-      }
       clinic.setDataValue("category", "clinic");
     });
-    const mergeResults = cities.concat(clinics);
-    var sortReuslts = mergeResults.sort(function async(a, b) {
-      return b.dataValues.initialLetterContained - a.dataValues.initialLetterContained;
-    });
+    const mergeResults = sortLocations.concat(clinics);
     return {
       statusCode: 200,
-      body: JSON.stringify(sortReuslts),
+      body: JSON.stringify(mergeResults),
     };
   } catch (error) {
     console.error(error);

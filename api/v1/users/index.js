@@ -226,7 +226,7 @@ router.get("/wroteCommentPosts", getUserInToken, async (req, res, next) => {
         attributes: {
           include: reviewQueryClass.reviewIncludeAttributes(userId),
         },
-        include: reviewQueryClass.reviewIncludeModels(db, "list", undefined, undefined, undefined, undefined, {
+        include: reviewQueryClass.reviewIncludeModels(db, "list", undefined, undefined, {
           model: db.Review_comment,
           include: [
             {
