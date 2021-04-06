@@ -27,18 +27,18 @@ custom:
     stage: ${self:provider.stage}
     createRoute53Record: true
   apigwBinary:
-    types:           #list of mime-types 
-       - 'multipart/form-data'
+    types: #list of mime-types
+      - "multipart/form-data"
   apiGatewayCaching:
     enabled: ${self:custom.cacheEnabled.${self:custom.stage}, false}
-    clusterSize: '0.5' # defaults to '0.5'
+    clusterSize: "0.5" # defaults to '0.5'
     ttlInSeconds: 300 # defaults to the maximum allowed: 3600
   prune:
     automatic: true
     number: 1
   scripts:
     hooks:
-      'deploy:finalize': npm run jest -- -stage=${opt:stage, 'dev'}
+      "deploy:finalize": npm run jest -- -stage=${opt:stage, 'dev'}
 
 provider:
   name: aws
@@ -56,8 +56,8 @@ provider:
   apiGateway:
     minimumCompressionSize: 1024
     binaryMediaTypes:
-      - 'multipart/form-data'
-      - 'image/*'
+      - "multipart/form-data"
+      - "image/*"
   iam:
     role:
       statements:
@@ -109,11 +109,11 @@ functions:
           method: ANY
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   getUserInfo:
     handler: services/user.getUserInfo
     layers:
@@ -124,11 +124,11 @@ functions:
           method: get
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   keywordSearchResults:
     handler: services/search.keywordSearchResults
     layers:
@@ -139,11 +139,11 @@ functions:
           method: get
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   getUserProfile:
     handler: services/user.getUserProfile
     layers:
@@ -154,11 +154,11 @@ functions:
           method: get
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   allTagItems:
     handler: services/search.allTagItems
     layers:
@@ -176,11 +176,11 @@ functions:
               - name: request.querystring.offset
               - name: request.querystring.limit
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   postRecentSearch:
     handler: services/recentSearch.postRecentSearch
     layers:
@@ -191,11 +191,11 @@ functions:
           method: post
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   getRecentSearch:
     handler: services/recentSearch.getRecent
     layers:
@@ -206,11 +206,11 @@ functions:
           method: get
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   delRecentSearch:
     handler: services/recentSearch.delRecent
     layers:
@@ -221,11 +221,11 @@ functions:
           method: delete
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   reviewSearch:
     handler: services/search.reviews
     layers:
@@ -236,11 +236,11 @@ functions:
           method: get
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   keywordClinicSearch:
     handler: services/search.keywordClinicSearch
     layers:
@@ -266,11 +266,11 @@ functions:
               - name: request.querystring.offset
               - name: request.querystring.holiday
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   aroundClinics:
     handler: services/around.clinics
     layers:
@@ -296,11 +296,11 @@ functions:
               - name: request.querystring.limit
               - name: request.querystring.offset
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   treatmentSearch:
     handler: services/search.treatmentAndDiseaseItems
     layers:
@@ -311,11 +311,11 @@ functions:
           method: get
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   diseaseSearch:
     handler: services/search.diseaseItems
     layers:
@@ -326,11 +326,11 @@ functions:
           method: get
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   clinicSearch:
     handler: services/search.dentalClinics
     layers:
@@ -346,11 +346,11 @@ functions:
             cacheKeyParameters:
               - name: request.querystring.q
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   symptomSearch:
     handler: services/search.symptomItems
     layers:
@@ -361,11 +361,11 @@ functions:
           method: get
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   login:
     handler: services/login.handler
     layers:
@@ -430,10 +430,10 @@ functions:
           method: delete
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
   searchCities:
     handler: services/residence.searchCities
     layers:
@@ -475,11 +475,11 @@ functions:
           method: post
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   changeUserResidence:
     handler: services/residence.changeUserResidence
     layers:
@@ -490,11 +490,11 @@ functions:
           method: put
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   deleteUserResidence:
     handler: services/residence.deleteUserResidence
     layers:
@@ -505,11 +505,11 @@ functions:
           method: delete
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   getUserResidence:
     handler: services/residence.getUserResidence
     layers:
@@ -520,11 +520,11 @@ functions:
           method: get
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   nowUserResidence:
     handler: services/residence.userResidenceNow
     layers:
@@ -535,11 +535,11 @@ functions:
           method: post
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   addLikeReview:
     handler: services/like.addLikeReview
     layers:
@@ -550,11 +550,11 @@ functions:
           method: post
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   removeLikeReview:
     handler: services/like.removeLikeReview
     layers:
@@ -565,11 +565,11 @@ functions:
           method: delete
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   addLikeCommunity:
     handler: services/like.addLikeCommunity
     layers:
@@ -580,11 +580,11 @@ functions:
           method: post
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   removeLikeCommunity:
     handler: services/like.removeLikeCommunity
     layers:
@@ -595,11 +595,11 @@ functions:
           method: delete
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   addScrapReview:
     handler: services/scrap.addScrapReview
     layers:
@@ -610,11 +610,11 @@ functions:
           method: post
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   removeScrapeReview:
     handler: services/scrap.removeScrapReview
     layers:
@@ -625,11 +625,11 @@ functions:
           method: delete
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   addScrapCommunity:
     handler: services/scrap.addScrapCommunities
     layers:
@@ -640,11 +640,11 @@ functions:
           method: post
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   removeScrapCommunity:
     handler: services/scrap.removeScrapCommunities
     layers:
@@ -655,11 +655,11 @@ functions:
           method: delete
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   addScrapClinic:
     handler: services/scrap.addScrapClinic
     layers:
@@ -670,11 +670,11 @@ functions:
           method: post
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   removeScrapClinic:
     handler: services/scrap.removeScrapClinic
     layers:
@@ -685,11 +685,11 @@ functions:
           method: delete
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   getScrapClinic:
     handler: services/scrap.getScrapClinic
     layers:
@@ -700,11 +700,11 @@ functions:
           method: get
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   detailClinics:
     handler: services/dentalClinic.detailClinics
     layers:
@@ -720,11 +720,11 @@ functions:
             cacheKeyParameters:
               - name: request.querystring.clinicId
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   userScrapClinics:
     handler: services/dentalClinic.userScrapClinics
     layers:
@@ -735,11 +735,11 @@ functions:
           method: get
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   ClinicsReviews:
     handler: services/dentalClinic.clinicReviews
     layers:
@@ -750,11 +750,11 @@ functions:
           method: get
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   updateNotificationConfig:
     handler: services/setting.updateNotificationConfig
     layers:
@@ -765,11 +765,11 @@ functions:
           method: put
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   keywordClinicAutoComplete:
     handler: services/search.keywordClinicAutoComplete
     layers:
@@ -785,11 +785,11 @@ functions:
             cacheKeyParameters:
               - name: request.querystring.query
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   redienceClinics:
     handler: services/around.redienceClinics
     layers:
@@ -803,11 +803,11 @@ functions:
             enabled: true
             ttlInSeconds: 300 # overrides the global setting for ttlInSeconds
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   getNotifications:
     handler: services/notification.getNotifications
     layers:
@@ -818,11 +818,11 @@ functions:
           method: get
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   delNotifications:
     handler: services/notification.delNotifications
     layers:
@@ -833,11 +833,11 @@ functions:
           method: delete
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   postClinicReport:
     handler: services/report.postClinicReport
     layers:
@@ -848,11 +848,11 @@ functions:
           method: post
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   residenceClinicsAndReviews:
     handler: services/residence.residenceClinicsAndReviews
     layers:
@@ -863,11 +863,11 @@ functions:
           method: get
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   postAppointment:
     handler: services/appointment.postAppointment
     layers:
@@ -878,11 +878,11 @@ functions:
           method: post
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   getAppointment:
     handler: services/appointment.getAppointment
     layers:
@@ -893,11 +893,11 @@ functions:
           method: get
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   removeAppointment:
     handler: services/appointment.removeAppointment
     layers:
@@ -908,11 +908,11 @@ functions:
           method: delete
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   residenceClinicReviews:
     handler: services/main.residenceClinicReviews
     layers:
@@ -923,11 +923,11 @@ functions:
           method: get
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   postReports:
     handler: services/report.reports
     layers:
@@ -938,11 +938,11 @@ functions:
           method: post
           cors: true
           authorizer:
-              name: verify-token
-              # this tells the lambda where to take the information from,
-              # in our case the HTTP Authorization header
-              identitySource: method.request.header.Authorization
-              resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
+            name: verify-token
+            # this tells the lambda where to take the information from,
+            # in our case the HTTP Authorization header
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 0 #7776000 # cache the result for 90 day
   verifyBillsAdmin:
     handler: services/admin.verifyBills
     layers:
@@ -957,7 +957,7 @@ functions:
     layers:
       - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:latest
     events:
-      - sqs: 
+      - sqs:
           arn: arn:aws:sqs:ap-northeast-1:751612718299:commentNotification-${opt:stage, 'dev'}
           enabled: true
   pushNotifiactionReplyTaskWorker:
@@ -965,7 +965,7 @@ functions:
     layers:
       - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:latest
     events:
-      - sqs: 
+      - sqs:
           arn: arn:aws:sqs:ap-northeast-1:751612718299:replyNotification-${opt:stage, 'dev'}
           enabled: true
   pushNotifiactionLikeTaskWorker:
@@ -973,7 +973,7 @@ functions:
     layers:
       - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:latest
     events:
-      - sqs: 
+      - sqs:
           arn: arn:aws:sqs:ap-northeast-1:751612718299:likeNotification-${opt:stage, 'dev'}
           enabled: true
   pushNotifiactionReportTaskWorker:
@@ -981,7 +981,7 @@ functions:
     layers:
       - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:latest
     events:
-      - sqs: 
+      - sqs:
           arn: arn:aws:sqs:ap-northeast-1:751612718299:reportNotification-${opt:stage, 'dev'}.fifo
           enabled: true
   billsVerifyTaskWorker:
@@ -989,7 +989,7 @@ functions:
     layers:
       - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:latest
     events:
-      - sqs: 
+      - sqs:
           arn: arn:aws:sqs:ap-northeast-1:751612718299:billsVerify-${self:provider.stage}.fifo
           enabled: true
   deleteSQSMessageTaskWorker:
@@ -997,7 +997,7 @@ functions:
     layers:
       - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:latest
     events:
-      - sqs: 
+      - sqs:
           arn: arn:aws:sqs:ap-northeast-1:751612718299:ReceiverDeadLetterQueue-${self:provider.stage}
           enabled: true
   deleteFifoSQSMessageTaskWorker:
@@ -1005,7 +1005,7 @@ functions:
     layers:
       - arn:aws:lambda:ap-northeast-1:751612718299:layer:NodeDataStreamUtils:latest
     events:
-      - sqs: 
+      - sqs:
           arn: arn:aws:sqs:ap-northeast-1:751612718299:FifoReceiverDeadLetterQueue-${self:provider.stage}.fifo
           enabled: true
   subwayAroundClinics:
@@ -1029,8 +1029,8 @@ resources:
         RedrivePolicy:
           deadLetterTargetArn:
             "Fn::GetAtt":
-            - ReceiverDeadLetterQueue
-            - Arn
+              - ReceiverDeadLetterQueue
+              - Arn
           maxReceiveCount: 1
     replyNotification:
       Type: "AWS::SQS::Queue"
@@ -1041,8 +1041,8 @@ resources:
         RedrivePolicy:
           deadLetterTargetArn:
             "Fn::GetAtt":
-            - ReceiverDeadLetterQueue
-            - Arn
+              - ReceiverDeadLetterQueue
+              - Arn
           maxReceiveCount: 1
     likeNotification:
       Type: "AWS::SQS::Queue"
@@ -1053,8 +1053,8 @@ resources:
         RedrivePolicy:
           deadLetterTargetArn:
             "Fn::GetAtt":
-            - ReceiverDeadLetterQueue
-            - Arn
+              - ReceiverDeadLetterQueue
+              - Arn
           maxReceiveCount: 1
     eventNotification:
       Type: "AWS::SQS::Queue"
@@ -1065,8 +1065,8 @@ resources:
         RedrivePolicy:
           deadLetterTargetArn:
             "Fn::GetAtt":
-            - ReceiverDeadLetterQueue
-            - Arn
+              - ReceiverDeadLetterQueue
+              - Arn
           maxReceiveCount: 1
     reportNotification:
       Type: "AWS::SQS::Queue"
@@ -1078,8 +1078,8 @@ resources:
         RedrivePolicy:
           deadLetterTargetArn:
             "Fn::GetAtt":
-            - FifoReceiverDeadLetterQueue
-            - Arn
+              - FifoReceiverDeadLetterQueue
+              - Arn
           maxReceiveCount: 1
     billsVerify:
       Type: "AWS::SQS::Queue"
@@ -1092,8 +1092,8 @@ resources:
         RedrivePolicy:
           deadLetterTargetArn:
             "Fn::GetAtt":
-            - FifoReceiverDeadLetterQueue
-            - Arn
+              - FifoReceiverDeadLetterQueue
+              - Arn
           maxReceiveCount: 1
     ReceiverDeadLetterQueue:
       Type: "AWS::SQS::Queue"
