@@ -6,7 +6,9 @@ const moment = require("moment");
 module.exports.treatmentAndDiseaseItems = async function treatmentAndDiseaseItems(event) {
   try {
     const query = event.queryStringParameters.q;
+    const queryLen = query.length;
     const treatments = await db.Treatment_item.findAll({
+      attributes: ["id", ["usualName", "name"]],
       where: {
         [Sequelize.Op.or]: [
           {
@@ -16,8 +18,12 @@ module.exports.treatmentAndDiseaseItems = async function treatmentAndDiseaseItem
           },
         ],
       },
+    });
+    treatments.forEach((treatment) => {
+      treatment.setDataValue("category", "treatment");
     });
     const diseases = await db.Disease_item.findAll({
+      attributes: ["id", ["usualName", "name"]],
       where: {
         [Sequelize.Op.or]: [
           {
@@ -28,10 +34,25 @@ module.exports.treatmentAndDiseaseItems = async function treatmentAndDiseaseItem
         ],
       },
     });
-    const results = treatments.concat(diseases);
+    diseases.forEach((disease) => {
+      disease.setDataValue("category", "disease");
+    });
+    const mergeResults = treatments.concat(diseases);
+    mergeResults.forEach((result) => {
+      if (result.dataValues.category !== "city") {
+        if (result.dataValues.name.substr(0, queryLen) === query) {
+          result.setDataValue("initialLetterContained", 1);
+        } else {
+          result.setDataValue("initialLetterContained", 0);
+        }
+      }
+    });
+    const sortResults = mergeResults.sort(function async(a, b) {
+      return b.dataValues.initialLetterContained - a.dataValues.initialLetterContained;
+    });
     let response = {
       statusCode: 200,
-      body: JSON.stringify(results),
+      body: JSON.stringify(sortResults),
     };
     return response;
   } catch (err) {
