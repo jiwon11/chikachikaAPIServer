@@ -20,13 +20,13 @@ module.exports.verifyBills = async function verifyBills(event) {
         },
       ],
     });
-    if (review.certifiedBill === false) {
-      await review.update({
-        certifiedBill: true,
-      });
-      var message;
-      console.log(JSON.stringify(review.user));
-      if (purpose === "permission") {
+    var message;
+    console.log(JSON.stringify(review.user));
+    if (purpose === "permission") {
+      if (review.certifiedBill !== true) {
+        await review.update({
+          certifiedBill: true,
+        });
         message = {
           notification: {
             title: "영수증 검수가 완료되었습니다.",
@@ -35,7 +35,12 @@ module.exports.verifyBills = async function verifyBills(event) {
           data: { targetId: `${review.id}` },
           token: review.user.fcmToken,
         };
-      } else {
+      }
+    } else {
+      if (review.certifiedBill !== false) {
+        await review.update({
+          certifiedBill: false,
+        });
         message = {
           notification: {
             title: "영수증 검수가 완료되었습니다.",
@@ -45,25 +50,20 @@ module.exports.verifyBills = async function verifyBills(event) {
           token: review.user.fcmToken,
         };
       }
-      const userNotifyConfig = await db.NotificationConfig.findOne({
-        where: {
-          userId: review.user.id,
-        },
-      });
-      if (userNotifyConfig.event === true) {
-        const fcmResponse = await pushFcm(message);
-        console.log(fcmResponse);
-      }
-      return {
-        statusCode: 200,
-        body: `{ status: "OK" }`,
-      };
-    } else {
-      return {
-        statusCode: 400,
-        body: `{ status: "Error", message: "이미 승인된 리뷰입니다."}`,
-      };
     }
+    const userNotifyConfig = await db.NotificationConfig.findOne({
+      where: {
+        userId: review.user.id,
+      },
+    });
+    if (userNotifyConfig.event === true) {
+      const fcmResponse = await pushFcm(message);
+      console.log(fcmResponse);
+    }
+    return {
+      statusCode: 200,
+      body: `{ status: "OK" }`,
+    };
   } catch (error) {
     console.error(error);
     return {
