@@ -23,29 +23,33 @@ module.exports.verifyBills = async function verifyBills(event) {
     var message;
     console.log(JSON.stringify(review.user));
     if (purpose === "permission") {
-      await review.update({
-        certifiedBill: true,
-      });
-      message = {
-        notification: {
-          title: "영수증 검수가 완료되었습니다.",
-          body: "영수증 검수 결과, 리뷰의 영수증 인증이 확인되었습니다.",
-        },
-        data: { targetId: `${review.id}` },
-        token: review.user.fcmToken,
-      };
+      if (review.certifiedBill !== true) {
+        await review.update({
+          certifiedBill: true,
+        });
+        message = {
+          notification: {
+            title: "영수증 검수가 완료되었습니다.",
+            body: "영수증 검수 결과, 리뷰의 영수증 인증이 확인되었습니다.",
+          },
+          data: { targetId: `${review.id}` },
+          token: review.user.fcmToken,
+        };
+      }
     } else {
-      await review.update({
-        certifiedBill: false,
-      });
-      message = {
-        notification: {
-          title: "영수증 검수가 완료되었습니다.",
-          body: "영수증 검수 결과, 반려되어 리뷰의 영수증 인증이 보류되었습니다.",
-        },
-        data: { targetId: `${review.id}` },
-        token: review.user.fcmToken,
-      };
+      if (review.certifiedBill !== false) {
+        await review.update({
+          certifiedBill: false,
+        });
+        message = {
+          notification: {
+            title: "영수증 검수가 완료되었습니다.",
+            body: "영수증 검수 결과, 반려되어 리뷰의 영수증 인증이 보류되었습니다.",
+          },
+          data: { targetId: `${review.id}` },
+          token: review.user.fcmToken,
+        };
+      }
     }
     const userNotifyConfig = await db.NotificationConfig.findOne({
       where: {
