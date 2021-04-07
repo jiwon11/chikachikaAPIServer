@@ -342,6 +342,7 @@ module.exports.billsVerify = async function billsVerify(event) {
       ],
     });
     const apiUrl = process.env.apiUrl;
+    console.log(apiUrl);
     const slackMessage = {
       attachments: [
         {
