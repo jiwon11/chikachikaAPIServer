@@ -443,7 +443,7 @@ module.exports.billsVerify = async function billsVerify(event) {
       method: "POST",
       data: slackMessage,
     });
-    console.log(slackResponse);
+    console.log(slackResponse.statusCode);
     const response = {
       message: "Task Worker PULL successfully",
       input: JSON.stringify(event),
