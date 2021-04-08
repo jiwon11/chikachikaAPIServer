@@ -33,6 +33,6 @@ describe("GET search", () => {
       })
       .then((response) => response);
     console.log(res);
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(STATUS);
   });
 });
