@@ -188,7 +188,7 @@ module.exports.addUserResidence = async function addUserResidence(event) {
         });
         await user.addResidences(city, {
           through: {
-            now: false,
+            now: true,
           },
         });
         return {

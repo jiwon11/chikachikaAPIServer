@@ -156,13 +156,11 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
               },
             });
             if (city) {
-              if (city.length === 1) {
-                await communityPost.addCityTag(city[0], {
-                  through: {
-                    index: hashtags.indexOf(hashtag) + 1,
-                  },
-                });
-              }
+              await communityPost.addCityTag(city[0], {
+                through: {
+                  index: hashtags.indexOf(hashtag) + 1,
+                },
+              });
               tagArray.push({ name: hashtag, category: "city", id: city.id });
             } else {
               let generalTag = await db.GeneralTag.findOne({
