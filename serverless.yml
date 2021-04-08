@@ -50,7 +50,7 @@ provider:
   stackName: chikachika-API-serverless-${self:provider.stage} # Use a custom name for the CloudFormation stack
   apiName: chikachika-API-serverless-${self:provider.stage} # Use a custom name for the API Gateway API
   logs:
-    restApi: false
+    restApi: true
   tracing:
     apiGateway: true
     lambda: true
