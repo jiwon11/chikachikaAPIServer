@@ -31,7 +31,8 @@ describe("GET search", () => {
           Authorization: USERTOKEN,
         },
       })
-      .then((response) => response);
+      .then((response) => response)
+      .catch((error) => error.response);
     console.log(res);
     expect(res.status).toBe(STATUS);
   });
