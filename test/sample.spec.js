@@ -18,17 +18,19 @@ if (stage === "test") {
   USERTOKEN = process.env.USERTOKEN;
 }
 
-axios.defaults.adapter = require("axios/lib/adapters/http");
-describe("GET search", () => {
-  test("GET search keyWaord Search", async () => {
-    const res = await axios
-      .get(`${API_ENDPOINT}/search/review?query=${encodeURIComponent("인천")}&lat=37.29404121591071&long=127.04600809585094&type=All&limit=10&offset=0&order=createdAt&region=all&cityId=-1`, {
-        headers: {
-          Authorization: USERTOKEN,
-        },
-      })
-      .then((response) => response);
-    console.log(res);
-    expect(res.status).toBe(200);
+if (stage !== "prod") {
+  axios.defaults.adapter = require("axios/lib/adapters/http");
+  describe("GET search", () => {
+    test("GET search keyWaord Search", async () => {
+      const res = await axios
+        .get(`${API_ENDPOINT}/search/review?query=${encodeURIComponent("인천")}&lat=37.29404121591071&long=127.04600809585094&type=All&limit=10&offset=0&order=createdAt&region=all&cityId=-1`, {
+          headers: {
+            Authorization: USERTOKEN,
+          },
+        })
+        .then((response) => response);
+      console.log(res);
+      expect(res.status).toBe(200);
+    });
   });
-});
+}
