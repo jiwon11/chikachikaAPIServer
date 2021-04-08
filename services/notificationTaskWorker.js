@@ -342,6 +342,7 @@ module.exports.billsVerify = async function billsVerify(event) {
       ],
     });
     const apiUrl = process.env.apiUrl;
+    console.log(apiUrl);
     const slackMessage = {
       attachments: [
         {
@@ -408,7 +409,7 @@ module.exports.billsVerify = async function billsVerify(event) {
                   },
                   value: "permission",
                   //url: `http://localhost:3000/dev/admin/verifyBills/permission?reviewId=${review.id}`,
-                  url: `${apiUrl}admin/verifyBills/permission?reviewId=${review.id}`,
+                  url: `${apiUrl}/admin/verifyBills/permission?reviewId=${review.id}`,
                 },
                 {
                   type: "button",
@@ -419,7 +420,7 @@ module.exports.billsVerify = async function billsVerify(event) {
                   },
                   value: "return",
                   //url: `http://localhost:3000/dev/admin/verifyBills/return?reviewId=${review.id}`,
-                  url: `${apiUrl}admin/verifyBills/return?reviewId=${review.id}`,
+                  url: `${apiUrl}/admin/verifyBills/return?reviewId=${review.id}`,
                 },
               ],
             },

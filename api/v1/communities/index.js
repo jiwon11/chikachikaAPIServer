@@ -53,7 +53,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
       userId: req.user.id,
       cityId: cityId,
     });
-    console.time("create coomunity image");
+    console.time("create community image");
     await Promise.all(
       images.map((image) =>
         db.Community_img.create({
@@ -69,7 +69,7 @@ router.post("/", getUserInToken, communityImgUpload.none(), async (req, res, nex
         })
       )
     );
-    console.timeEnd("create coomunity image");
+    console.timeEnd("create community image");
     console.time("find tag");
     var hashtags = [];
     const regex = /\{\{[가-힣|ㄱ-ㅎ|ㅏ-ㅣ|0-9|a-zA-Z|(|)|([\{\}\[\]\/?.,;:|\)*~`!^\-_+<>@\#$%&\\\=\(\'\")]*\}\}/gm;
