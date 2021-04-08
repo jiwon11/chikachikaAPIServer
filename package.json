@@ -18,6 +18,7 @@
     "axios": "^0.21.1",
     "crypto": "^1.0.1",
     "dotenv": "^8.2.0",
+    "epsagon": "^1.107.2",
     "express": "^4.17.1",
     "fast-xml-parser": "^3.17.6",
     "firebase-admin": "^9.4.2",
@@ -54,6 +55,7 @@
     "serverless-domain-manager": "^5.1.0",
     "serverless-latest-layer-version": "^2.1.1",
     "serverless-offline-env": "^0.2.0",
+    "serverless-plugin-epsagon": "^1.10.4",
     "serverless-prune-plugin": "^1.4.3",
     "supertest": "^6.1.3"
   }

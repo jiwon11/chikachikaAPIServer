@@ -40,6 +40,9 @@ custom:
   scripts:
     hooks:
       "deploy:finalize": npm run jest -- -stage=${opt:stage, 'dev'}
+  epsagon:
+    token: "ecaf8eeb-6e6b-4114-80b3-0d9014bbc0f7"
+    appName: chikachika-${self:custom.stage}
 
 provider:
   name: aws
@@ -1143,3 +1146,4 @@ plugins:
   - serverless-plugin-scripts
   - serverless-latest-layer-version
   - serverless-domain-manager
+  - serverless-plugin-epsagon
