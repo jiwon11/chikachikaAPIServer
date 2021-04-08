@@ -328,16 +328,10 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
 module.exports.getKeywordSearchAll = async function (db, lat, long, query, clusterQuery, limit, offset, order) {
   console.log(clusterQuery);
   var orderQuery;
-  if (order === "distance") {
-    orderQuery = [
-      [Sequelize.literal(`ROUND((6371*acos(cos(radians(${lat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${long}))+sin(radians(${lat}))*sin(radians(geographLat)))),2)`), "ASC"],
-    ];
-  } else if (order === "accuracy") {
-    orderQuery = [
-      [Sequelize.literal(`IF(telNumber IS NOT NULL,1,0)`), "ASC"],
-      [accuracyPointQuery, "DESC"],
-      ["name", "ASC"],
-    ];
+  if (order === "d") {
+    orderQuery = Sequelize.literal("`distance(km)` ASC");
+  } else if (order === "a") {
+    orderQuery = Sequelize.literal("accuracyPoint DESC");
   }
   const todayHoliday = await todayHolidayFunc(db, today);
   const conclustionAndLunchTime = conclustionAndLunchTimeCalFunc(day, nowTime, todayHoliday, undefined);
