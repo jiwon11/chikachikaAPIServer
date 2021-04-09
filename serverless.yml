@@ -15,7 +15,7 @@ custom:
   cacheEnabled:
     dev: false
     test: false
-    prod: false
+    prod: true
   stage: ${opt:stage, self:provider.stage}
   domains:
     prod: api.chikachika-app.com
