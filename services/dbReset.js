@@ -545,8 +545,9 @@ module.exports.dentalClinicLocalUpdate = async function dentalClinicLocalUpdate(
           id: clinic.cityId,
         },
       });
+      console.log(city.fullCityName);
       await clinic.update({
-        local: `${city.sido} ${city.sigungu} ${city.emdName}`,
+        local: city.fullCityName,
       });
       console.log(clinic.name);
     }
