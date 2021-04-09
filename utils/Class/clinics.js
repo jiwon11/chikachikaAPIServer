@@ -388,12 +388,6 @@ module.exports.getClinicByAttributes = async function (db, attrType, clusterQuer
       },
     };
   }
-  var orderQuery;
-  if (sort === "d") {
-    orderQuery = Sequelize.literal("`distance(km)` ASC");
-  } else if (sort === "a") {
-    orderQuery = Sequelize.literal("accuracyPoint DESC");
-  }
   var results = await this.findAll({
     attributes: clinicIncludeAttributes(lat, long, conclustionAndLunchTime),
     where: whereQuery,
