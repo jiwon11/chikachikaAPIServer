@@ -78,7 +78,7 @@ module.exports.getClinicByAttributes = async function getClinicByAttributes(even
     const limit = parseInt(event.queryStringParameters.limit);
     const offset = parseInt(event.queryStringParameters.offset);
     var userResidence = await db.City.findOne({
-      attributes: ["id", "sido", "sigungu", "sido", "newTownId"],
+      attributes: ["id", "sido", "sigungu", "sido", "emdName", "newTownId"],
       where: {
         id: cityId,
       },
@@ -90,6 +90,7 @@ module.exports.getClinicByAttributes = async function getClinicByAttributes(even
       : {
           sido: userResidence.sido,
           sigungu: userResidence.sigungu,
+          emdName: userResidence.emdName,
         };
     console.log(clusterQuery);
     const results = await db.Dental_clinic.getClinicByAttributes(db, attrType, clusterQuery, lat, long, sort, limit, offset);
