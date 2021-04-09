@@ -210,9 +210,19 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
   var attrWhereQuery;
   if (type === "around") {
     const radius = 2;
-    attrWhereQuery = [
-      Sequelize.literal(`(6371*acos(cos(radians(${maplat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${maplong}))+sin(radians(${maplat}))*sin(radians(geographLat))))<=${radius}`),
-    ];
+    if (query === undefined || query === "") {
+      attrWhereQuery = [
+        Sequelize.literal(`(6371*acos(cos(radians(${maplat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${maplong}))+sin(radians(${maplat}))*sin(radians(geographLat))))<=${radius}`),
+      ];
+    } else {
+      attrWhereQuery = [
+        {
+          local: {
+            [Sequelize.Op.like]: `%${query}%`,
+          },
+        },
+      ];
+    }
   } else if (type === "keyword") {
     attrWhereQuery = [
       {
