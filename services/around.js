@@ -2,7 +2,7 @@ const db = require("../utils/models");
 const moment = require("moment");
 module.exports.clinics = async function clinics(event) {
   try {
-    const { lat, long, maplat, maplong, wantParking, sort, days, time, holiday, transparent, surgeon, night } = event.queryStringParameters;
+    const { lat, long, maplat, maplong, wantParking, sort, days, time, holiday, transparent, surgeon, night, cityName } = event.queryStringParameters;
     console.log(JSON.stringify(event.queryStringParameters));
     const limit = parseInt(event.queryStringParameters.limit);
     const offset = parseInt(event.queryStringParameters.offset);
@@ -32,7 +32,7 @@ module.exports.clinics = async function clinics(event) {
     const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
     const day = weekDay[today.day()];
     console.log(day, nowTime);
-    const clinics = await db.Dental_clinic.searchAll(db, "around", null, nowTime, day, week, lat, long, maplat, maplong, limit, offset, sort, wantParking, holiday, transparent, surgeon, night);
+    const clinics = await db.Dental_clinic.searchAll(db, "around", cityName, nowTime, day, week, lat, long, maplat, maplong, limit, offset, sort, wantParking, holiday, transparent, surgeon, night);
     console.log(clinics.length);
     let response = {
       statusCode: 200,
