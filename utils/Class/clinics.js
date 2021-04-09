@@ -176,17 +176,23 @@ const clinicIncludeAttributes = function (lat, long, conclustionAndLunchTime) {
   ];
 };
 
+const order = function (sort, maplat, maplong) {
+  var orderQuery;
+  if (sort === "d") {
+    orderQuery = Sequelize.literal(
+      `(6371*acos(cos(radians(${maplat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${maplong}))+sin(radians(${maplat}))*sin(radians(geographLat)))) ASC`
+    );
+  } else if (sort === "a") {
+    orderQuery = Sequelize.literal("accuracyPoint DESC");
+  }
+  return orderQuery;
+};
+
 const accuracyPointQuery = Sequelize.literal(
   `(IF(CD_Num > 0 OR SD_Num > 0 OR RE_Num > 0 OR IN_Num > 0, 1, 0))+(IF(Mon_Consulation_start_time > "00:00:00", 1, 0))+ (IF(Sat_Consulation_start_time > "00:00:00", 1, 0)) + (IF(parking_allow_num>0, 1, 0))+(IF(holiday_treatment_start_time IS NOT NULL, 1, 0))+(IF(description IS NOT NULL, 1, 0))+(IF(dentalTransparent IS TRUE, 1, 0))+(IF((SELECT COUNT(*) FROM Clinic_subjects where dentalClinicId = dental_clinic.id)>0,1,0))+(IF((SELECT COUNT(*) FROM Clinic_special_treatment where dentalClinicId = dental_clinic.id)>0,1,0))+(IF((SELECT COUNT(*) FROM dentalClinicProfileImgs where dentalClinicId = dental_clinic.id AND dentalClinicProfileImgs.deletedAt IS NOT NULL)>0,1,0))`
 );
 
 module.exports.SearchAll = async function (db, type, query, nowTime, day, week, lat, long, maplat, maplong, limit, offset, sort, wantParking, holidayTreatment, transparent, surgeon, night) {
-  var orderQuery;
-  if (sort === "d") {
-    orderQuery = Sequelize.literal("`distance(km)` ASC");
-  } else if (sort === "a") {
-    orderQuery = Sequelize.literal("accuracyPoint DESC");
-  }
   var parkingQuery;
   if (type !== "residence") {
     if (wantParking === "y") {
@@ -209,8 +215,8 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
   var whereQuery;
   var attrWhereQuery;
   if (type === "around") {
-    const radius = 2;
     if (query === undefined || query === "") {
+      const radius = 2;
       attrWhereQuery = [
         Sequelize.literal(`(6371*acos(cos(radians(${maplat}))*cos(radians(geographLat))*cos(radians(geographLong)-radians(${maplong}))+sin(radians(${maplat}))*sin(radians(geographLat))))<=${radius}`),
       ];
@@ -329,20 +335,14 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
         order: [["represent", "DESC"]],
       },
     ],
-    order: orderQuery,
+    order: order(sort, maplat, maplong),
     limit: limit,
     offset: offset,
   });
 };
 
-module.exports.getKeywordSearchAll = async function (db, lat, long, query, clusterQuery, limit, offset, order) {
+module.exports.getKeywordSearchAll = async function (db, lat, long, query, clusterQuery, limit, offset, sort) {
   console.log(clusterQuery);
-  var orderQuery;
-  if (order === "d") {
-    orderQuery = Sequelize.literal("`distance(km)` ASC");
-  } else if (order === "a") {
-    orderQuery = Sequelize.literal("accuracyPoint DESC");
-  }
   const todayHoliday = await todayHolidayFunc(db, today);
   const conclustionAndLunchTime = conclustionAndLunchTimeCalFunc(day, nowTime, todayHoliday, undefined);
   const includeModels = clinicIncludeModels(db, clusterQuery);
@@ -365,7 +365,7 @@ module.exports.getKeywordSearchAll = async function (db, lat, long, query, clust
     attributes: clinicIncludeAttributes(lat, long, conclustionAndLunchTime),
     where: whereQuery,
     include: includeModels,
-    order: orderQuery,
+    order: order(sort, lat, long),
     limit: limit,
     offset: offset,
   });
@@ -398,7 +398,7 @@ module.exports.getClinicByAttributes = async function (db, attrType, clusterQuer
     attributes: clinicIncludeAttributes(lat, long, conclustionAndLunchTime),
     where: whereQuery,
     include: clinicIncludeModels(db, clusterQuery),
-    order: orderQuery,
+    order: order(sort, lat, long),
     limit: limit,
     offset: offset,
   });
