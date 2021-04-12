@@ -258,15 +258,15 @@ router.get("/wroteCommentPosts", getUserInToken, async (req, res, next) => {
           },
           [Sequelize.Op.or]: [
             {
-              ["$community_comments.userId$"]: { [Sequelize.Op.eq]: userId },
+              ["$community_comments.userId$"]: userId,
             },
-            { ["$community_comments.Replys.userId$"]: { [Sequelize.Op.eq]: userId } },
+            { ["$community_comments.Replys.userId$"]: userId },
           ],
         },
         attributes: {
           include: communityQueryClass.communityIncludeAttributes(userId),
         },
-        include: communityQueryClass.communityIncludeModels(db, undefined, undefined, undefined, undefined, {
+        include: communityQueryClass.communityIncludeModels(db, undefined, {
           model: db.Community_comment,
           attributes: ["id", "userId", "createdAt"],
           include: [
