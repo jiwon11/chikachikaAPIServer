@@ -280,8 +280,8 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
   whereQuery = {
     [Sequelize.Op.and]: attrWhereQuery,
     nightQuery,
-    dentalTransparent: transparent === "t" ? true : false,
-    societySpecialist: surgeon === "t" ? true : false,
+    dentalTransparent: transparent === "t" ? true : [true, false],
+    societySpecialist: surgeon === "t" ? true : [true, false],
     parking_allow_num: parkingQuery,
     holiday_treatment_start_time: conclustionAndLunchTime.holidayTreatmentQuery,
     Mon_Consulation_start_time: {
