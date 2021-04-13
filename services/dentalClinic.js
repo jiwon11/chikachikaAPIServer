@@ -122,7 +122,7 @@ module.exports.detailClinics = async function detailClinics(event) {
             treatmentTime: [clinic.Mon_Consulation_start_time, clinic.Mon_Consulation_end_time],
             lunchTime: [clinic.weekday_TOL_start, clinic.weekday_TOL_end],
           },
-          tus: {
+          tue: {
             treatmentTime: [clinic.Tue_Consulation_start_time, clinic.Tue_Consulation_end_time],
             lunchTime: [clinic.weekday_TOL_start, clinic.weekday_TOL_end],
           },
