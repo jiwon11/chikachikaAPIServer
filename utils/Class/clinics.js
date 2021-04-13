@@ -291,10 +291,10 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
       [Sequelize.Op.gte]: week.mon === null ? "00:00:00" : week.mon,
     },
     Tue_Consulation_start_time: {
-      [Sequelize.Op.lte]: week.tus === null ? "24:00:00" : week.tus,
+      [Sequelize.Op.lte]: week.tus === null ? "24:00:00" : week.tue,
     },
     Tue_Consulation_end_time: {
-      [Sequelize.Op.gte]: week.tus === null ? "00:00:00" : week.tus,
+      [Sequelize.Op.gte]: week.tus === null ? "00:00:00" : week.tue,
     },
     Wed_Consulation_start_time: {
       [Sequelize.Op.lte]: week.wed === null ? "24:00:00" : week.wed,
