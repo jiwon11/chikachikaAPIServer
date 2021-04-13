@@ -4,7 +4,7 @@ const moment = require("moment");
 module.exports.residenceClinicReviews = async function residenceClinicReviews(event) {
   try {
     const { cityId, lat, long } = event.queryStringParameters;
-    var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
+    var weekDay = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const today = moment().tz(process.env.TZ);
     const day = weekDay[today.day()];
     const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;

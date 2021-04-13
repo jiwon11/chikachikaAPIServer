@@ -64,11 +64,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TIME,
         allowNullL: true,
       },
-      Tus_Consulation_start_time: {
+      Tue_Consulation_start_time: {
         type: DataTypes.TIME,
         allowNullL: true,
       },
-      Tus_Consulation_end_time: {
+      Tue_Consulation_end_time: {
         type: DataTypes.TIME,
         allowNullL: true,
       },
