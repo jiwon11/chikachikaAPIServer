@@ -188,7 +188,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
       }
       var week = {
         mon: null,
-        tus: null,
+        tue: null,
         wed: null,
         thu: null,
         fri: null,

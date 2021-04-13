@@ -8,7 +8,7 @@ module.exports.clinics = async function clinics(event) {
     const offset = parseInt(event.queryStringParameters.offset);
     var week = {
       mon: null,
-      tus: null,
+      tue: null,
       wed: null,
       thu: null,
       fri: null,
