@@ -206,7 +206,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
           week[day] = time;
         }
       }
-      var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
+      var weekDay = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
       const today = moment().tz(process.env.TZ);
       const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
       const day = weekDay[today.day()];

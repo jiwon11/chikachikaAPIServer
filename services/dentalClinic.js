@@ -14,7 +14,7 @@ module.exports.detailClinics = async function detailClinics(event) {
     const userId = event.requestContext.authorizer.principalId;
     if (userId) {
       const { clinicId } = event.queryStringParameters;
-      var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
+      var weekDay = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
       const today = moment().tz(process.env.TZ);
       const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
       const day = weekDay[today.day()];
@@ -123,7 +123,7 @@ module.exports.detailClinics = async function detailClinics(event) {
             lunchTime: [clinic.weekday_TOL_start, clinic.weekday_TOL_end],
           },
           tus: {
-            treatmentTime: [clinic.Tus_Consulation_start_time, clinic.Tus_Consulation_end_time],
+            treatmentTime: [clinic.Tue_Consulation_start_time, clinic.Tue_Consulation_end_time],
             lunchTime: [clinic.weekday_TOL_start, clinic.weekday_TOL_end],
           },
           wed: {

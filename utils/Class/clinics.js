@@ -2,7 +2,7 @@ const Sequelize = require("sequelize");
 const cloudFrontUrl = process.env.cloudFrontUrl;
 const moment = require("moment");
 
-var weekDay = ["Sun", "Mon", "Tus", "Wed", "Thu", "Fri", "Sat"];
+var weekDay = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const today = moment().tz(process.env.TZ);
 const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
 const day = weekDay[today.day()];
@@ -290,10 +290,10 @@ module.exports.SearchAll = async function (db, type, query, nowTime, day, week, 
     Mon_Consulation_end_time: {
       [Sequelize.Op.gte]: week.mon === null ? "00:00:00" : week.mon,
     },
-    Tus_Consulation_start_time: {
+    Tue_Consulation_start_time: {
       [Sequelize.Op.lte]: week.tus === null ? "24:00:00" : week.tus,
     },
-    Tus_Consulation_end_time: {
+    Tue_Consulation_end_time: {
       [Sequelize.Op.gte]: week.tus === null ? "00:00:00" : week.tus,
     },
     Wed_Consulation_start_time: {
