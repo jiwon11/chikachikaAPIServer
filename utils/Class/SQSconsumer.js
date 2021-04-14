@@ -16,7 +16,7 @@ module.exports.comment = async function (body) {
       statusCode: 200,
       body: JSON.stringify({
         message: "Consumer PUSH successfully",
-        input: messageBody,
+        input: JSON.parse(messageBody),
       }),
     };
     return response;
@@ -39,7 +39,7 @@ module.exports.reply = async function (body) {
       statusCode: 200,
       body: JSON.stringify({
         message: "Consumer PUSH successfully",
-        input: messageBody,
+        input: JSON.parse(messageBody),
       }),
     };
     return response;
@@ -62,7 +62,7 @@ module.exports.like = async function (body) {
       statusCode: 200,
       body: JSON.stringify({
         message: "Consumer PUSH successfully",
-        input: messageBody,
+        input: JSON.parse(messageBody),
       }),
     };
     return response;
@@ -90,7 +90,7 @@ module.exports.report = async function (body) {
       statusCode: 200,
       body: JSON.stringify({
         message: "Consumer PUSH successfully",
-        input: messageBody,
+        input: JSON.parse(messageBody),
       }),
     };
     return response;
@@ -118,7 +118,7 @@ module.exports.billsVerify = async function billsVerify(body) {
       statusCode: 200,
       body: JSON.stringify({
         message: "Consumer PUSH successfully",
-        input: messageBody,
+        input: JSON.parse(messageBody),
       }),
     };
     return response;
