@@ -28,7 +28,8 @@ module.exports.verifyToken = (event, context, callback) => {
   try {
     const token = event.authorizationToken;
     const methodArn = event.methodArn;
-    if (token === undefined && token === "null") {
+    console.log(typeof token, " ", token);
+    if (token === undefined && token === "null" && token === "undefined") {
       return callback("Unauthorized");
     } else {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
