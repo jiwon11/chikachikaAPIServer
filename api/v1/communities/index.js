@@ -216,7 +216,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
     const order = req.query.order;
     const cityId = req.query.cityId;
     const region = req.query.region;
-    const userId = req.user.id;
+    const userId = req.user ? req.user.id : "register";
     var clusterQuery;
     if (region === "residence") {
       var userResidence = await db.City.findOne({
@@ -253,7 +253,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
 router.get("/", getUserInToken, async (req, res, next) => {
   try {
     const communityPostId = req.query.postId;
-    const userId = req.user.id;
+    const userId = req.user ? req.user.id : "register";
     if (!communityPostId) {
       return res.status(400).json({
         statusCode: 400,
