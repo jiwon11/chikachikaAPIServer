@@ -35,5 +35,5 @@ describe("GET search", () => {
       .catch((error) => error.response);
     console.log(res);
     expect(res.status).toBe(STATUS);
-  });
+  }, 30000);
 });
