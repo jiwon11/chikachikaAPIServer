@@ -4,7 +4,6 @@ const multerS3 = require("multer-s3");
 const multer = require("multer");
 const path = require("path");
 const Sequelize = require("sequelize");
-const ApiError = require("../../../utils/error");
 const { getUserInToken } = require("../middlewares");
 const db = require("../../../utils/models");
 const moment = require("moment");
@@ -37,7 +36,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
   try {
     const limit = parseInt(req.query.limit);
     const offset = parseInt(req.query.offset);
-    const userId = req.user.id;
+    const userId = req.user ? req.user.id : "register";
     const order = req.query.order;
     const reviews = await db.Review.getAll(db, userId, order, limit, offset);
     console.log(reviews.length);
@@ -53,7 +52,7 @@ router.get("/lists", getUserInToken, async (req, res, next) => {
 router.get("/", getUserInToken, async (req, res, next) => {
   try {
     const reviewId = req.query.reviewId;
-    const userId = req.user.id;
+    const userId = req.user ? req.user.id : "register";
     if (!reviewId) {
       return res.status(404).json({
         statusCode: 404,
