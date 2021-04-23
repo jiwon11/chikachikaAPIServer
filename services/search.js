@@ -131,7 +131,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
         id: userId,
       },
     });
-    if (user) {
+    if (userId !== "register") {
       console.log(event.queryStringParameters);
       const { lat, long, query, sort, days, time, wantParking, holiday, tagCategory, transparent, surgeon, night } = event.queryStringParameters;
       const limit = parseInt(event.queryStringParameters.limit);
@@ -142,7 +142,7 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
           body: `{"statusText": "Bad Request","message": "검색어를 입력해주새요."}`,
         };
       }
-      if (user) {
+      if (userId !== "register") {
         if (query !== "") {
           const [search, created] = await db.Search_record.findOrCreate({
             where: {

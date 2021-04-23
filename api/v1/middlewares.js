@@ -10,7 +10,7 @@ exports.getUserInToken = async (req, res, next) => {
         id: decoded.id,
       },
     });
-    if (user) {
+    if (user || decoded.id === "register") {
       req.user = user;
       next();
     } else {
