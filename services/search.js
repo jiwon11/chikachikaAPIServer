@@ -131,18 +131,18 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
         id: userId,
       },
     });
+    console.log(event.queryStringParameters);
+    const { lat, long, query, sort, days, time, wantParking, holiday, tagCategory, transparent, surgeon, night } = event.queryStringParameters;
+    const limit = parseInt(event.queryStringParameters.limit);
+    const offset = parseInt(event.queryStringParameters.offset);
+    if (!query) {
+      return {
+        statusCode: 400,
+        body: `{"statusText": "Bad Request","message": "검색어를 입력해주새요."}`,
+      };
+    }
     if (userId !== "register") {
-      console.log(event.queryStringParameters);
-      const { lat, long, query, sort, days, time, wantParking, holiday, tagCategory, transparent, surgeon, night } = event.queryStringParameters;
-      const limit = parseInt(event.queryStringParameters.limit);
-      const offset = parseInt(event.queryStringParameters.offset);
-      if (!query) {
-        return {
-          statusCode: 400,
-          body: `{"statusText": "Bad Request","message": "검색어를 입력해주새요."}`,
-        };
-      }
-      if (userId !== "register") {
+      if (user) {
         if (query !== "") {
           const [search, created] = await db.Search_record.findOrCreate({
             where: {
@@ -174,50 +174,50 @@ module.exports.keywordClinicSearch = async function keywordClinicSearch(event) {
           body: `{"statusText": "Unauthorized","message": "사용자를 찾을 수 없습니다."}`,
         };
       }
-      if (parseFloat(long) > 131.87222222 && parseFloat(long) < 125.06666667) {
-        return {
-          statusCode: 400,
-          body: `{"statusText": "Bad Request","message": "한국 내 경도 범위를 입력하세요."}`,
-        };
-      }
-      if (parseFloat(lat) > 38.45 && parseFloat(lat) < 33.1) {
-        return {
-          statusCode: 400,
-          body: `{"statusText": "Bad Request","message": "한국 내 위도 범위를 입력하세요."}`,
-        };
-      }
-      var week = {
-        mon: null,
-        tue: null,
-        wed: null,
-        thu: null,
-        fri: null,
-        sat: null,
-      };
-      if (time !== "") {
-        if (days !== "") {
-          days.split(",").forEach((day) => {
-            week[day] = time;
-          });
-        } else {
-          const today = moment().tz(process.env.TZ);
-          const weekDay = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
-          const day = weekDay[today.day()];
-          week[day] = time;
-        }
-      }
-      var weekDay = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-      const today = moment().tz(process.env.TZ);
-      const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
-      const day = weekDay[today.day()];
-      console.log(day, nowTime);
-      const clinics = await db.Dental_clinic.searchAll(db, "keyword", query, nowTime, day, week, lat, long, null, null, limit, offset, sort, wantParking, holiday, transparent, surgeon, night);
-      let response = {
-        statusCode: 200,
-        body: JSON.stringify(clinics),
-      };
-      return response;
     }
+    if (parseFloat(long) > 131.87222222 && parseFloat(long) < 125.06666667) {
+      return {
+        statusCode: 400,
+        body: `{"statusText": "Bad Request","message": "한국 내 경도 범위를 입력하세요."}`,
+      };
+    }
+    if (parseFloat(lat) > 38.45 && parseFloat(lat) < 33.1) {
+      return {
+        statusCode: 400,
+        body: `{"statusText": "Bad Request","message": "한국 내 위도 범위를 입력하세요."}`,
+      };
+    }
+    var week = {
+      mon: null,
+      tue: null,
+      wed: null,
+      thu: null,
+      fri: null,
+      sat: null,
+    };
+    if (time !== "") {
+      if (days !== "") {
+        days.split(",").forEach((day) => {
+          week[day] = time;
+        });
+      } else {
+        const today = moment().tz(process.env.TZ);
+        const weekDay = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+        const day = weekDay[today.day()];
+        week[day] = time;
+      }
+    }
+    var weekDay = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const today = moment().tz(process.env.TZ);
+    const nowTime = `${today.hour()}:${today.minute()}:${today.second()}`;
+    const day = weekDay[today.day()];
+    console.log(day, nowTime);
+    const clinics = await db.Dental_clinic.searchAll(db, "keyword", query, nowTime, day, week, lat, long, null, null, limit, offset, sort, wantParking, holiday, transparent, surgeon, night);
+    let response = {
+      statusCode: 200,
+      body: JSON.stringify(clinics),
+    };
+    return response;
   } catch (error) {
     console.log(error);
     return {
@@ -418,67 +418,69 @@ module.exports.keywordSearchResults = async function keywordSearchResults(event)
     const cityId = event.queryStringParameters.cityId;
     const lat = event.queryStringParameters.lat;
     const long = event.queryStringParameters.long;
-    const user = await db.User.findOne({
-      where: {
-        id: userId,
-      },
-    });
-    if (user) {
-      var clusterQuery;
-      if (region === "residence") {
-        var userResidence = await db.City.findOne({
-          where: {
-            id: cityId,
-          },
-        });
-        clusterQuery = userResidence.newTownId
-          ? {
-              newTownId: userResidence.newTownId,
-            }
-          : {
-              sido: userResidence.sido,
-              sigungu: userResidence.sigungu,
-            };
-      } else if (region !== "all") {
+    var clusterQuery;
+    if (userId !== "register") {
+      const user = await db.User.findOne({
+        where: {
+          id: userId,
+        },
+      });
+      if (user) {
+        if (region === "residence") {
+          var userResidence = await db.City.findOne({
+            where: {
+              id: cityId,
+            },
+          });
+          clusterQuery = userResidence.newTownId
+            ? {
+                newTownId: userResidence.newTownId,
+              }
+            : {
+                sido: userResidence.sido,
+                sigungu: userResidence.sigungu,
+              };
+        } else if (region !== "all") {
+          return {
+            statusCode: 400,
+            body: { statusText: "Bad Request", message: "유효하지 않는 쿼리입니다." },
+          };
+        }
+      } else {
         return {
-          statusCode: 400,
-          body: { statusText: "Bad Request", message: "유효하지 않는 쿼리입니다." },
+          statusCode: 401,
+          body: `{"statusText": "Unauthorized","message": "사용자를 찾을 수 없습니다."}`,
         };
       }
-      switch (resultType) {
-        case "community":
-          const communityType = event.queryStringParameters.communityType === "All" ? ["Question", "FreeTalk"] : [event.queryStringParameters.communityType];
-          const communityResult = await db.Community.getKeywordSearchAll(db, communityType, query, userId, clusterQuery, offset, limit, order);
-          console.log(`${resultType} results Num: ${communityResult.length}`);
-          return {
-            statusCode: 200,
-            body: JSON.stringify(communityResult),
-          };
-        case "review":
-          console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
-          const correctionStatus = event.queryStringParameters.correctionStatus;
-          const reviewResult = await db.Review.getKeywordSearchAll(db, userId, query, clusterQuery, limit, offset, order, correctionStatus);
-          console.log(`${resultType} results Num: ${reviewResult.length}`);
-          return {
-            statusCode: 200,
-            body: JSON.stringify(reviewResult),
-          };
-        case "clinic":
-          console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
-          const clinicResult = await db.Dental_clinic.getKeywordSearchAll(db, lat, long, query, clusterQuery, limit, offset, order);
-          console.log(`${resultType} results Num: ${clinicResult.length}`);
-          return {
-            statusCode: 200,
-            body: JSON.stringify(clinicResult),
-          };
-        default:
-          break;
-      }
-    } else {
-      return {
-        statusCode: 401,
-        body: `{"statusText": "Unauthorized","message": "사용자를 찾을 수 없습니다."}`,
-      };
+    }
+    switch (resultType) {
+      case "community":
+        const communityType = event.queryStringParameters.communityType === "All" ? ["Question", "FreeTalk"] : [event.queryStringParameters.communityType];
+        const communityResult = await db.Community.getKeywordSearchAll(db, communityType, query, userId, clusterQuery, offset, limit, order);
+        console.log(`${resultType} results Num: ${communityResult.length}`);
+        return {
+          statusCode: 200,
+          body: JSON.stringify(communityResult),
+        };
+      case "review":
+        console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
+        const correctionStatus = event.queryStringParameters.correctionStatus;
+        const reviewResult = await db.Review.getKeywordSearchAll(db, userId, query, clusterQuery, limit, offset, order, correctionStatus);
+        console.log(`${resultType} results Num: ${reviewResult.length}`);
+        return {
+          statusCode: 200,
+          body: JSON.stringify(reviewResult),
+        };
+      case "clinic":
+        console.log(`cluster: ${JSON.stringify(clusterQuery)}`);
+        const clinicResult = await db.Dental_clinic.getKeywordSearchAll(db, lat, long, query, clusterQuery, limit, offset, order);
+        console.log(`${resultType} results Num: ${clinicResult.length}`);
+        return {
+          statusCode: 200,
+          body: JSON.stringify(clinicResult),
+        };
+      default:
+        break;
     }
   } catch (error) {
     console.log(error);
