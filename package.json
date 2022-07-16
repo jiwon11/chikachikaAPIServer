@@ -15,7 +15,7 @@
   "dependencies": {
     "aws-serverless-express": "^3.4.0",
     "aws-serverless-express-binary": "^1.0.1",
-    "axios": "^0.21.1",
+    "axios": "^0.21.2",
     "crypto": "^1.0.1",
     "dotenv": "^10.0.0",
     "epsagon": "^1.111.3",
