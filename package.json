@@ -19,7 +19,7 @@
     "crypto": "^1.0.1",
     "dotenv": "^10.0.0",
     "epsagon": "^1.111.3",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "fast-xml-parser": "^3.19.0",
     "firebase-admin": "^9.10.0",
     "geojson": "^0.5.0",
