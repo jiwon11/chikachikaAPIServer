@@ -35,7 +35,7 @@
     "phin": "^3.6.0",
     "redis": "^3.1.2",
     "request": "^2.88.2",
-    "sequelize": "^6.6.4",
+    "sequelize": "^6.29.0",
     "sequelize-cli": "^6.2.0",
     "serverless-api-gateway-caching": "^1.7.3",
     "serverless-offline": "^7.0.0",
